@@ -547,14 +547,14 @@ jobs:
               # own --image flag, and anaconda runs *that* under `unshare
               # --mount --propagation unchanged`, bind-mounting /tmp and
               # friends into the target root and unmounting them again once
-              # the install finishes. If the container'"'"'s own mount tree is
+              # the install finishes. If the container mount tree is
               # still shared (the privileged-docker default), that teardown
               # unmount can fail with "umount of /tmp failed (32)" because
               # the event tries to propagate back to a peer group anaconda
               # never asked for. Making it rprivate first is the same fix
               # any nested-mount-namespace tool (buildah, systemd-nspawn)
               # needs in a privileged container - it does not touch what
-              # the ISO build does, which never goes through anaconda'"'"'s
+              # the ISO build does, which never goes through Anaconda.
               # --image path and never hit this.
               mount --make-rprivate /
 
@@ -564,7 +564,7 @@ jobs:
                 qemu-img systemd-udev libguestfs-tools-c \
                 shim-x64 grub2-efi-x64-cdboot policycoreutils
 
-              # Fedora 43'"'"'s packaged anaconda-core still carries a real
+              # Fedora 43 packaged anaconda-core still carries a real
               # bug upstream already fixed - see
               # scripts/patch-anaconda-efi-skip-bug.py for the full
               # writeup and findings/gh-actions-live-iso-build.md for the
@@ -572,8 +572,13 @@ jobs:
               # runs anaconda, rather than wait for Fedora to backport it.
               python3 /workspace/scripts/patch-anaconda-efi-skip-bug.py
 
+              # The selected Azure Linux shim/GRUB family owns EFI/azurelinux,
+              # while the Fedora Anaconda profile defaults to EFI/fedora. Make
+              # Anaconda generate its stub beside the selected EFI binaries.
+              python3 /workspace/scripts/configure-anaconda-efi-vendor.py
+
               # A partitioned disk image (unlike the ISO, which just
-              # loop-mounts one blank ext4 filesystem) needs blivet'"'"'s own
+              # loop-mounts one blank ext4 filesystem) needs its own
               # kpartx-based partition activation to work, and kpartx needs
               # a live udev to actually process the device-node events it
               # triggers. This container has no init system and no udevd

@@ -45,6 +45,7 @@ sudo podman run --rm \
             qemu-img systemd-udev libguestfs-tools-c \
             shim-x64 grub2-efi-x64-cdboot policycoreutils
         python3 /workspace/scripts/patch-anaconda-efi-skip-bug.py
+        python3 /workspace/scripts/configure-anaconda-efi-vendor.py
         /usr/lib/systemd/systemd-udevd --daemon
         udevadm trigger
         udevadm settle
