@@ -197,7 +197,7 @@ jobs:
                 --iso-name azurelinux-desktop-live.iso \
                 --ks /workspace/kickstart/azurelinux-desktop-live.ks \
                 --project "Azure Linux Desktop" \
-                --releasever 44 \
+                --releasever 43 \
                 --volid AZLDESKTOP \
                 --extra-boot-args "rd.live.overlay.overlayfs=1" \
                 --logfile /workspace/livemedia-build.log
