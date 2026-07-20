@@ -601,31 +601,29 @@ jobs:
                 --releasever 43 \
                 --logfile /workspace/livemedia-disk-build.log
 
+              # Anaconda install/cleanup (package %post scripts,
+              # dnf cache, journal, temp files it deletes on the way out)
+              # leaves non-zero leftovers in what is logically free space -
+              # qemu-img sparse detection and -c/zstd compression can
+              # only shrink data it can actually recognize as zero, so
+              # none of that leftover garbage compresses away on its own.
+              # Run virt-sparsify on the raw image before qemu-img produces
+              # its compressed qcow2. In-place sparsification of compressed
+              # qcow2 clusters reports success but can discard all guest data.
+              # GitHub-hosted runners have no KVM (see this file top-level
+              # notes on why nested virtualization is unavailable here), so
+              # libguestfs falls
+              # back to its own TCG appliance - slower than a KVM-backed
+              # run, but this job already carries a 180-minute timeout with
+              # plenty of headroom for it.
+              LIBGUESTFS_BACKEND=direct virt-sparsify --in-place \
+                /workspace/live-disk-result/azurelinux-desktop-live.img
+
               qemu-img convert -O qcow2 -c -o compression_type=zstd \
                 /workspace/live-disk-result/azurelinux-desktop-live.img \
                 /workspace/live-disk-result/azurelinux-desktop-live.qcow2
               qemu-img resize /workspace/live-disk-result/azurelinux-desktop-live.qcow2 64G
               rm -f /workspace/live-disk-result/azurelinux-desktop-live.img
-
-              # Anaconda'"'"'s own install/cleanup (package %post scripts,
-              # dnf cache, journal, temp files it deletes on the way out)
-              # leaves non-zero leftovers in what is logically free space -
-              # qemu-img'"'"'s sparse detection and -c/zstd compression can
-              # only shrink data it can actually recognize as zero, so
-              # none of that leftover garbage compresses away on its own.
-              # virt-sparsify --in-place zero-fills the guest'"'"'s actual
-              # free space (mounts the filesystem via its own libguestfs
-              # appliance, does the equivalent of fstrim) without needing
-              # a second, temporary copy of a 64G image - it rewrites the
-              # existing qcow2'"'"'s already-allocated clusters to zero rather
-              # than allocating a new file. GitHub-hosted runners have no
-              # KVM (see this file'"'"'s own top-of-file notes on why nested
-              # virtualization isn'"'"'t available here), so libguestfs falls
-              # back to its own TCG appliance - slower than a KVM-backed
-              # run, but this job already carries a 180-minute timeout with
-              # plenty of headroom for it.
-              LIBGUESTFS_BACKEND=direct virt-sparsify --in-place \
-                /workspace/live-disk-result/azurelinux-desktop-live.qcow2
             '
 
       # anaconda writes program.log/storage.log/anaconda.log etc. into

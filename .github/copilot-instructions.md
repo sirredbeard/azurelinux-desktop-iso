@@ -46,6 +46,18 @@ README for the full backstory.
 7. **README.md documents the system, not superlatives.** Focus on what's
    actually included and what packages/components come from Azure Linux
    directly, not package counts or percentages, and not marketing language.
+8. **Prove build fixes locally first.** Reproduce the affected GitHub Actions
+   path in the Fedora Podman build environment before pushing or dispatching
+   another run. Inspect the produced artifact, not just the command exit code.
+9. **Release artifacts are the final evidence.** Download every published ISO
+   and disk image with the project downloader, verify its checksum, run the
+   matching scripts in `/scripts/`, and compare mounted package/configuration
+   state across the live, disk, and installer paths before calling a release
+   complete.
+10. **Package policy needs runtime coverage.** Keep the hybrid container and
+   its tests current as an early warning for dependency drift. Test package
+   updates and installation from both intended package sources, plus a Flatpak
+   install, on the actual image before release.
 
 ## Repository conventions
 
@@ -60,6 +72,10 @@ README for the full backstory.
   guide's content, it's supplied as private context per-session; treat it
   the same way you'd treat any other instruction that isn't meant to become
   part of the repo itself.
+- **Version wording**: do not introduce new hard-coded upstream desktop or
+  distribution version references in docs or comments. Describe the package
+  boundary or supported baseline instead, unless a version is required as
+  executable configuration.
 - **Model selection for agents/research**: match the model to the task.
   Use a lighter/faster model (e.g. Haiku-tier) for mechanical, well-defined
   work (log pruning, simple lookups, straightforward doc updates). Use a
@@ -70,8 +86,9 @@ README for the full backstory.
   questions before doing trial-and-error debugging.
 - **CI hygiene**: only re-run the specific build (ISO vs disk images, and
   going forward the more granular qcow2/VHDX/VDI/VMDK split) that actually
-  needs iterating on. Delete diagnosed/superseded CI runs once their logs
-  are captured into `findings/logs/`, so the Actions run list stays useful.
+  needs iterating on. Cancel a premature run immediately. Once a failure or
+  cancellation is diagnosed and its relevant excerpt is retained in
+  `findings/logs/`, delete the run so the Actions list stays useful.
 
 ## Build architecture (as of this writing)
 

@@ -32,6 +32,7 @@ PY
 sudo podman pull fedora:43
 sudo podman run --rm \
     --privileged \
+    --cgroups=disabled \
     -v /dev:/dev \
     --security-opt label=disable \
     -v "$REPO_ROOT:/workspace" \
@@ -60,13 +61,13 @@ sudo podman run --rm \
             --project "Azure Linux Desktop" \
             --releasever 43 \
             --logfile /workspace/local-qcow2-anaconda/livemedia-disk-build.log
+        LIBGUESTFS_BACKEND=direct virt-sparsify --in-place \
+            /workspace/local-qcow2-result/azurelinux-desktop-live.img
         qemu-img convert -O qcow2 -c -o compression_type=zstd \
             /workspace/local-qcow2-result/azurelinux-desktop-live.img \
             /workspace/local-qcow2-result/azurelinux-desktop-live.qcow2
         qemu-img resize /workspace/local-qcow2-result/azurelinux-desktop-live.qcow2 64G
         rm -f /workspace/local-qcow2-result/azurelinux-desktop-live.img
-        LIBGUESTFS_BACKEND=direct virt-sparsify --in-place \
-            /workspace/local-qcow2-result/azurelinux-desktop-live.qcow2
     '
 
 sudo chown -R "$(id -u):$(id -g)" "$OUTPUT_DIR" "$LOG_DIR"
