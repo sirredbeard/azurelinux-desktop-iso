@@ -10,7 +10,7 @@ rebuild.
 
 The important constraint is glibc. Azure Linux 4 ships glibc 2.42, while
 the current GTK4 stack requires `GLIBC_2.43`. That is why the current image
-intentionally takes the complete glibc family from Fedora 44. Rebuilding
+intentionally takes the complete glibc family from Fedora. Rebuilding
 GTK/GNOME "natively" means first owning and maintaining a newer glibc,
 which is core operating-system work rather than ordinary desktop packaging.
 
@@ -76,7 +76,7 @@ Three logical sources are reasonable:
 1. Azure Linux 4 owns the retained base and platform packages.
 2. A COPR desktop repository owns the rebuilt glibc, GTK/GNOME stack, and
    other specifically approved Fedora-derived packages.
-3. Fedora 44 remains a low-priority source for approved extra GUI
+3. Fedora remains a low-priority source for approved extra GUI
    applications only.
 
 In practice the installed system would still have Microsoft, GitHub, RPM

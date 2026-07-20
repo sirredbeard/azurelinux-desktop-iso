@@ -34,7 +34,7 @@ offline-repo-then-generate-kickstart pattern, same `@@PACKAGES@@`
 templating, same `post-install.sh`/`post-bootloader.sh` reused
 verbatim. Key differences:
 
-- `INSTALL_PKGS` is the full GNOME 50 + Microsoft/GitHub stack (mirrors
+- `INSTALL_PKGS` is the full GNOME + Microsoft/GitHub stack (mirrors
   the live ISO's `%packages`), not Azure Linux's minimal cloud-base set.
 - GitHub Copilot GUI/CLI, `microsoft/edit`, and Flathub's repo file are
   fetched during the single build-time network window in `config.sh` and
@@ -44,7 +44,7 @@ verbatim. Key differences:
 - Single profile, x86_64 only.
 
 `.github/workflows/build-installer-iso.yml` mirrors `build-live-iso.yml`'s
-shape (bare `ubuntu-24.04` runner, Fedora 44 container via `docker run
+shape (bare `ubuntu-24.04` runner, Fedora container via `docker run
 --privileged`, same artifact-upload conventions) but runs `kiwi-ng
 system build` instead of `livemedia-creator`.
 
@@ -54,7 +54,7 @@ Line-by-line comparison of the live kickstart against the installer's
 config turned up two real bugs:
 
 - **RPMFusion missing** from `config.sh`'s `dnf5 download` repo list,
-  but `ffmpeg`/`gstreamer1-libav` need it.
+  but `ffmpeg`/`gstreamer1-plugin-libav` need it.
 - **Global `--exclude=` instead of per-repo.** The grub2/shim/dnf5
   family exclude was applied globally (`dnf5 download --exclude=...`),
   which would have dropped those packages from the offline repo entirely
@@ -115,7 +115,7 @@ before it could burn another CI round-trip.
 **`fedora:45` container instability.** `fedora:45` is
 `RELEASE_TYPE=development` (daily-drifting prerelease). `dnf5 install`
 was replacing glibc/coreutils/rpm mid-container, causing `/workspace`
-bind-mount failures. Fixed by pinning to `fedora:44`
+bind-mount failures. Fixed by pinning to `Fedora container`
 (`RELEASE_TYPE=stable`) in both `build-installer-iso.yml` and
 `build-live-iso.yml`.
 
@@ -175,7 +175,7 @@ Diffed our installer vs. our live ISO vs. official Microsoft
   (the installer's account has a real password, so the polkit challenge
   is satisfiable normally).
 
-## Installer ISO package sourcing: same 93% Fedora 44 ratio
+## Installer ISO package sourcing: same 93% Fedora ratio
 
 The installer's offline repo showed the same 60/982/16 AZL/Fedora/other
 split as the live ISO, for the same `cost=` vs `priority=` reason. Fixed
@@ -189,11 +189,11 @@ with the same claw-back mechanism - see `package-sourcing-clawback.md`.
 - `.github/workflows/release-installer-iso.yml` - same UTC-date tag
   pattern as the live release. Both release workflows targeting the same
   day upsert into the same GitHub Release automatically.
-- `scripts/podman-test-azl4-fedora44.sh` rewritten to parse the live
+- `scripts/podman-test-azl4-fedora.sh` rewritten to parse the live
   kickstart's repo/package config directly instead of a stale
   hand-maintained copy.
 
-## All persisted upstream repos, not just fedora44
+## All persisted upstream repos, not just Fedora
 
 The seven non-AZL, non-Fedora kickstart `repo` lines (`ms-prod`,
 `vscode`, `edge-canary`, `gh-cli`, `github-desktop`, `rpmfusion-free`,

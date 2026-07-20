@@ -20,8 +20,8 @@ the start.
 First pass paired AZL4 against Fedora rawhide (the easiest to reach
 for locally). Azure Linux 4.0's `glibc` is `2.42-10.azl4`, Fedora 43's
 is `2.42-4.fc43` - same upstream snapshot. Rawhide is already at
-`glibc-2.43.9000`, two releases of drift ahead. Switching to Fedora 44
-(one release ahead, stable GNOME 50) took this from "constant
+`glibc-2.43.9000`, two releases of drift ahead. Switching to Fedora
+(one release ahead, stable GNOME) took this from "constant
 conflicts" to "three specific, fixable conflicts." The right question
 is always "what release is the target distro closest to," not "what's
 newest."
@@ -50,5 +50,5 @@ newest."
 
 - `Nue-Houjuu/azurelinux-fedora-repo-installer` - adds Fedora repos to
   Azure Linux for XFCE/KDE. Unaffiliated, confirms the basic approach.
-- `ublue-os/bluefin-lts` - CentOS Stream 10 + GNOME 50 COPR, identical
+- `ublue-os/bluefin-lts` - CentOS Stream 10 + GNOME COPR, identical
   conflict category, same fix tools. See `alternative-architectures.md`.

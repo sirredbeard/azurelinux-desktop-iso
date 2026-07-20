@@ -11,8 +11,8 @@ name: Build Azure Linux Desktop installer ISO
 #
 # Architecture notes (mirrors build-live-iso.yml's own reasoning):
 #   - runs-on is a bare ubuntu-24.04 VM, build itself happens inside
-#     `docker run --privileged fedora:44`, matching the live ISO build.
-#   - Deliberately pinned to fedora:44 (the current stable release), NOT
+#     `docker run --privileged fedora:43`, matching the live ISO build.
+#   - Deliberately pinned to fedora:43 (the current stable release), NOT
 #     fedora:45. fedora:45 is still a "Prerelease"/branched image whose
 #     package metadata drifts daily - `dnf5 install -y` against it was
 #     observed swapping out glibc/coreutils/rpm/systemd-libs mid-
@@ -57,8 +57,8 @@ jobs:
       - name: Show disk space
         run: df -h /
 
-      - name: Pull Fedora 44 build image
-        run: docker pull fedora:44
+      - name: Pull Fedora 43 build image
+        run: docker pull fedora:43
 
       # kiwi's <archive name="assets.tar.gz"/> unpacks straight onto the
       # image root ("/") - the transform below lands our checked-out
@@ -80,7 +80,7 @@ jobs:
             --security-opt label=disable \
             -v "$GITHUB_WORKSPACE:/workspace" \
             --tmpfs /tmp:exec,size=8g \
-            fedora:44 \
+            fedora:43 \
             bash -exo pipefail -c '
               # Create the result dir on the bind-mounted /workspace
               # BEFORE the dnf5 install below, not after. Twice in a
@@ -132,7 +132,7 @@ jobs:
               # of the other packages above (KiwiCommandNotFound:
               # "mkfs.ext4" not found in the environment otherwise).
 
-              # Fedora 44 python3-kiwi build names its console-script
+              # Fedora 43 python3-kiwi build names its console-script
               # entry point kiwi-ng-3 (a python3-version-suffixed name,
               # confirmed via `rpm -ql python3-kiwi` - there is no plain
               # kiwi-ng on this release), unlike the plain kiwi-ng most
@@ -169,7 +169,7 @@ jobs:
             -v /dev:/dev \
             --security-opt label=disable \
             -v "$GITHUB_WORKSPACE:/workspace" \
-            fedora:44 \
+            fedora:43 \
             bash -exo pipefail -c '
               dnf5 install -y xorriso squashfs-tools e2fsprogs
               ISO=/workspace/installer-result/azurelinux-desktop-install.iso

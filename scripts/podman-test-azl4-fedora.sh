@@ -14,9 +14,9 @@
 # was last hand-edited.
 #
 # Usage (from repo root, needs podman):
-#   ./scripts/podman-test-azl4-fedora44.sh
+#   ./scripts/podman-test-azl4-fedora43.sh
 #
-# Runs inside a plain `podman run fedora:44` container - no --privileged,
+# Runs inside a plain `podman run fedora:43` container - no --privileged,
 # no /dev mount, no real ISO/ostree work happens here, just a dnf
 # --installroot resolve+install into a container-local directory, which
 # is enough to catch every dependency conflict this project has actually
@@ -40,6 +40,7 @@ fi
 # metacharacters (RPMFusion's mirrorlist= URLs have a literal & in the
 # query string), so this can't be left unquoted or passed through printf
 # %s as-is.
+# shellcheck disable=SC1003
 REPO_SETUP=$(awk '
 function quote(s) { gsub(/'"'"'/, "'"'"'\\'"'"''"'"'", s); return "'"'"'" s "'"'"'" }
 /^repo --name=/ {
@@ -77,7 +78,7 @@ mapfile -t PKGS < <(awk '/^%packages/{f=1;next}/^%end/{if(f){exit}}f' "$KS" \
 echo "=== ${#PKGS[@]} packages parsed from $KS ==="
 echo "=== ${#REPO_NAMES[@]} repos parsed: ${REPO_NAMES[*]} ==="
 
-WORKDIR="${AZL_PODMAN_WORKDIR:-$HOME/azl-work/podman-test-azl4-fedora44}"
+WORKDIR="${AZL_PODMAN_WORKDIR:-$HOME/azl-work/podman-test-azl4-fedora43}"
 mkdir -p "$WORKDIR"
 printf '%s\n' "${PKGS[@]}" > "$WORKDIR/pkglist.txt"
 
@@ -104,12 +105,12 @@ done
 
 podman run --rm \
     -v "$WORKDIR:/work:Z" \
-    registry.fedoraproject.org/fedora:44 bash -exo pipefail -c '
+    registry.fedoraproject.org/fedora:43 bash -exo pipefail -c '
         mkdir -p /mnt/azl/etc/yum.repos.d
         cp /work/azl-test.repo /mnt/azl/etc/yum.repos.d/azl-test.repo
         dnf5 install -y \
             --setopt=reposdir=/mnt/azl/etc/yum.repos.d \
-            --installroot=/mnt/azl --releasever=44 \
+            --installroot=/mnt/azl --releasever=43 \
             --setopt=install_weak_deps=True \
             $(cat /work/pkglist.txt) 2>&1 | tail -80
         echo "=== RESULT ==="
@@ -118,8 +119,8 @@ podman run --rm \
         chroot /mnt/azl rpm -qa --qf "%{name}-%{version}-%{release}.%{arch}\n" 2>/dev/null | sort > /work/pkglist_result.txt
         TOTAL=$(wc -l < /work/pkglist_result.txt)
         AZL=$(grep -c "\.azl4" /work/pkglist_result.txt || true)
-        FC=$(grep -c "\.fc44" /work/pkglist_result.txt || true)
-        echo "azl4=$AZL fc44=$FC total=$TOTAL"
+        FC=$(grep -c "\.fc43" /work/pkglist_result.txt || true)
+        echo "azl4=$AZL fc43=$FC total=$TOTAL"
     '
 
 echo "Full resolved package list: $WORKDIR/pkglist_result.txt"

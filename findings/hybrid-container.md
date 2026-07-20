@@ -11,7 +11,7 @@ build.
 
 Not a containerized desktop. Ships a tiny proof-of-priority package set:
 `filesystem`, `bash`, `azurelinux-release` (from `azl-base`, cost=1)
-plus `glib2`, `gtk4` (from `fedora44`, cost=50).
+plus `glib2`, `gtk4` (from `Fedora`, cost=50).
 
 ## Precedent
 

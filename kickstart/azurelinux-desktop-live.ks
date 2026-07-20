@@ -19,10 +19,10 @@
 # glibc-2.42-4.fc43, systemd-258.4 vs systemd-258 - same upstream versions,
 # different build tags). It ships no desktop packages at all: it's a server
 # and cloud-native distro. This kickstart installs the real Azure Linux 4.0
-# base, then layers GNOME 50 in from Fedora 44 stable, which is only one
+# base, then layers GNOME 49 in from Fedora 43 stable, which is only one
 # Fedora release ahead of AZL4's own lineage. That one-release gap is the
 # whole trick: Fedora rawhide (45) needs glibc symbols AZL4 doesn't have yet,
-# Fedora 44 mostly doesn't.
+# Fedora 43 mostly doesn't.
 #
 # Repo priority policy (dnf5 supports `priority=` natively, no plugin needed):
 #   - azl-base / azl-microsoft: priority=1 (win whenever they can satisfy a
@@ -98,13 +98,13 @@ shutdown
 # all), hand the whole dnf5/libdnf5 family to Fedora too rather than
 # splitting it - same "don't split a coupled family across repos"
 # reasoning as the grub2/shim/fuse3 fix above.
-repo --name=azl-base --baseurl=https://packages.microsoft.com/azurelinux/4.0/beta/base/x86_64 --cost=1 --excludepkgs=hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-tools,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas,dnf5,dnf5daemon-server,dnf5daemon-server-polkit,libdnf5,libdnf5-cli,libdnf5-plugin-actions,libdnf5-plugin-appstream,libdnf5-plugin-expired-pgp-keys,libdnf5-plugin-local
-repo --name=azl-microsoft --baseurl=https://packages.microsoft.com/azurelinux/4.0/beta/microsoft/x86_64 --cost=1 --excludepkgs=hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-tools,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas
+repo --name=azl-base --baseurl=https://packages.microsoft.com/azurelinux/4.0/beta/base/x86_64 --cost=1 --excludepkgs=hunspell-en,gsettings-desktop-schemas,dnf5,dnf5daemon-server,dnf5daemon-server-polkit,libdnf5,libdnf5-cli,libdnf5-plugin-actions,libdnf5-plugin-appstream,libdnf5-plugin-expired-pgp-keys,libdnf5-plugin-local
+repo --name=azl-microsoft --baseurl=https://packages.microsoft.com/azurelinux/4.0/beta/microsoft/x86_64 --cost=1 --excludepkgs=hunspell-en,gsettings-desktop-schemas
 # Claw-back excludepkgs: forces these specific base/system packages back
 # onto Azure Linux's own build instead of Fedora's, on top of the cost=
 # tie-break above - cost= only decides between mirrors offering the exact
 # same NEVRA, it has no opinion on which repo "owns" a package name when
-# the two repos offer genuinely different versions, and Fedora 44 was
+# the two repos offer genuinely different versions, and Fedora 43 was
 # winning nearly everything, not just the GNOME/GUI stack it's actually
 # needed for. Same list, same reasoning, and the same verified-with-a-
 # real-dnf5-resolve process as kiwi/config.sh's FEDORA_EXCLUDES - see the
@@ -112,8 +112,8 @@ repo --name=azl-microsoft --baseurl=https://packages.microsoft.com/azurelinux/4.
 # fwupd/fwupd-efi, and fuse3-libs are deliberately NOT on this list despite
 # looking like obvious candidates (real ABI/version floors, or a silent-
 # drop risk with no AZL fallback at all).
-repo --name=fedora44 --baseurl=https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Everything/x86_64/os/ --cost=50 --excludepkgs=audit,audit-libs,audit-rules,bash,bluez,bluez-libs,bluez-obexd,bzip2,ca-certificates,chrony,coreutils,coreutils-common,cryptsetup,cryptsetup-libs,dbus,dbus-broker,dbus-common,dbus-daemon,dbus-libs,dbus-tools,device-mapper,device-mapper-event,device-mapper-event-libs,device-mapper-libs,device-mapper-persistent-data,diffutils,dosfstools,e2fsprogs,e2fsprogs-libs,efibootmgr,findutils,firewalld,firewalld-filesystem,gawk,gawk-all-langpacks,grep,gzip,hwdata,iproute,iputils,kbd,kbd-legacy,kbd-misc,kernel,kernel-core,kernel-modules,kernel-modules-core,kernel-modules-extra,kmod,less,less-color,libaio,libblkid,libcom_err,libfdisk,liblastlog2,libmount,libnm,libsmartcols,libuuid,linux-firmware,linux-firmware-whence,lvm2,lvm2-libs,microcode_ctl,ModemManager-glib,mtools,ncurses,ncurses-base,ncurses-libs,NetworkManager,NetworkManager-libnm,NetworkManager-team,NetworkManager-tui,NetworkManager-wifi,openssh,openssh-clients,openssh-server,patch,polkit,polkit-libs,procps-ng,python3-audit,python3-firewall,python3-libmount,sed,selinux-policy,selinux-policy-targeted,setup,shadow-utils,sudo,sudo-python-plugin,systemd,systemd-boot-unsigned,systemd-container,systemd-libs,systemd-networkd,systemd-pam,systemd-resolved,systemd-shared,systemd-sysusers,systemd-udev,tar,util-linux,util-linux-core,vim-data,vim-minimal,xz,xz-libs,amd-gpu-firmware,amd-ucode-firmware,atheros-firmware,brcmfmac-firmware,cirrus-audio-firmware,intel-audio-firmware,intel-gpu-firmware,mt7xxx-firmware,nvidia-gpu-firmware,nxpwireless-firmware,qcom-wwan-firmware,realtek-firmware,tiwilink-firmware
-repo --name=fedora44-updates --baseurl=https://dl.fedoraproject.org/pub/fedora/linux/updates/44/Everything/x86_64/ --cost=50 --excludepkgs=audit,audit-libs,audit-rules,bash,bluez,bluez-libs,bluez-obexd,bzip2,ca-certificates,chrony,coreutils,coreutils-common,cryptsetup,cryptsetup-libs,dbus,dbus-broker,dbus-common,dbus-daemon,dbus-libs,dbus-tools,device-mapper,device-mapper-event,device-mapper-event-libs,device-mapper-libs,device-mapper-persistent-data,diffutils,dosfstools,e2fsprogs,e2fsprogs-libs,efibootmgr,findutils,firewalld,firewalld-filesystem,gawk,gawk-all-langpacks,grep,gzip,hwdata,iproute,iputils,kbd,kbd-legacy,kbd-misc,kernel,kernel-core,kernel-modules,kernel-modules-core,kernel-modules-extra,kmod,less,less-color,libaio,libblkid,libcom_err,libfdisk,liblastlog2,libmount,libnm,libsmartcols,libuuid,linux-firmware,linux-firmware-whence,lvm2,lvm2-libs,microcode_ctl,ModemManager-glib,mtools,ncurses,ncurses-base,ncurses-libs,NetworkManager,NetworkManager-libnm,NetworkManager-team,NetworkManager-tui,NetworkManager-wifi,openssh,openssh-clients,openssh-server,patch,polkit,polkit-libs,procps-ng,python3-audit,python3-firewall,python3-libmount,sed,selinux-policy,selinux-policy-targeted,setup,shadow-utils,sudo,sudo-python-plugin,systemd,systemd-boot-unsigned,systemd-container,systemd-libs,systemd-networkd,systemd-pam,systemd-resolved,systemd-shared,systemd-sysusers,systemd-udev,tar,util-linux,util-linux-core,vim-data,vim-minimal,xz,xz-libs,amd-gpu-firmware,amd-ucode-firmware,atheros-firmware,brcmfmac-firmware,cirrus-audio-firmware,intel-audio-firmware,intel-gpu-firmware,mt7xxx-firmware,nvidia-gpu-firmware,nxpwireless-firmware,qcom-wwan-firmware,realtek-firmware,tiwilink-firmware
+repo --name=fedora43 --baseurl=https://dl.fedoraproject.org/pub/fedora/linux/releases/43/Everything/x86_64/os/ --cost=50 --excludepkgs=audit,audit-libs,audit-rules,bash,bluez,bluez-libs,bluez-obexd,bzip2,ca-certificates,chrony,coreutils,coreutils-common,cryptsetup,cryptsetup-libs,dbus,dbus-broker,dbus-common,dbus-daemon,dbus-libs,dbus-tools,device-mapper,device-mapper-event,device-mapper-event-libs,device-mapper-libs,device-mapper-persistent-data,diffutils,dosfstools,e2fsprogs,e2fsprogs-libs,efibootmgr,findutils,firewalld,firewalld-filesystem,gawk,gawk-all-langpacks,grep,gzip,hwdata,iproute,iputils,kbd,kbd-legacy,kbd-misc,kernel,kernel-core,kernel-modules,kernel-modules-core,kernel-modules-extra,kmod,less,less-color,libaio,libblkid,libcom_err,libfdisk,liblastlog2,libmount,libnm,libsmartcols,libuuid,linux-firmware,linux-firmware-whence,lvm2,lvm2-libs,microcode_ctl,ModemManager-glib,mtools,ncurses,ncurses-base,ncurses-libs,NetworkManager,NetworkManager-libnm,NetworkManager-team,NetworkManager-tui,NetworkManager-wifi,openssh,openssh-clients,openssh-server,patch,polkit,polkit-libs,procps-ng,python3-audit,python3-firewall,python3-libmount,sed,selinux-policy,selinux-policy-targeted,setup,shadow-utils,sudo,sudo-python-plugin,systemd,systemd-boot-unsigned,systemd-container,systemd-libs,systemd-networkd,systemd-pam,systemd-resolved,systemd-shared,systemd-sysusers,systemd-udev,tar,util-linux,util-linux-core,vim-data,vim-minimal,xz,xz-libs,amd-gpu-firmware,amd-ucode-firmware,atheros-firmware,brcmfmac-firmware,cirrus-audio-firmware,intel-audio-firmware,intel-gpu-firmware,mt7xxx-firmware,nvidia-gpu-firmware,nxpwireless-firmware,qcom-wwan-firmware,realtek-firmware,tiwilink-firmware
+repo --name=fedora43-updates --baseurl=https://dl.fedoraproject.org/pub/fedora/linux/updates/43/Everything/x86_64/ --cost=50 --excludepkgs=audit,audit-libs,audit-rules,bash,bluez,bluez-libs,bluez-obexd,bzip2,ca-certificates,chrony,coreutils,coreutils-common,cryptsetup,cryptsetup-libs,dbus,dbus-broker,dbus-common,dbus-daemon,dbus-libs,dbus-tools,device-mapper,device-mapper-event,device-mapper-event-libs,device-mapper-libs,device-mapper-persistent-data,diffutils,dosfstools,e2fsprogs,e2fsprogs-libs,efibootmgr,findutils,firewalld,firewalld-filesystem,gawk,gawk-all-langpacks,grep,gzip,hwdata,iproute,iputils,kbd,kbd-legacy,kbd-misc,kernel,kernel-core,kernel-modules,kernel-modules-core,kernel-modules-extra,kmod,less,less-color,libaio,libblkid,libcom_err,libfdisk,liblastlog2,libmount,libnm,libsmartcols,libuuid,linux-firmware,linux-firmware-whence,lvm2,lvm2-libs,microcode_ctl,ModemManager-glib,mtools,ncurses,ncurses-base,ncurses-libs,NetworkManager,NetworkManager-libnm,NetworkManager-team,NetworkManager-tui,NetworkManager-wifi,openssh,openssh-clients,openssh-server,patch,polkit,polkit-libs,procps-ng,python3-audit,python3-firewall,python3-libmount,sed,selinux-policy,selinux-policy-targeted,setup,shadow-utils,sudo,sudo-python-plugin,systemd,systemd-boot-unsigned,systemd-container,systemd-libs,systemd-networkd,systemd-pam,systemd-resolved,systemd-shared,systemd-sysusers,systemd-udev,tar,util-linux,util-linux-core,vim-data,vim-minimal,xz,xz-libs,amd-gpu-firmware,amd-ucode-firmware,atheros-firmware,brcmfmac-firmware,cirrus-audio-firmware,intel-audio-firmware,intel-gpu-firmware,mt7xxx-firmware,nvidia-gpu-firmware,nxpwireless-firmware,qcom-wwan-firmware,realtek-firmware,tiwilink-firmware
 # aznfs (Azure Files NFS mount helper) rides along in ms-prod's dependency
 # graph even though nothing we actually want (powershell) needs it for real -
 # it's a pure Azure-cloud tool with a %pre scriptlet that hard-fails without
@@ -134,11 +134,11 @@ repo --name=github-desktop --baseurl=https://mirror.mwt.me/shiftkey-desktop/rpm 
 # RPMFusion, for real ffmpeg/h264/aac decoding - Fedora's own gstreamer
 # packages are the "-free" builds only (patent-clean, no mp3/h264/aac).
 # Cost 50 puts it in the same "fill the gaps" tier as Fedora proper.
-repo --name=rpmfusion-free --mirrorlist=https://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-44&arch=x86_64 --cost=50
-repo --name=rpmfusion-nonfree --mirrorlist=https://mirrors.rpmfusion.org/mirrorlist?repo=nonfree-fedora-44&arch=x86_64 --cost=50
+repo --name=rpmfusion-free --mirrorlist=https://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-43&arch=x86_64 --cost=50
+repo --name=rpmfusion-nonfree --mirrorlist=https://mirrors.rpmfusion.org/mirrorlist?repo=nonfree-fedora-43&arch=x86_64 --cost=50
 
 # --nocore: the AZL repo has no comps groups so @core is meaningless here.
-# GNOME 50 group comes from fedora44
+# GNOME 49 group comes from fedora43
 %packages --nocore --excludedocs
 # Azure Linux base
 azurelinux-release
@@ -216,7 +216,7 @@ glibc-all-langpacks
 # mksquashfs step.
 grub2-efi-x64-cdboot
 
-# GNOME 50 desktop (Fedora 44) - core session only, not the whole
+# GNOME 49 desktop (Fedora 43) - core session only, not the whole
 # workstation-product-environment comps group. See investigation.md for why.
 gnome-shell
 gnome-session
@@ -251,9 +251,9 @@ wireplumber
 flatpak
 gnome-software
 
-# The rest of "a normal GNOME 50 desktop" - default viewers, a handful of
+# The rest of "a normal GNOME 49 desktop" - default viewers, a handful of
 # core apps, nothing that pulls in an office suite or a docs/tour/parental-
-# controls stack we don't want. Loupe/Papers are the GNOME 50-era renames
+# controls stack we don't want. Loupe/Papers are the GNOME 49-era renames
 # of eog/evince - use those, not the old names.
 loupe
 papers
@@ -295,7 +295,7 @@ evolution-ews
 -mdatp
 
 # fedora-logos rides in as a weak/transitive dep of gdm/gnome-shell (see
-# findings/final-package-list.txt: fedora-logos-42.0.1-3.fc44.noarch was
+# findings/final-package-list.txt: fedora-logos-42.0.1-3.fc43.noarch was
 # never asked for directly) and puts Fedora's own blue "f" logo and
 # background on the GDM login screen of what is otherwise an Azure Linux
 # build. generic-logos is Fedora's own trademark-free drop-in replacement
@@ -303,8 +303,6 @@ evolution-ews
 # ships) - built for exactly this respin scenario - so swap it in and
 # exclude fedora-logos outright rather than leave two competing logo
 # packages both trying to own the same paths.
-generic-logos
--fedora-logos
 
 # Fonts, broad coverage beyond just Adwaita's own faces
 adwaita-sans-fonts
@@ -315,13 +313,13 @@ google-noto-fonts-common
 
 # Real codec support - Fedora's own gstreamer packages are the "-free"
 # builds only (no patented mp3/h264/aac decode). RPMFusion's ffmpeg and
-# gstreamer1-libav fill that in; gstreamer1-plugin-openh264 is Cisco's own
+# gstreamer1-plugin-libav fill that in; gstreamer1-plugin-openh264 is Cisco's own
 # royalty-free build and ships from Fedora directly, no RPMFusion needed.
 gstreamer1-plugins-good
 gstreamer1-plugins-bad-free
 gstreamer1-plugins-ugly-free
 gstreamer1-plugin-openh264
-gstreamer1-libav
+gstreamer1-plugin-libav
 ffmpeg
 
 # Deliberately NOT installed, on request: libreoffice, gnome-maps,
@@ -362,7 +360,7 @@ fwupd
 microcode_ctl
 
 # what's genuinely missing is the userspace power/laptop stack, pulled
-# from Fedora 44:
+# from Fedora 43:
 upower
 power-profiles-daemon
 thermald
@@ -397,7 +395,7 @@ plymouth-plugin-label
 # github-0:1.0.24-1.x86_64", and %post has no `set -e` so the failure was
 # swallowed and the build carried on with no /usr/bin/github, no desktop
 # icon, no error surfaced anywhere except this post-install log). Listing
-# it here as a real package (Fedora 44 ships it) means the RPM install can
+# it here as a real package (Fedora 43 ships it) means the RPM install can
 # actually succeed instead of failing quietly.
 libayatana-appindicator-gtk3
 
@@ -515,21 +513,21 @@ set -x
 
 # Persist the same repo priority policy post-install, so `dnf install
 # <whatever>` next year still prefers Azure Linux first and only falls back
-# to Fedora 44 when AZL has no package. Known soname landmines get an
+# to Fedora 43 when AZL has no package. Known soname landmines get an
 # exclude here as they're discovered - add to this list, don't fight it.
 FEDORA_EXCLUDES="audit,audit-libs,audit-rules,bash,bluez,bluez-libs,bluez-obexd,bzip2,ca-certificates,chrony,coreutils,coreutils-common,cryptsetup,cryptsetup-libs,dbus,dbus-broker,dbus-common,dbus-daemon,dbus-libs,dbus-tools,device-mapper,device-mapper-event,device-mapper-event-libs,device-mapper-libs,device-mapper-persistent-data,diffutils,dosfstools,e2fsprogs,e2fsprogs-libs,efibootmgr,findutils,firewalld,firewalld-filesystem,gawk,gawk-all-langpacks,grep,gzip,hwdata,iproute,iputils,kbd,kbd-legacy,kbd-misc,kernel,kernel-core,kernel-modules,kernel-modules-core,kernel-modules-extra,kmod,less,less-color,libaio,libblkid,libcom_err,libfdisk,liblastlog2,libmount,libnm,libsmartcols,libuuid,linux-firmware,linux-firmware-whence,lvm2,lvm2-libs,microcode_ctl,ModemManager-glib,mtools,ncurses,ncurses-base,ncurses-libs,NetworkManager,NetworkManager-libnm,NetworkManager-team,NetworkManager-tui,NetworkManager-wifi,openssh,openssh-clients,openssh-server,patch,polkit,polkit-libs,procps-ng,python3-audit,python3-firewall,python3-libmount,sed,selinux-policy,selinux-policy-targeted,setup,shadow-utils,sudo,sudo-python-plugin,systemd,systemd-boot-unsigned,systemd-container,systemd-libs,systemd-networkd,systemd-pam,systemd-resolved,systemd-shared,systemd-sysusers,systemd-udev,tar,util-linux,util-linux-core,vim-data,vim-minimal,xz,xz-libs,amd-gpu-firmware,amd-ucode-firmware,atheros-firmware,brcmfmac-firmware,cirrus-audio-firmware,intel-audio-firmware,intel-gpu-firmware,mt7xxx-firmware,nvidia-gpu-firmware,nxpwireless-firmware,qcom-wwan-firmware,realtek-firmware,tiwilink-firmware"
 cat > /etc/yum.repos.d/azl-desktop-fedora.repo << EOF
-[fedora44]
-name=Fedora 44 (GNOME 50 desktop stack)
-baseurl=https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Everything/x86_64/os/
+[fedora43]
+name=Fedora 43 (GNOME 49 desktop stack)
+baseurl=https://dl.fedoraproject.org/pub/fedora/linux/releases/43/Everything/x86_64/os/
 enabled=1
 gpgcheck=0
 priority=50
 excludepkgs=$FEDORA_EXCLUDES
 
-[fedora44-updates]
-name=Fedora 44 Updates
-baseurl=https://dl.fedoraproject.org/pub/fedora/linux/updates/44/Everything/x86_64/
+[fedora43-updates]
+name=Fedora 43 Updates
+baseurl=https://dl.fedoraproject.org/pub/fedora/linux/updates/43/Everything/x86_64/
 enabled=1
 gpgcheck=0
 priority=50
@@ -540,10 +538,10 @@ EOF
 # gh-cli, github-desktop, rpmfusion-free/nonfree) only exist for Anaconda's
 # own install-time transaction - none of them get written to the installed
 # system's /etc/yum.repos.d automatically, unlike the AZL repos (shipped by
-# the azurelinux-repos package itself) and fedora44/fedora44-updates (just
+# the azurelinux-repos package itself) and fedora43/fedora43-updates (just
 # persisted above). Left as-is, that meant PowerShell, .NET, VS Code
 # Insiders, Edge Canary, GitHub CLI, GitHub Desktop, and the RPMFusion
-# ffmpeg/gstreamer1-libav codec packages would all be frozen at whatever
+# ffmpeg/gstreamer1-plugin-libav codec packages would all be frozen at whatever
 # version was current on the day this ISO was built, with no `dnf upgrade`
 # path afterward. Persist their real upstream repos too so they keep
 # receiving updates same as everything else.
@@ -586,15 +584,15 @@ EOF
 
 cat > /etc/yum.repos.d/azl-desktop-rpmfusion.repo << 'EOF'
 [rpmfusion-free]
-name=RPM Fusion for Fedora 44 - Free
-baseurl=https://download1.rpmfusion.org/free/fedora/releases/44/Everything/x86_64/os/
+name=RPM Fusion for Fedora 43 - Free
+baseurl=https://download1.rpmfusion.org/free/fedora/releases/43/Everything/x86_64/os/
 enabled=1
 gpgcheck=0
 priority=50
 
 [rpmfusion-nonfree]
-name=RPM Fusion for Fedora 44 - Nonfree
-baseurl=https://download1.rpmfusion.org/nonfree/fedora/releases/44/Everything/x86_64/os/
+name=RPM Fusion for Fedora 43 - Nonfree
+baseurl=https://download1.rpmfusion.org/nonfree/fedora/releases/43/Everything/x86_64/os/
 enabled=1
 gpgcheck=0
 priority=50

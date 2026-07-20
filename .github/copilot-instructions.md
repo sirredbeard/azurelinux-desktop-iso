@@ -76,7 +76,7 @@ README for the full backstory.
 ## Build architecture (as of this writing)
 
 - **Live ISO** (`build-live-iso.yml`, `build-iso` job) uses `lorax` +
-  `livemedia-creator --make-iso` inside a `fedora:44` container, driven by
+  `livemedia-creator --make-iso` inside a `Fedora container` container, driven by
   `kickstart/azurelinux-desktop-live.ks`. **Installer ISO**
   (`build-installer-iso.yml`) uses KIWI-NG (`python3-kiwi`) instead - the
   same tool Microsoft's own real Azure Linux installer ISO is built with

@@ -7,7 +7,7 @@ something that boots, and what happens after "boot it in a VM" succeeds.
 ## Validated package list (pre-GH-Actions)
 
 Ran the complete `kickstart/azurelinux-desktop.ks` package list (base
-system, GNOME 50, all apps, hardware/power stack, .NET 11 preview, Intel
+system, GNOME, all apps, hardware/power stack, .NET 11 preview, Intel
 VAAPI media drivers) against all repos. Log:
 `findings/logs/podman-resolve-full-package-list-1019pkgs-success.log`.
 
@@ -36,7 +36,7 @@ AZL4 already ships: `linux-firmware` (full per-vendor split),
 `bluez`/`bluez-libs`, `fwupd`/`fwupd-efi`, `microcode_ctl`,
 `NetworkManager-wifi`, `wireless-regdb`, and a full kernel family.
 
-Pulled from Fedora 44 (pure userspace daemons, no kernel-ABI coupling):
+Pulled from Fedora (pure userspace daemons, no kernel-ABI coupling):
 `upower`, `power-profiles-daemon`, `thermald`, `switcheroo-control`,
 `brightnessctl`, `gnome-power-manager`. Intel VAAPI: `libva`,
 `libva-intel-media-driver`, `intel-mediasdk`.

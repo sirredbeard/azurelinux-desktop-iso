@@ -6,7 +6,7 @@
 # (microsoft/azurelinux, same commit pinned in reference/azl-installer/
 # README.md) - same offline-repo-download-then-validate structure, same
 # @@PACKAGES@@ kickstart templating, same welcome-banner/autologin setup.
-# What's different here: INSTALL_PKGS is the full GNOME 50 + Microsoft/
+# What's different here: INSTALL_PKGS is the full GNOME 49 + Microsoft/
 # GitHub desktop stack (not just a minimal base system), pulled from
 # several repos instead of one, and this project's own GitHub Copilot/
 # microsoft-edit/Flathub side-loads and branding assets get staged into
@@ -19,7 +19,7 @@ echo "=== Architecture: x86_64 (this project only ever builds x86_64) ==="
 
 #----------------------------------------------------------------------
 # Single source of truth for target-install packages.
-# Same GNOME 50 desktop + Microsoft/GitHub tooling stack as
+# Same GNOME 49 desktop + Microsoft/GitHub tooling stack as
 # kickstart/azurelinux-desktop-live.ks's %packages - see that file for
 # the full per-package reasoning, not repeated here. Live-only packages
 # (livesys-scripts, anaconda-live, dracut-config-generic,
@@ -139,7 +139,7 @@ INSTALL_PKGS=(
     gstreamer1-plugins-bad-free
     gstreamer1-plugins-ugly-free
     gstreamer1-plugin-openh264
-    gstreamer1-libav
+    gstreamer1-plugin-libav
     ffmpeg
 
     microsoft-edge-canary
@@ -248,26 +248,26 @@ mkdir -p "$OFFLINE_REPO"
 # reasoning for ms-prod's aznfs/mdatp exclude - scoped to that repo only,
 # matching the live ISO's `repo --name=ms-prod --excludepkgs=aznfs,mdatp`
 # line exactly instead of a global exclude.
-AZL_BASE_EXCLUDES="hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-tools,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas,dnf5,dnf5daemon-server,dnf5daemon-server-polkit,libdnf5,libdnf5-cli,libdnf5-plugin-actions,libdnf5-plugin-appstream,libdnf5-plugin-expired-pgp-keys,libdnf5-plugin-local"
-AZL_MICROSOFT_EXCLUDES="hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-tools,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas"
+AZL_BASE_EXCLUDES="hunspell-en,gsettings-desktop-schemas,dnf5,dnf5daemon-server,dnf5daemon-server-polkit,libdnf5,libdnf5-cli,libdnf5-plugin-actions,libdnf5-plugin-appstream,libdnf5-plugin-expired-pgp-keys,libdnf5-plugin-local"
+AZL_MICROSOFT_EXCLUDES="hunspell-en,gsettings-desktop-schemas"
 MS_PROD_EXCLUDES="aznfs,mdatp"
 
 # Claw-back list: forces these specific base/system packages to resolve
 # to Azure Linux's own build instead of Fedora's, on top of the cost=
 # tie-break above. cost= only decides between mirrors offering the exact
 # same NEVRA - it has no opinion on which repo "owns" a package name when
-# the two repos offer genuinely different versions, and Fedora 44 is
+# the two repos offer genuinely different versions, and Fedora 43 is
 # currently ahead of AZL4's frozen beta base for almost every package
 # they both ship, so left alone, cost= let Fedora win nearly everything,
 # not just the GNOME/GUI stack it's actually needed for. This list is
-# scoped to fedora44/fedora44-updates only (excludepkgs on THOSE repos,
+# scoped to fedora43/fedora43-updates only (excludepkgs on THOSE repos,
 # not a blanket dnf5 --exclude=), the same mechanism as the AZL-side
 # excludes above, just pointed the other direction: it makes AZL's copy
 # the only candidate for these names while leaving Fedora free to win
 # everything else, GNOME/GTK/glibc included.
 #
 # Every package on this list was verified with a real `dnf5 download
-# --resolve --alldeps` reproduction (scripts/podman-test-azl4-fedora44.sh)
+# --resolve --alldeps` reproduction (scripts/podman-test-azl4-fedora43.sh)
 # before landing here - some real, non-negotiable ABI/version floors
 # forced exclusions from this list even though they looked like obvious
 # candidates at first:
@@ -315,7 +315,7 @@ FEDORA_EXCLUDES="audit,audit-libs,audit-rules,bash,bluez,bluez-libs,bluez-obexd,
 # this points straight at a real RPMFusion mirror's release tree instead
 # of the mirrorlist CGI. Missing this entirely was the first real gap
 # found in a deep-dive comparison against the live ISO: ffmpeg and
-# gstreamer1-libav are both in INSTALL_PKGS but neither Fedora nor Azure
+# gstreamer1-plugin-libav are both in INSTALL_PKGS but neither Fedora nor Azure
 # Linux's own repos carry them, so without this the offline-repo
 # download would have silently dropped them and the dry-run validation
 # below would have failed the whole build on missing packages.
@@ -323,7 +323,7 @@ FEDORA_EXCLUDES="audit,audit-libs,audit-rules,bash,bluez,bluez-libs,bluez-obexd,
 # multilib_policy=best alone did not stop `dnf5 download --alldeps` from
 # still pulling in i686 siblings of multilib-capable packages (alldeps
 # appears to walk every arch's dependency chain regardless of that
-# setopt) - e.g. libpeas1-gtk-1.36.0-13.fc44.i686 next to the .x86_64
+# setopt) - e.g. libpeas1-gtk-1.36.0-13.fc43.i686 next to the .x86_64
 # build totem actually needs, which then conflict with each other
 # ("has inferior architecture" / "conflicts with libpeas-gtk < 2.0").
 # --arch=x86_64,noarch is dnf5 download's own hard architecture filter
@@ -365,15 +365,15 @@ dnf5 download \
     --arch=noarch \
     --repofrompath=azl-base,https://packages.microsoft.com/azurelinux/4.0/beta/base/x86_64 \
     --repofrompath=azl-microsoft,https://packages.microsoft.com/azurelinux/4.0/beta/microsoft/x86_64 \
-    --repofrompath=fedora44,https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Everything/x86_64/os/ \
-    --repofrompath=fedora44-updates,https://dl.fedoraproject.org/pub/fedora/linux/updates/44/Everything/x86_64/ \
+    --repofrompath=fedora43,https://dl.fedoraproject.org/pub/fedora/linux/releases/43/Everything/x86_64/os/ \
+    --repofrompath=fedora43-updates,https://dl.fedoraproject.org/pub/fedora/linux/updates/43/Everything/x86_64/ \
     --repofrompath=ms-prod,https://packages.microsoft.com/rhel/9/prod/ \
     --repofrompath=vscode,https://packages.microsoft.com/yumrepos/vscode \
     --repofrompath=edge-canary,https://packages.microsoft.com/yumrepos/edge-canary \
     --repofrompath=gh-cli,https://cli.github.com/packages/rpm \
     --repofrompath=github-desktop,https://mirror.mwt.me/shiftkey-desktop/rpm \
-    --repofrompath=rpmfusion-free,https://download1.rpmfusion.org/free/fedora/releases/44/Everything/x86_64/os/ \
-    --repofrompath=rpmfusion-nonfree,https://download1.rpmfusion.org/nonfree/fedora/releases/44/Everything/x86_64/os/ \
+    --repofrompath=rpmfusion-free,https://download1.rpmfusion.org/free/fedora/releases/43/Everything/x86_64/os/ \
+    --repofrompath=rpmfusion-nonfree,https://download1.rpmfusion.org/nonfree/fedora/releases/43/Everything/x86_64/os/ \
     --setopt=azl-base.cost=1 \
     --setopt=azl-microsoft.cost=1 \
     --setopt=ms-prod.cost=1 \
@@ -381,16 +381,16 @@ dnf5 download \
     --setopt=edge-canary.cost=1 \
     --setopt=gh-cli.cost=1 \
     --setopt=github-desktop.cost=1 \
-    --setopt=fedora44.cost=50 \
-    --setopt=fedora44-updates.cost=50 \
+    --setopt=fedora43.cost=50 \
+    --setopt=fedora43-updates.cost=50 \
     --setopt=rpmfusion-free.cost=50 \
     --setopt=rpmfusion-nonfree.cost=50 \
     --setopt=azl-base.excludepkgs="$AZL_BASE_EXCLUDES" \
     --setopt=azl-microsoft.excludepkgs="$AZL_MICROSOFT_EXCLUDES" \
     --setopt=ms-prod.excludepkgs="$MS_PROD_EXCLUDES" \
-    --setopt=fedora44.excludepkgs="$FEDORA_EXCLUDES" \
-    --setopt=fedora44-updates.excludepkgs="$FEDORA_EXCLUDES" \
-    --repo=azl-base --repo=azl-microsoft --repo=fedora44 --repo=fedora44-updates \
+    --setopt=fedora43.excludepkgs="$FEDORA_EXCLUDES" \
+    --setopt=fedora43-updates.excludepkgs="$FEDORA_EXCLUDES" \
+    --repo=azl-base --repo=azl-microsoft --repo=fedora43 --repo=fedora43-updates \
     --repo=ms-prod --repo=vscode --repo=edge-canary --repo=gh-cli --repo=github-desktop \
     --repo=rpmfusion-free --repo=rpmfusion-nonfree \
     --resolve \
@@ -401,7 +401,7 @@ dnf5 download \
     echo "WARNING: dnf5 download had errors - some packages may be missing"
 }
 
-RPM_COUNT=$(ls "$OFFLINE_REPO"/*.rpm 2>/dev/null | wc -l)
+RPM_COUNT=$(find "$OFFLINE_REPO" -maxdepth 1 -type f -name '*.rpm' | wc -l)
 echo "=== Downloaded $RPM_COUNT RPMs ==="
 
 createrepo_c "$OFFLINE_REPO"
@@ -560,7 +560,7 @@ AUTOEOF
 # azl-desktop-install.ks naming).
 #----------------------------------------------------------------------
 generate_packages_section() {
-    echo "# Packages - Azure Linux Desktop (GNOME 50 + Microsoft/GitHub tooling)"
+    echo "# Packages - Azure Linux Desktop (GNOME 49 + Microsoft/GitHub tooling)"
     echo "# --nocore: AZL repo has no comps groups, so @core would fail"
     echo "%packages --nocore --excludedocs"
     for pkg in "${INSTALL_PKGS[@]}"; do
@@ -576,7 +576,7 @@ generate_packages_section() {
     # the live ISO's %packages does it. fedora-logos is excluded so
     # generic-logos (added to INSTALL_PKGS above) is the only logo
     # package left standing, matching the live ISO's GDM branding fix.
-    for pkg in gnome-tour gnome-user-docs yelp yelp-libs malcontent-control mdatp fedora-logos; do
+    for pkg in gnome-tour gnome-user-docs yelp yelp-libs malcontent-control mdatp; do
         echo "-$pkg"
     done
     echo "%end"

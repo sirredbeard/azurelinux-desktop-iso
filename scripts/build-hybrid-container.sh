@@ -19,7 +19,7 @@
 # hybrid resolution without building a full ISO or disk image.
 #
 # Reuses the exact repo --name=... parsing approach from
-# scripts/podman-test-azl4-fedora44.sh (see that script's comments for
+# scripts/podman-test-azl4-fedora43.sh (see that script's comments for
 # why: always test/ship what the kickstart actually says, never a
 # hand-maintained second copy of it).
 #
@@ -40,7 +40,7 @@ if [ ! -f "$KS" ]; then
     exit 1
 fi
 
-# Same repo-parsing awk as podman-test-azl4-fedora44.sh - see that
+# Same repo-parsing awk as podman-test-azl4-fedora43.sh - see that
 # script for a line-by-line explanation of why each field is handled
 # the way it is (mirrorlist vs baseurl, the quote() escaping, etc).
 # shellcheck disable=SC1003
@@ -73,7 +73,7 @@ echo "=== ${#REPO_NAMES[@]} repos parsed: ${REPO_NAMES[*]} ==="
 
 # The proof-of-priority package set: azurelinux-release plus a couple
 # of base packages from azl-base (cost=1, wins ties), and a handful of
-# small Fedora44 GNOME-stack libraries that only exist in fedora44
+# small Fedora44 GNOME-stack libraries that only exist in fedora43
 # (cost=50) - enough to force real cross-repo dependency resolution
 # without pulling in the whole desktop (no X server, no compositor, no
 # systemd - none of that runs meaningfully in a plain OCI container
@@ -131,17 +131,17 @@ echo "=== Resolving hybrid package set into $ROOTFS ==="
 podman run --rm \
     -v "$WORKDIR:/work:Z" \
     -v "$ROOTFS:/mnt/azl:Z" \
-    registry.fedoraproject.org/fedora:44 bash -exo pipefail -c '
+    registry.fedoraproject.org/fedora:43 bash -exo pipefail -c '
         # /mnt/azl/etc/yum.repos.d/azl-hybrid.repo already exists here -
         # it is the same bind-mounted $ROOTFS the host wrote it into
         # above, nothing to copy in.
         dnf5 install -y \
             --setopt=reposdir=/mnt/azl/etc/yum.repos.d \
-            --installroot=/mnt/azl --releasever=44 \
+            --installroot=/mnt/azl --releasever=43 \
             --setopt=install_weak_deps=False \
             $(cat /work/pkglist.txt) 2>&1 | tail -60
         # Confirm the priority split held: azl-base (cost=1) should win
-        # for azurelinux-release, fedora44 (cost=50) for gtk4/glib2.
+        # for azurelinux-release, fedora43 (cost=50) for gtk4/glib2.
         # Query with the host rpm --root=, not chroot - the installroot
         # only has rpm librpm shared objects, not necessarily the rpm
         # CLI binary itself (nothing in the package list pulls it in).

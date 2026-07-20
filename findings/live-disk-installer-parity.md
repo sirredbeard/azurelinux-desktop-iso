@@ -42,6 +42,53 @@ The gaps were not broad missing-content failures. They were mostly
 configuration timing and lifecycle failures: settings present in the live
 boot path but never persisted into the disk image.
 
+## Flatpak SELinux compatibility across image formats
+
+The installer failure exposed a package-boundary problem that is broader than
+the installer. Azure Linux supplies the SELinux base and targeted policy,
+while the desktop layer currently obtains Flatpak from Fedora.
+
+Fedora's `flatpak-1.18.0-1.fc44` has an exact conditional dependency on
+`flatpak-selinux-1.18.0-1.fc44` whenever `selinux-policy-targeted` is
+installed. Its policy module is format 24. Azure Linux 4's policy tooling
+accepts module formats 4 through 23, so the Fedora policy package cannot
+be used safely with the Azure Linux policy base:
+
+```text
+libsepol.policydb_read: policydb module version 24 does not match my
+version range 4-23
+```
+
+This is not limited to Anaconda. Direct inspection of the mounted live ISO
+found the same Fedora `flatpak`, `flatpak-session-helper`, and
+`flatpak-selinux` packages beside Azure Linux
+`selinux-policy-43.4-4.azl4` and `selinux-policy-targeted-43.4-4.azl4`.
+That makes the live image subject to the same incompatible package boundary,
+even though its boot path has not yet exposed it as an installer transaction
+failure. The installer runtime correctly contains the Azure policy packages
+and Fedora Flatpak packages in its offline repository; it fails when
+Anaconda attempts the target transaction.
+
+Fedora 43's published Flatpak family was evaluated as a no-custom-RPM
+alternative. Its `flatpak-selinux-1.16.1-1.fc43` module is format 22 and
+matches Azure Linux's SELinux policy format. A narrow solver test also
+resolved that Flatpak family with Azure's FUSE 3 packages.
+
+The full rendered-installer solver rejected the combination. Fedora's
+GNOME Software, XDG Desktop Portal, GVFS, GNOME Connections, and GRUB tools
+all require the FUSE 4 ABI, while Fedora 43 Flatpak requires FUSE 3. Both
+ABIs use mutually exclusive versions of the `fuse3-libs` RPM. GNOME Software
+also requires the Fedora `flatpak-libs` package. The Fedora 43 fallback
+therefore cannot coexist with the current Fedora desktop stack and was
+reverted before release builds could consume it.
+
+Azure Linux has an upstream `flatpak.spec`, but the public Azure Linux 4.0
+repositories do not publish its RPMs. With custom RPMs ruled out, a safe
+Flatpak-enabled image requires a published Azure-native Flatpak stack or a
+supported upstream alignment of the Azure SELinux and FUSE bases. Until then,
+the existing Fedora Flatpak stack remains an unresolved cross-image
+compatibility issue and no release should claim it is fixed.
+
 ## Plymouth
 
 **Observed problem:** the qcow2 showed the generic splash or text path even

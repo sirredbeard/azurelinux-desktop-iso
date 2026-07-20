@@ -115,11 +115,11 @@ set -x
 # Persist the same runtime repo priority policy the live ISO ships (see
 # kickstart/azurelinux-desktop-live.ks) - this machine is a real,
 # persistent install, not a throwaway live session, so `dnf install
-# <whatever>` next year needs the same "AZL first, Fedora 44 fills the
+# <whatever>` next year needs the same "AZL first, Fedora 43 fills the
 # gap" setup that was used to build it, not just the file:///opt/
 # azl-offline-repo/ path that only existed for this one install.
 # azurelinux-repos (in %packages above) already wrote the real AZL repo
-# files - this only adds Fedora 44 alongside them. Build the Fedora
+# files - this only adds Fedora 43 alongside them. Build the Fedora
 # exclusion list from the installed Azure-owned RPMs, so no Fedora update
 # can replace part of the Azure Linux base after installation.
 FEDORA_EXCLUDES=$(rpm -qa --qf '%{NAME}\t%{VENDOR}\n' \
@@ -129,17 +129,17 @@ FEDORA_EXCLUDES=$(rpm -qa --qf '%{NAME}\t%{VENDOR}\n' \
     exit 1
 }
 cat > /etc/yum.repos.d/azl-desktop-fedora.repo << EOF
-[fedora44]
-name=Fedora 44 (GNOME 50 desktop stack)
-baseurl=https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Everything/x86_64/os/
+[fedora43]
+name=Fedora 43 (GNOME 49 desktop stack)
+baseurl=https://dl.fedoraproject.org/pub/fedora/linux/releases/43/Everything/x86_64/os/
 enabled=1
 gpgcheck=0
 priority=50
 excludepkgs=$FEDORA_EXCLUDES
 
-[fedora44-updates]
-name=Fedora 44 Updates
-baseurl=https://dl.fedoraproject.org/pub/fedora/linux/updates/44/Everything/x86_64/
+[fedora43-updates]
+name=Fedora 43 Updates
+baseurl=https://dl.fedoraproject.org/pub/fedora/linux/updates/43/Everything/x86_64/
 enabled=1
 gpgcheck=0
 priority=50
@@ -150,10 +150,10 @@ EOF
 # points at a directory that came from the boot media, not the installed
 # system) - kiwi/config.sh built it by merging every real upstream repo
 # (AZL, Fedora, ms-prod, vscode, edge-canary, gh-cli, github-desktop,
-# rpmfusion-free/nonfree) into one offline blob. Persisting fedora44 above
+# rpmfusion-free/nonfree) into one offline blob. Persisting fedora43 above
 # was already done; without also persisting the rest, PowerShell, .NET,
 # VS Code Insiders, Edge Canary, GitHub CLI, GitHub Desktop, and the
-# RPMFusion ffmpeg/gstreamer1-libav codec packages would be frozen at
+# RPMFusion ffmpeg/gstreamer1-plugin-libav codec packages would be frozen at
 # whatever version was current on the day this ISO was built, with no
 # `dnf upgrade` path afterward. Persist their real upstream repos too.
 cat > /etc/yum.repos.d/azl-desktop-microsoft-github.repo << 'EOF'
@@ -195,15 +195,15 @@ EOF
 
 cat > /etc/yum.repos.d/azl-desktop-rpmfusion.repo << 'EOF'
 [rpmfusion-free]
-name=RPM Fusion for Fedora 44 - Free
-baseurl=https://download1.rpmfusion.org/free/fedora/releases/44/Everything/x86_64/os/
+name=RPM Fusion for Fedora 43 - Free
+baseurl=https://download1.rpmfusion.org/free/fedora/releases/43/Everything/x86_64/os/
 enabled=1
 gpgcheck=0
 priority=50
 
 [rpmfusion-nonfree]
-name=RPM Fusion for Fedora 44 - Nonfree
-baseurl=https://download1.rpmfusion.org/nonfree/fedora/releases/44/Everything/x86_64/os/
+name=RPM Fusion for Fedora 43 - Nonfree
+baseurl=https://download1.rpmfusion.org/nonfree/fedora/releases/43/Everything/x86_64/os/
 enabled=1
 gpgcheck=0
 priority=50

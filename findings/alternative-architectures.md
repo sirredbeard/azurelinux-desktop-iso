@@ -22,7 +22,7 @@ rpm-ostree's layering still calls the same libdnf dependency resolver.
 OSTree changes storage/deployment (atomic, rollback-capable), not
 conflict resolution.
 
-The proof: `ublue-os/bluefin-lts` (CentOS Stream 10 + GNOME 50 COPR)
+The proof: `ublue-os/bluefin-lts` (CentOS Stream 10 + GNOME COPR)
 hits the exact same category of conflicts - `libjxl` ABI mismatch,
 `glib2` version floor, `fontconfig` symbol requirement,
 `selinux-policy` varlink rules - and fixes them with excludes, version

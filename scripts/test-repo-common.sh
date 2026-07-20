@@ -70,7 +70,7 @@ azl_repo_matches_family() {
             [[ "$repoid" == azl-* ]]
             ;;
         fedora)
-            [[ "$repoid" == fedora44 || "$repoid" == fedora44-updates ]]
+            [[ "$repoid" == fedora43 || "$repoid" == fedora43-updates ]]
             ;;
         *)
             return 1
@@ -99,8 +99,8 @@ azl_required_repo_names() {
     cat <<'EOF2'
 azl-base
 azl-microsoft
-fedora44
-fedora44-updates
+fedora43
+fedora43-updates
 EOF2
 }
 
@@ -114,7 +114,7 @@ EOF2
 azl_live_kickstart_packages() {
     local ks="$1"
     # Same %packages...%end extraction as the older podman-test-azl4-
-    # fedora44.sh: strip comments/blank lines, "@group" lines (--nocore
+    # fedora43.sh: strip comments/blank lines, "@group" lines (--nocore
     # means no comps groups exist to expand here anyway), and leading-
     # "-" exclusion lines (those remove a package, they are not one to
     # install).
@@ -167,7 +167,7 @@ azl_combined_install_packages() {
 # repo" here that can silently drift out of sync. A package excluded
 # from an azl-* repo is expected to resolve from fedora (that is the
 # whole point of excluding it there); a package excluded from a
-# fedora44* repo is expected to resolve from azl. Repos outside the
+# fedora43* repo is expected to resolve from azl. Repos outside the
 # azl/fedora hybrid split (ms-prod, vscode, edge-canary, rpmfusion-*,
 # etc.) are skipped - their excludepkgs entries (e.g. ms-prod's
 # aznfs/mdatp) are outright removals, not a family assertion. Emits
@@ -185,7 +185,7 @@ azl_derive_repo_assertions() {
         }
         if (excl == "") { next }
         if (name ~ /^azl-/) { family = "fedora" }
-        else if (name ~ /^fedora44/) { family = "azl" }
+        else if (name ~ /^fedora43/) { family = "azl" }
         else { next }
         n2 = split(excl, pkgs, ",");
         for (j = 1; j <= n2; j++) { print pkgs[j], family }

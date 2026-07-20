@@ -84,8 +84,8 @@ jobs:
       - name: Show disk space
         run: df -h /
 
-      - name: Pull Fedora 44 build image
-        run: docker pull fedora:44
+      - name: Pull Fedora 43 build image
+        run: docker pull fedora:43
 
       - name: Render test kickstart variant
         run: ./scripts/render-test-kickstart.sh kickstart/azurelinux-desktop-live.ks kickstart/azurelinux-desktop-live-test.ks
@@ -99,7 +99,7 @@ jobs:
             --security-opt label=disable \
             -v "$GITHUB_WORKSPACE:/workspace" \
             --tmpfs /tmp:exec,size=8g \
-            fedora:44 \
+            fedora:43 \
             bash -exo pipefail -c '
               mount --make-rprivate /
 

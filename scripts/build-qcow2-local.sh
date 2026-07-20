@@ -29,14 +29,14 @@ with open(sys.argv[1]) as workflow:
         raise SystemExit("Disk-image kickstart generation step not found")
 PY
 
-sudo podman pull fedora:44
+sudo podman pull fedora:43
 sudo podman run --rm \
     --privileged \
     -v /dev:/dev \
     --security-opt label=disable \
     -v "$REPO_ROOT:/workspace" \
     --tmpfs /tmp:exec,size=8g \
-    fedora:44 \
+    fedora:43 \
     bash -exo pipefail -c '
         mount --make-rprivate /
         dnf5 install -y \

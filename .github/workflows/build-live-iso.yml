@@ -4,7 +4,7 @@ name: Build Azure Linux Desktop live ISO/Images
 # that just produces a downloadable artifact, not a release pipeline yet.
 # See findings/live-iso-and-bare-metal.md for the local build history this
 # is based on (lorax + livemedia-creator --no-virt, confirmed working
-# locally, boots to a real GNOME 50 desktop in QEMU).
+# locally, boots to a real GNOME 49 desktop in QEMU).
 #
 # Architecture notes (see findings/github-actions-research.md for the full
 # research write-up this is based on):
@@ -13,10 +13,10 @@ name: Build Azure Linux Desktop live ISO/Images
 #     exists, and `container:` doesn't reliably give the same privileged
 #     access as a plain `docker run --privileged` step does.
 #   - The actual build happens inside `docker run --privileged -v /dev:/dev
-#     fedora:44 ...` - matches the exact package set already proven to work
+#     fedora:43 ...` - matches the exact package set already proven to work
 #     on this project's local Fedora 45 dev host (lorax, lorax-lmc-novirt,
 #     anaconda-core/-live, xorriso, squashfs-tools).
-#   - Pinned to fedora:44 (current stable), not the rolling fedora:45
+#   - Pinned to fedora:43 (current stable), not the rolling fedora:45
 #     "Prerelease" image - see the matching note in build-installer-
 #     iso.yml and findings/gh-actions-installer-iso-build.md for the
 #     glibc/coreutils/rpm mid-transaction churn this avoids.
@@ -63,7 +63,7 @@ name: Build Azure Linux Desktop live ISO/Images
 #     Fedora's own tooling as it can. The "You have not created a bootable
 #     partition." failure that used to block this turned out to be a real
 #     xfs-module/blivet-mountability bug (bug #5) plus a real anaconda-
-#     core packaging bug in Fedora 44's efibootmgr() skip path (bug #7) -
+#     core packaging bug in Fedora 43's efibootmgr() skip path (bug #7) -
 #     not a platform-detection mismatch to work around. This build makes
 #     a genuine UEFI/GPT disk image (real EFI System Partition, real
 #     anaconda-written bootloader) matching how GitHub-hosted runners and
@@ -147,8 +147,8 @@ jobs:
       - name: Show disk space
         run: df -h /
 
-      - name: Pull Fedora 44 build image
-        run: docker pull fedora:44
+      - name: Pull Fedora 43 build image
+        run: docker pull fedora:43
 
       - name: Build live ISO (lorax + livemedia-creator --no-virt)
         run: |
@@ -158,7 +158,7 @@ jobs:
             --security-opt label=disable \
             -v "$GITHUB_WORKSPACE:/workspace" \
             --tmpfs /tmp:exec,size=8g \
-            fedora:44 \
+            fedora:43 \
             bash -exo pipefail -c '
               dnf5 install -y \
                 lorax lorax-templates-generic lorax-lmc-novirt \
@@ -181,7 +181,7 @@ jobs:
               # --releasever below verbatim. --releasever is still needed
               # (it drives dnf/repo variable substitution during the
               # build), it just should not show up in the boot menu text -
-              # this is Azure Linux 4.0 with a Fedora 44 package set, not
+              # this is Azure Linux 4.0 with a Fedora 43 package set, not
               # "Azure Linux Desktop 44", and the menu should read plainly
               # as "Azure Linux Desktop".
               for f in /usr/share/lorax/templates.d/99-generic/live/config_files/x86/grub2-bios.cfg \
@@ -216,7 +216,7 @@ jobs:
             -v /dev:/dev \
             --security-opt label=disable \
             -v "$GITHUB_WORKSPACE:/workspace" \
-            fedora:44 \
+            fedora:43 \
             bash -exo pipefail -c '
               dnf5 install -y xorriso squashfs-tools
               ISO=$(ls /workspace/live-result/*.iso | head -1)
@@ -326,8 +326,8 @@ jobs:
       - name: Show disk space
         run: df -h /
 
-      - name: Pull Fedora 44 build image
-        run: docker pull fedora:44
+      - name: Pull Fedora 43 build image
+        run: docker pull fedora:43
 
       # No --boot-drive= is set. That was tried first as --boot-drive=vda,
       # assuming the virtio device name a real virt-install boot would use
@@ -539,7 +539,7 @@ jobs:
             --security-opt label=disable \
             -v "$GITHUB_WORKSPACE:/workspace" \
             --tmpfs /tmp:exec,size=8g \
-            fedora:44 \
+            fedora:43 \
             bash -exo pipefail -c '
               # Break shared mount propagation on the whole container tree
               # before anaconda gets anywhere near it. --make-disk (unlike
@@ -564,7 +564,7 @@ jobs:
                 qemu-img systemd-udev libguestfs-tools-c \
                 shim-x64 grub2-efi-x64-cdboot policycoreutils
 
-              # Fedora 44'"'"'s packaged anaconda-core still carries a real
+              # Fedora 43'"'"'s packaged anaconda-core still carries a real
               # bug upstream already fixed - see
               # scripts/patch-anaconda-efi-skip-bug.py for the full
               # writeup and findings/gh-actions-live-iso-build.md for the

@@ -16,7 +16,7 @@ Local `livemedia-creator` builds were memory-constrained (~58 min vs.
 ## The workflow itself
 
 `.github/workflows/build-live-iso.yml` - manual (`workflow_dispatch`),
-runs in a Fedora 44 container (`registry.fedoraproject.org/fedora:44`)
+runs in a Fedora container (`registry.fedoraproject.org/Fedora container`)
 on an `ubuntu-latest` runner. Installs lorax/anaconda/livemedia-creator,
 checks out the repo to `/workspace`, runs `livemedia-creator --no-virt`
 against `kickstart/azurelinux-desktop-live.ks`, and uploads the ISO and
@@ -36,7 +36,7 @@ whole EFI template section, then `xorrisofs` blows up later. Fix: add
 ## Run 3: first real success - bugs found from QEMU testing
 
 31m3s, first working ISO. Downloaded and boot-tested in QEMU (see
-`scripts/qemu-test-live-iso.sh`). Boots to a real GNOME 50 desktop.
+`scripts/qemu-test-live-iso.sh`). Boots to a real GNOME desktop.
 Bugs found from directly viewing the QEMU GTK window plus mounting the
 ISO's squashfs:
 
@@ -169,7 +169,7 @@ this class of problem, not repo-level `--excludepkgs=`.
 
 - Moved stray `.log` files into `findings/logs/` with descriptive
   names, removed two confirmed-duplicate logs.
-- Deleted stale `scripts/podman-test-azl4-fedora44-full-desktop.sh`.
+- Deleted stale `scripts/podman-test-azl4-fedora-full-desktop.sh`.
 - `findings/final-package-list.txt` replaced with a real `rpm -qa` list
   extracted from the built ISO via `xorriso`/`unsquashfs`, uploaded as
   its own CI artifact (`azurelinux-desktop-live-package-list`).
@@ -225,19 +225,19 @@ day. `softprops/action-gh-release@v2`'s `overwrite_files` defaults to
 `true`, so same-day rebuilds replace assets in place. Made this explicit
 in the workflow with a comment.
 
-## Package sourcing ratio: "mostly Fedora 44" and the claw-back
+## Package sourcing ratio: "mostly Fedora" and the claw-back
 
 After switching from `priority=` to `cost=` (to fix a
 `grub2-efi-x64-cdboot` conflict - see
 `gh-actions-installer-iso-build.md`), the real installed package
 database showed: **1,177 packages total, 60 from Azure Linux, 1,100
-from Fedora 44, 17 Microsoft/GitHub** - including kernel, glibc,
+from Fedora, 17 Microsoft/GitHub** - including kernel, glibc,
 systemd, and NetworkManager. `cost=` only tie-breaks identical NEVRAs,
 it doesn't shadow repos like `priority=` does.
 
 This was fixed with a per-package `excludepkgs` on the Fedora repos -
 see `package-sourcing-clawback.md` for the full investigation. Result:
-**171 Azure Linux, 986 Fedora 44, 16 other, 1,173 total.**
+**171 Azure Linux, 986 Fedora, 16 other, 1,173 total.**
 
 ## Disk-image build: the full bug chain (bugs 1-7)
 
@@ -344,7 +344,7 @@ installed `anaconda-core-0:44.30-2.fc44` has older, pre-fix code where
 and in Python, `"" != 0` is always `True` (cross-type comparison), so
 it raises every time this skip path runs. The upstream `main` branch
 already has the fix (pops `capture` kwarg first, returns `"" if
-capture_expected else 0`); it just hasn't been backported to Fedora 44's
+capture_expected else 0`); it just hasn't been backported to Fedora's
 package yet.
 
 Fix: `scripts/patch-anaconda-efi-skip-bug.py`, a small idempotent
@@ -424,7 +424,7 @@ Fix: convert from the already-resized qcow2, not the raw image.
 - `build-disk-image` now only produces the base qcow2.
 - `build-vhdx`, `build-vdi`, `build-vmdk` are independent jobs, each
   `needs: build-disk-image`, downloading its qcow2 artifact and running
-  one `qemu-img convert`. None touch the fedora:44 container or anaconda.
+  one `qemu-img convert`. None touch the Fedora container container or anaconda.
 - Each format has its own `workflow_dispatch` toggle.
 - All three convert from the resized qcow2, never from raw - same
   lesson as the VHDX bug above.
@@ -473,7 +473,7 @@ touching CI:
    data it can't recognize as zero. `--in-place` avoids needing a
    second temporary copy of a 64G image; it rewrites already-allocated
    clusters to zero in place instead. Needs `libguestfs-tools-c`
-   (installed inside the same privileged fedora:44 container that
+   (installed inside the same privileged Fedora container container that
    already builds the qcow2). GitHub-hosted runners have no KVM (see
    this repo's own runner notes elsewhere in this file), so libguestfs
    falls back to its own TCG appliance for this - slower, but
