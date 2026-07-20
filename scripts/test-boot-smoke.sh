@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Headless boot smoke test for a built qcow2 or ISO. This is the CI-safe
+# Headless boot smoke test for a built qcow2. This is the CI-safe
 # counterpart to the local/manual QEMU scripts: UEFI only, serial log only.
 # Uses KVM automatically when /dev/kvm is present and usable (real hardware,
 # self-hosted/nested-virt runners), falling back to TCG software emulation
@@ -10,7 +10,7 @@
 
 set -euo pipefail
 
-IMAGE="${1:?usage: $0 /path/to/azurelinux-desktop-live.qcow2|.iso [timeout_seconds] [marker_regex]}"
+IMAGE="${1:?usage: $0 /path/to/azurelinux-desktop-live.qcow2 [timeout_seconds] [marker_regex]}"
 TIMEOUT_SECONDS="${2:-1200}"
 MARKER_REGEX="${3:-login:|Started GNOME Display Manager|Reached target .*Graphical Interface|Started Getty on tty1|Started Serial Getty on ttyS0}"
 WORKDIR="${AZL_QEMU_WORKDIR:-$HOME/azl-work/boot-smoke}"
@@ -25,6 +25,14 @@ PIDFILE="$WORKDIR/${SAFE_NAME}.pid"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/qemu-uefi-common.sh
 source "$SCRIPT_DIR/qemu-uefi-common.sh"
+
+case "$IMAGE" in
+    *.qcow2) ;;
+    *)
+        echo "ERROR: this serial-marker smoke test only supports qcow2 images; use qemu-test-live-iso.sh for a graphical ISO test." >&2
+        exit 2
+        ;;
+esac
 
 azl_find_ovmf
 mkdir -p "$WORKDIR"
@@ -63,16 +71,9 @@ QEMU_ARGS=(
     -no-reboot
 )
 
-if azl_qemu_is_iso "$IMAGE"; then
-    QEMU_ARGS+=(
-        -cdrom "$IMAGE"
-        -boot d
-    )
-else
-    QEMU_ARGS+=(
-        -drive "file=$IMAGE,format=qcow2,if=virtio,snapshot=on"
-    )
-fi
+QEMU_ARGS+=(
+    -drive "file=$IMAGE,format=qcow2,if=virtio,snapshot=on"
+)
 
 : > "$LOG"
 qemu-system-x86_64 "${QEMU_ARGS[@]}" &
