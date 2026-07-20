@@ -28,6 +28,20 @@ contains the disk-only EFI and one-shot grow-root setup plus the persisted
 GNOME favorites override. Those are expected lifecycle differences, not
 configuration drift.
 
+The live ISO, disk image, and installer all request `grub2-tools-extra` and
+select its complete Fedora GRUB family. The Fedora update repository remains
+enabled for security fixes to that family; only the Azure copy is excluded to
+prevent a version-locked mix of GRUB siblings.
+
+Before publishing this policy, the project package canary installed the live
+kickstart's complete package set into a disposable Podman installroot. The
+transaction completed with 1,169 packages and selected the Fedora
+`grub2-tools-extra`, `grub2-common`, and `grub2-tools-minimal` family. The
+container reported non-fatal dracut xattr-copy warnings, a local filesystem
+limitation already covered in
+[local-build-environment-boundaries.md](local-build-environment-boundaries.md);
+the resulting package transaction and RPM inventory completed normally.
+
 The live ISO is not the same kind of system as the qcow2 or an installed
 system. It boots with `rd.live.image` and runs `livesys` setup services.
 The qcow2 and installer target are ordinary installed systems, so anything

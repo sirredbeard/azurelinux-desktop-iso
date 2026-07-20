@@ -247,8 +247,8 @@ mkdir -p "$OFFLINE_REPO"
 # reasoning for ms-prod's aznfs/mdatp exclude - scoped to that repo only,
 # matching the live ISO's `repo --name=ms-prod --excludepkgs=aznfs,mdatp`
 # line exactly instead of a global exclude.
-AZL_BASE_EXCLUDES="hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-efi-x64-cdboot,grub2-tools,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas,dnf5,dnf5daemon-server,dnf5daemon-server-polkit,libdnf5,libdnf5-cli,libdnf5-plugin-actions,libdnf5-plugin-appstream,libdnf5-plugin-expired-pgp-keys,libdnf5-plugin-local"
-AZL_MICROSOFT_EXCLUDES="hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-efi-x64-cdboot,grub2-tools,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas"
+AZL_BASE_EXCLUDES="hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-efi-x64-cdboot,grub2-tools,grub2-tools-extra,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas,dnf5,dnf5daemon-server,dnf5daemon-server-polkit,libdnf5,libdnf5-cli,libdnf5-plugin-actions,libdnf5-plugin-appstream,libdnf5-plugin-expired-pgp-keys,libdnf5-plugin-local"
+AZL_MICROSOFT_EXCLUDES="hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-efi-x64-cdboot,grub2-tools,grub2-tools-extra,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas"
 MS_PROD_EXCLUDES="aznfs,mdatp"
 
 # Claw-back list: forces these specific base/system packages to resolve

@@ -98,8 +98,8 @@ shutdown
 # all), hand the whole dnf5/libdnf5 family to Fedora too rather than
 # splitting it - same "don't split a coupled family across repos"
 # reasoning as the grub2/shim/fuse3 fix above.
-repo --name=azl-base --baseurl=https://packages.microsoft.com/azurelinux/4.0/beta/base/x86_64 --cost=1 --excludepkgs=hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-efi-x64-cdboot,grub2-tools,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas,dnf5,dnf5daemon-server,dnf5daemon-server-polkit,libdnf5,libdnf5-cli,libdnf5-plugin-actions,libdnf5-plugin-appstream,libdnf5-plugin-expired-pgp-keys,libdnf5-plugin-local
-repo --name=azl-microsoft --baseurl=https://packages.microsoft.com/azurelinux/4.0/beta/microsoft/x86_64 --cost=1 --excludepkgs=hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-efi-x64-cdboot,grub2-tools,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas
+repo --name=azl-base --baseurl=https://packages.microsoft.com/azurelinux/4.0/beta/base/x86_64 --cost=1 --excludepkgs=hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-efi-x64-cdboot,grub2-tools,grub2-tools-extra,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas,dnf5,dnf5daemon-server,dnf5daemon-server-polkit,libdnf5,libdnf5-cli,libdnf5-plugin-actions,libdnf5-plugin-appstream,libdnf5-plugin-expired-pgp-keys,libdnf5-plugin-local
+repo --name=azl-microsoft --baseurl=https://packages.microsoft.com/azurelinux/4.0/beta/microsoft/x86_64 --cost=1 --excludepkgs=hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-efi-x64-cdboot,grub2-tools,grub2-tools-extra,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas
 # Claw-back excludepkgs: forces these specific base/system packages back
 # onto Azure Linux's own build instead of Fedora's, on top of the cost=
 # tie-break above - cost= only decides between mirrors offering the exact
@@ -215,6 +215,7 @@ glibc-all-langpacks
 # how the first ISO build was hand-recovered without redoing the ~40-minute
 # mksquashfs step.
 grub2-efi-x64-cdboot
+grub2-tools-extra
 
 # GNOME 49 desktop (Fedora 43) - core session only, not the whole
 # workstation-product-environment comps group. See investigation.md for why.
@@ -609,6 +610,9 @@ EOF
 # plain version floor, no ABI risk, let Fedora's copy win.
 sed -i '/^\[azl-base\]/,/^\[/ s/^enabled=1/enabled=1\nexclude=hunspell-en grub2 grub2-pc grub2-pc-modules grub2-efi-x64 grub2-efi-x64-modules grub2-tools grub2-tools-minimal grub2-common shim shim-x64 gsettings-desktop-schemas dnf5 dnf5daemon-server dnf5daemon-server-polkit libdnf5 libdnf5-cli libdnf5-plugin-actions libdnf5-plugin-appstream libdnf5-plugin-expired-pgp-keys libdnf5-plugin-local/' /etc/yum.repos.d/azurelinux.repo 2>/dev/null || true
 sed -i '/^\[azl-microsoft\]/,/^\[/ s/^enabled=1/enabled=1\nexclude=hunspell-en grub2 grub2-pc grub2-pc-modules grub2-efi-x64 grub2-efi-x64-modules grub2-tools grub2-tools-minimal grub2-common shim shim-x64 gsettings-desktop-schemas/' /etc/yum.repos.d/azurelinux.repo 2>/dev/null || true
+# Keep the version-locked Fedora GRUB family together during later updates.
+sed -i '/^\[azl-base\]/,/^\[/ s/^exclude=/&grub2-tools-extra /' /etc/yum.repos.d/azurelinux.repo 2>/dev/null || true
+sed -i '/^\[azl-microsoft\]/,/^\[/ s/^exclude=/&grub2-tools-extra /' /etc/yum.repos.d/azurelinux.repo 2>/dev/null || true
 
 systemctl set-default graphical.target
 systemctl enable gdm.service

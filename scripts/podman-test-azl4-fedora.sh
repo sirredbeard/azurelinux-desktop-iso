@@ -103,7 +103,11 @@ for i in "${!REPO_NAMES[@]}"; do
     } >> "$REPO_FILE"
 done
 
-podman run --rm \
+# This host's rootless Podman cannot install its device-filter cgroup. The
+# privileged image builders use the same rootful cgroup workaround.
+sudo podman run --rm \
+    --cgroups=disabled \
+    --security-opt label=disable \
     -v "$WORKDIR:/work:Z" \
     registry.fedoraproject.org/fedora:43 bash -exo pipefail -c '
         mkdir -p /mnt/azl/etc/yum.repos.d
@@ -123,4 +127,5 @@ podman run --rm \
         echo "azl4=$AZL fc43=$FC total=$TOTAL"
     '
 
+sudo chown -R "$(id -u):$(id -g)" "$WORKDIR"
 echo "Full resolved package list: $WORKDIR/pkglist_result.txt"

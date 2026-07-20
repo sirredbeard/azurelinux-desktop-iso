@@ -129,6 +129,18 @@ The completeness dry-run now validates both `INSTALL_PKGS` and
 `EXTRA_REPO_PKGS`, so a missing Anaconda support RPM fails the image build
 instead of a real installation.
 
+The first attempt to add it exposed the other half of the same split: Azure's
+newer `grub2-tools-extra` was selected by the lower repository cost, but its
+exact-version `grub2-tools-minimal` sibling is intentionally excluded. The
+Azure copies of `grub2-tools-extra` are now excluded too, so the complete
+version-locked GRUB family comes from Fedora. The same exclusion is persisted
+for installed-system updates.
+
+A focused Podman transaction canary then resolved all 114 direct installer and
+Anaconda-support package requests with the configured repository policy. It
+selected the matching Fedora `grub2-tools-extra`, `grub2-common`, and
+`grub2-tools-minimal` packages without any resolver errors.
+
 **`libselinux`/`libseccomp` missing from bootstrap.** All 162 of 163
 bootstrap packages installed, then scriptlets failed with `error while
 loading shared libraries: libseccomp.so.2` / `libselinux.so.1` against
