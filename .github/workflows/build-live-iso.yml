@@ -442,6 +442,36 @@ jobs:
           if [ -x /usr/bin/pwsh ]; then
               usermod --shell /usr/bin/pwsh liveuser
           fi
+
+          # The privileged build container exposes the GitHub runner's
+          # block devices to Anaconda. Disable GRUB's OS probe before
+          # regenerating its config so the runner's Ubuntu installation
+          # cannot become boot-menu entries in this image.
+          cat >> /etc/default/grub << 'GRUBDEF'
+          GRUB_DISABLE_OS_PROBER=true
+          GRUB_DISTRIBUTOR="Azure Linux Desktop"
+          GRUBDEF
+          grub2-mkconfig -o /boot/grub2/grub.cfg
+
+          # BLS entries use PRETTY_NAME from Azure Linux's own os-release,
+          # which correctly remains Azure Linux. Apply desktop branding
+          # only to the menu title, both for the installed kernel and
+          # every kernel added later.
+          install -d /etc/kernel/install.d
+          cat > /etc/kernel/install.d/99-azl-desktop-title.install << 'TITLEHOOK'
+          #!/bin/sh
+          if [ "$1" = add ]; then
+              for entry in /boot/loader/entries/*-"$2".conf; do
+                  [ -f "$entry" ] || continue
+                  sed -i 's/^title .*/title Azure Linux Desktop/' "$entry"
+              done
+          fi
+          TITLEHOOK
+          chmod 0755 /etc/kernel/install.d/99-azl-desktop-title.install
+          for entry in /boot/loader/entries/*.conf; do
+              [ -f "$entry" ] || continue
+              sed -i 's/^title .*/title Azure Linux Desktop/' "$entry"
+          done
           %end
           KSPOST
 
