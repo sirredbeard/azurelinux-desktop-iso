@@ -1,0 +1,229 @@
+name: Build Azure Linux Desktop installer ISO
+
+# Manual-only for now (workflow_dispatch), same as build-live-iso.yml.
+# Built with KIWI-NG (python3-kiwi), the SAME tool Microsoft's own real
+# Azure Linux 4.0 installer ISO is built with (microsoft/azurelinux,
+# base/images/vm-iso-installer/vm-iso-installer.kiwi) - not mkksiso
+# injected into a downloaded binary ISO. See kiwi/azl-desktop-
+# installer.kiwi and kiwi/config.sh for the full "why" - both are direct
+# adaptations of Microsoft's own .kiwi/config.sh, same offline-repo-on-
+# the-ISO pattern, same @@PACKAGES@@ kickstart templating.
+#
+# Architecture notes (mirrors build-live-iso.yml's own reasoning):
+#   - runs-on is a bare ubuntu-24.04 VM, build itself happens inside
+#     `docker run --privileged fedora:44`, matching the live ISO build.
+#   - Deliberately pinned to fedora:44 (the current stable release), NOT
+#     fedora:45. fedora:45 is still a "Prerelease"/branched image whose
+#     package metadata drifts daily - `dnf5 install -y` against it was
+#     observed swapping out glibc/coreutils/rpm/systemd-libs mid-
+#     transaction (replacing them with newer rawhide builds to satisfy
+#     our requested packages), which corrupted the container's
+#     `-v "$GITHUB_WORKSPACE:/workspace"` bind mount and made the very
+#     next `mkdir /workspace/...` fail with "Permission denied". Fedora
+#     44 is a released, metadata-frozen target and installs the same
+#     package set with no base-system churn at all (verified locally
+#     with podman). See findings/gh-actions-installer-iso-build.md.
+#   - kiwi-ng needs real root + loop devices to assemble the squashfs/
+#     ISO, same reason the live build needs --privileged -v /dev:/dev.
+#   - assets.tar.gz is built fresh from this repo's own assets/ directory
+#     right before kiwi runs - kiwi's config.sh is chrooted with no view
+#     of the git checkout, so anything it stages has to arrive as a
+#     declared <archive> in the .kiwi file instead of a bind mount.
+
+on:
+  workflow_dispatch: {}
+  workflow_call: {}
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+          tool-cache: false
+
+      - name: Show disk space
+        run: df -h /
+
+      - name: Pull Fedora 44 build image
+        run: docker pull fedora:44
+
+      # kiwi's <archive name="assets.tar.gz"/> unpacks straight onto the
+      # image root ("/") - the transform below lands our checked-out
+      # assets/ under /opt/azl-desktop-assets, matching what
+      # kiwi/azl-install.ks.in's %post --nochroot block expects.
+      - name: Package project assets for KIWI
+        run: |
+          tar -C "$GITHUB_WORKSPACE" \
+            --transform 's,^assets,opt/azl-desktop-assets,' \
+            -czf "$GITHUB_WORKSPACE/kiwi/assets.tar.gz" \
+            assets
+          ls -lah "$GITHUB_WORKSPACE/kiwi/assets.tar.gz"
+
+      - name: Build installer ISO (KIWI-NG)
+        run: |
+          docker run --rm \
+            --privileged \
+            -v /dev:/dev \
+            --security-opt label=disable \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            --tmpfs /tmp:exec,size=8g \
+            fedora:44 \
+            bash -exo pipefail -c '
+              # Create the result dir on the bind-mounted /workspace
+              # BEFORE the dnf5 install below, not after. Twice in a
+              # row, `mkdir -p /workspace/installer-result` run right
+              # after that install (which replaces glibc/coreutils/
+              # rpm/systemd-libs mid-transaction to satisfy the newly-
+              # requested packages) failed with "Permission denied" on
+              # /workspace itself on the GitHub-hosted runner, even
+              # though the exact same docker/dnf5 invocation (same
+              # package list, same glibc/coreutils replace) could not
+              # be reproduced locally via podman - pointing at a
+              # runner/Docker-specific bind-mount quirk triggered by
+              # that package churn, not a bug in this repo. Touching
+              # the mount while calm, before the churn, plus a short
+              # retry loop as defense-in-depth, sidesteps it without
+              # depending on fully root-causing the runner behavior.
+              # See findings/gh-actions-installer-iso-build.md.
+              for i in 1 2 3 4 5; do
+                mkdir -p /workspace/installer-result && break
+                echo "mkdir /workspace/installer-result failed (attempt $i), retrying..."
+                sleep 5
+              done
+              test -d /workspace/installer-result
+
+              dnf5 install -y \
+                python3-kiwi \
+                dracut-live squashfs-tools xorriso dosfstools mtools \
+                grub2-tools grub2-tools-extra shim-x64 grub2-efi-x64-cdboot \
+                createrepo_c curl isomd5sum qemu-img e2fsprogs
+              # qemu-img: kiwi-ng shells out to it to build the FAT-
+              # formatted EFI boot image bundled onto this hybrid-UEFI
+              # ISO (KiwiCommandNotFound: "qemu-img" not found in the
+              # environment otherwise) - it just needs the qemu-img
+              # binary itself, not an actual QEMU VM/KVM.
+              # mtools: kiwi-ng EFI-fat-image builder runs qemu-img
+              # create, then mkdosfs (dosfstools), then mcopy (mtools)
+              # to populate that FAT image - confirmed by reading
+              # kiwi/bootloader/config/grub2.py,
+              # _create_embedded_fat_efi_image() upstream, added ahead
+              # of hitting the same "command not found" failure for
+              # mcopy that qemu-img just hit.
+              # e2fsprogs: after building the dracut live ISO rootfs
+              # image, kiwi-ng creates a plain ext4-formatted disk image
+              # via `qemu-img create` + `losetup` + `mkfs.ext4` (see
+              # the <type ... filesystem="ext4"> declaration in
+              # azl-desktop-installer.kiwi) - mkfs.ext4 itself, plus
+              # tune2fs/resize2fs/e2fsck it may also call, all come from
+              # e2fsprogs, which is not pulled in as a dependency of any
+              # of the other packages above (KiwiCommandNotFound:
+              # "mkfs.ext4" not found in the environment otherwise).
+
+              # Fedora 44 python3-kiwi build names its console-script
+              # entry point kiwi-ng-3 (a python3-version-suffixed name,
+              # confirmed via `rpm -ql python3-kiwi` - there is no plain
+              # kiwi-ng on this release), unlike the plain kiwi-ng most
+              # KIWI docs/examples assume. Resolve whichever one is
+              # actually on PATH instead of hardcoding either name, so
+              # this keeps working if a future Fedora release ships the
+              # unsuffixed name again.
+              KIWI_NG=kiwi-ng
+              command -v kiwi-ng >/dev/null 2>&1 || KIWI_NG=kiwi-ng-3
+
+              "$KIWI_NG" --debug system build \
+                --description /workspace/kiwi \
+                --target-dir /workspace/installer-result \
+                2>&1 | tee /workspace/kiwi-build.log
+
+              # KIWI names its ISO after the <image name=...> attribute
+              # plus a KIWI-generated version/arch suffix - normalize to
+              # our own fixed filename so downstream release/QEMU steps
+              # do not have to guess it.
+              ISO=$(ls /workspace/installer-result/*.iso | head -1)
+              mv -v "$ISO" /workspace/installer-result/azurelinux-desktop-install.iso
+            '
+
+      - name: Show result directory
+        if: always()
+        run: ls -lah "$GITHUB_WORKSPACE/installer-result" || true
+
+      - name: Extract real resolved package list from the built ISO
+        if: success()
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            --privileged \
+            -v /dev:/dev \
+            --security-opt label=disable \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            fedora:44 \
+            bash -exo pipefail -c '
+              dnf5 install -y xorriso squashfs-tools e2fsprogs
+              ISO=/workspace/installer-result/azurelinux-desktop-install.iso
+              mkdir -p /tmp/iso-extract
+
+              # The dracut-live layout nests one more level than the
+              # live ISO does: /LiveOS/squashfs.img on the ISO itself
+              # just wraps a second image, /LiveOS/rootfs.img, which is
+              # a plain ext4 filesystem holding the actual installed-
+              # system tree (including /root/azl-install.ks,
+              # the final rendered kickstart with @@PACKAGES@@ already
+              # substituted). unsquashfs cannot read that inner ext4
+              # image directly (it only unpacks the squashfs layer
+              # itself, which is why the previous version of this step
+              # got "0 inodes... 0 files" and then failed on `cp` for a
+              # path, root/azl-install.ks, that only exists one
+              # level deeper) - use debugfs (from e2fsprogs) to dump
+              # the one file we need straight out of that ext4 image
+              # without mounting a loop device.
+              xorriso -osirrox on -indev "$ISO" \
+                -extract /LiveOS/squashfs.img /tmp/iso-extract/squashfs.img
+              unsquashfs -d /tmp/iso-extract/squash-out \
+                /tmp/iso-extract/squashfs.img LiveOS/rootfs.img
+              debugfs -R "dump /root/azl-install.ks /workspace/installer-result/final-kickstart.ks" \
+                /tmp/iso-extract/squash-out/LiveOS/rootfs.img
+            '
+
+      - name: Upload build log (always, even on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: azurelinux-desktop-install-build-log
+          path: |
+            kiwi-build.log
+            installer-result/*.log
+            installer-result/*.changes
+            installer-result/*.packages
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: azurelinux-desktop-install-iso
+          path: installer-result/azurelinux-desktop-install.iso
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Upload final kickstart artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: azurelinux-desktop-install-kickstart
+          path: installer-result/final-kickstart.ks
+          retention-days: 7
+          if-no-files-found: warn

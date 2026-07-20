@@ -1,0 +1,57 @@
+name: Publish hybrid AZL+Fedora container
+
+# Manual-only (workflow_dispatch). Publishes a small OCI container image
+# to GHCR straight from this project's own repo/priority setup - the same
+# idea as Azure Linux's own upstream container-base image
+# (microsoft/azurelinux base/images/container-base/container-base.kiwi,
+# published as mcr.microsoft.com/azurelinux/base/core), except ours also
+# proves the Azure-Linux-base + Fedora44-GNOME-layer repo priority split
+# from kickstart/azurelinux-desktop-live.ks resolves correctly, which is
+# the thing this whole project actually depends on.
+#
+# This is NOT a container version of the full desktop - see
+# scripts/build-hybrid-container.sh's own comments for why (no systemd,
+# no display, none of that makes sense in a plain OCI container - Azure
+# Linux's own container-base is systemd=false for the same reason, per
+# base/images/images.toml upstream). It's a small, fast, always-fresh
+# proof that the hybrid resolution still works, publishable so anyone
+# can pull and inspect it without building a full ISO or disk image.
+#
+# Runs on a plain ubuntu-24.04 runner with rootless podman (already
+# preinstalled on GitHub-hosted runners) - no privileged container, no
+# anaconda, nothing this project's ISO/disk-image builds need.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build hybrid container
+        run: ./scripts/build-hybrid-container.sh "ghcr.io/${{ github.repository }}/hybrid:latest"
+
+      - name: Tag with the run's UTC date
+        run: |
+          # Same one-tag-per-day convention release-live-iso.yml uses for
+          # its release tags - a plain date is enough for a project that
+          # only rebuilds this a handful of times a week, and it lets
+          # anyone pull a specific day's resolution instead of always
+          # getting whatever :latest currently is.
+          date_tag="$(date -u +%Y.%m.%d)"
+          podman tag "ghcr.io/${{ github.repository }}/hybrid:latest" "ghcr.io/${{ github.repository }}/hybrid:$date_tag"
+          echo "date_tag=$date_tag" >> "$GITHUB_ENV"
+
+      - name: Push both tags
+        run: |
+          podman push "ghcr.io/${{ github.repository }}/hybrid:latest"
+          podman push "ghcr.io/${{ github.repository }}/hybrid:${{ env.date_tag }}"

@@ -1,0 +1,2156 @@
+DEBUG:anaconda.modules.common:The configuration is loaded from: ['/run/anaconda/anaconda.conf']
+INFO:program:Running... udevadm trigger --action=change --subsystem-match=block
+DEBUG:program:Return code: 0
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:anaconda.core.util:ID_LIKE not found in os-release files
+DEBUG:anaconda.core.kickstart.version:Using ID for version detection: fedora
+DEBUG:anaconda.core.kickstart.version:Attempting to convert version string: f44
+INFO:anaconda.core.kickstart.version:Detected kickstart version from platform ID: f44 -> 44000
+INFO:anaconda.core.kickstart.version:Using os-release detected kickstart version
+INFO:dasbus.connection:Connecting to the system bus.
+INFO:dasbus.connection:Connecting to the system bus.
+INFO:blivet:failed to get initiator name from iscsi firmware: g-io-error-quark: Could not connect: No such file or directory (1)
+DEBUG:anaconda.modules.storage.bootloader.factory:The default class is set to 'None'.
+DEBUG:anaconda.modules.storage.bootloader.bootloader:The default type is set to 'BootloaderType.DEFAULT'.
+DEBUG:anaconda.modules.storage.fcoe.fcoe:Start up the FCoE module.
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x55f957a87950 released
+
+ERROR:blivet:failed to load libfc: Module 'libfc' doesn't exist
+DEBUG:anaconda.modules.storage.iscsi.iscsi:Start up the iSCSI module.
+DEBUG:anaconda.modules.storage.nvme.nvme:Start up the NVMe module.
+DEBUG:anaconda.modules.storage.zfcp.zfcp:Start up the zFCP module.
+DEBUG:blivet:               Ext4FS.supported: supported: True ;
+DEBUG:blivet:get_format('ext4') returning Ext4FS instance with object id 0
+DEBUG:blivet:            Ext4FS.supported: supported: True ;
+DEBUG:blivet:trying to set new default fstype to 'ext4'
+DEBUG:blivet:                  Ext4FS.supported: supported: True ;
+DEBUG:blivet:get_format('ext4') returning Ext4FS instance with object id 1
+DEBUG:blivet:               Ext4FS.supported: supported: True ;
+INFO:blivet:Fstab file '' does not exist, setting fstab read path to None
+INFO:program:Running... lsblk --bytes -a -o NAME,SIZE,OWNER,GROUP,MODE,FSTYPE,LABEL,UUID,PARTUUID,MOUNTPOINT
+INFO:program:stdout:
+INFO:program:NAME            SIZE OWNER GROUP MODE       FSTYPE LABEL           UUID                                 PARTUUID                             MOUNTPOINT
+INFO:program:loop0              0 root  disk  brw-rw----                                                                                                  
+INFO:program:loop1              0 root  disk  brw-rw----                                                                                                  
+INFO:program:loop2              0 root  disk  brw-rw----                                                                                                  
+INFO:program:loop3              0 root  disk  brw-rw----                                                                                                  
+INFO:program:loop4              0 root  disk  brw-rw----                                                                                                  
+INFO:program:loop5              0 root  disk  brw-rw----                                                                                                  
+INFO:program:loop6              0 root  disk  brw-rw----                                                                                                  
+INFO:program:loop7              0 root  disk  brw-rw----                                                                                                  
+INFO:program:sda     161061273600 root  disk  brw-rw----                                                                                                  
+INFO:program:|-sda1  159986466304 root  disk  brw-rw---- ext4   cloudimg-rootfs 107607cd-5bf5-48d7-a575-3ea3ded48999 d5946064-ddae-44fb-9cf0-46591a6fbcbe /etc/hosts
+INFO:program:|-sda14      4194304 root  disk  brw-rw----                                                             ccf3fcd9-98ff-4182-a399-c83d59a76e3e 
+INFO:program:|-sda15    111149056 root  disk  brw-rw---- vfat   UEFI            3F6C-603D                            fc0a7458-6a49-4172-a31d-75f26b44de0b 
+INFO:program:`-sda16    957350400 root  disk  brw-rw---- ext4   BOOT            813a7c03-8693-4ca9-a7f2-d0ab764ddca0 3351779b-7c58-4ab6-879a-a78c997ec208 
+DEBUG:program:Return code: 0
+DEBUG:blivet:lsblk output:
+NAME            SIZE OWNER GROUP MODE       FSTYPE LABEL           UUID                                 PARTUUID                             MOUNTPOINT
+loop0              0 root  disk  brw-rw----                                                                                                  
+loop1              0 root  disk  brw-rw----                                                                                                  
+loop2              0 root  disk  brw-rw----                                                                                                  
+loop3              0 root  disk  brw-rw----                                                                                                  
+loop4              0 root  disk  brw-rw----                                                                                                  
+loop5              0 root  disk  brw-rw----                                                                                                  
+loop6              0 root  disk  brw-rw----                                                                                                  
+loop7              0 root  disk  brw-rw----                                                                                                  
+sda     161061273600 root  disk  brw-rw----                                                                                                  
+|-sda1  159986466304 root  disk  brw-rw---- ext4   cloudimg-rootfs 107607cd-5bf5-48d7-a575-3ea3ded48999 d5946064-ddae-44fb-9cf0-46591a6fbcbe /etc/hosts
+|-sda14      4194304 root  disk  brw-rw----                                                             ccf3fcd9-98ff-4182-a399-c83d59a76e3e 
+|-sda15    111149056 root  disk  brw-rw---- vfat   UEFI            3F6C-603D                            fc0a7458-6a49-4172-a31d-75f26b44de0b 
+`-sda16    957350400 root  disk  brw-rw---- ext4   BOOT            813a7c03-8693-4ca9-a7f2-d0ab764ddca0 3351779b-7c58-4ab6-879a-a78c997ec208 
+
+DEBUG:blivet:lvm filter: clearing the lvm devices list
+DEBUG:blivet:lvm filter: clearing the lvm devices list
+DEBUG:blivet:trying to set new default fstype to 'ext4'
+DEBUG:blivet:                Ext4FS.supported: supported: True ;
+DEBUG:blivet:get_format('ext4') returning Ext4FS instance with object id 2
+DEBUG:blivet:             Ext4FS.supported: supported: True ;
+DEBUG:anaconda.storage:trying to set new default luks version to 'luks2'
+DEBUG:blivet:              LUKS.__init__: luks_version: luks2 ;
+DEBUG:blivet:get_format('luks') returning LUKS instance with object id 3
+DEBUG:anaconda.modules.storage.storage:The storage model has changed.
+DEBUG:anaconda.modules.common.base.base:Publish the service.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/Checker.
+INFO:anaconda.core.dbus:Connecting to the Anaconda bus at unix:path=/tmp/dbus-2tDGsR67F9,guid=75e1305ddffd6ab6cb82b3476a5b4363.
+WARNING:py.warnings:/usr/lib/python3.14/site-packages/dasbus/server/handler.py:78: DeprecationWarning: Gio.DBusConnection.register_object is deprecated
+  registration_id = connection.register_object(
+
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/DeviceTree.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/DiskInitialization.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/DiskSelection.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/Snapshot.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/Bootloader.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/FCoE.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/iSCSI.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/NVMe.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/DASD.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/zFCP.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage.
+DEBUG:dasbus.connection:Registering a service name org.fedoraproject.Anaconda.Modules.Storage.
+DEBUG:anaconda.modules.common.base.base:Start the loop.
+WARNING:py.warnings:/usr/lib64/python3.14/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+  AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+DEBUG:anaconda.modules.common.base.base:Reading kickstart...
+DEBUG:anaconda.modules.storage.disk_initialization.initialization:Can format unrecognized is set to 'True'.
+DEBUG:anaconda.modules.storage.disk_initialization.initialization:Default disk label is set to ''.
+DEBUG:anaconda.modules.storage.disk_initialization.initialization:Can initialize labels is set to 'True'.
+DEBUG:anaconda.modules.storage.disk_initialization.initialization:Can format LDL is set to 'False'.
+DEBUG:anaconda.modules.storage.disk_initialization.initialization:The initialization mode is set to 'InitializationMode.CLEAR_ALL'.
+DEBUG:anaconda.modules.storage.disk_initialization.initialization:Devices to clear are set to '[]'.
+DEBUG:anaconda.modules.storage.disk_initialization.initialization:Drives to clear are set to '[]'.
+DEBUG:anaconda.modules.storage.disk_selection.selection:Selected disks are set to '[]'.
+DEBUG:anaconda.modules.storage.disk_selection.selection:Exclusive disks are set to '[]'.
+DEBUG:anaconda.modules.storage.disk_selection.selection:Ignored disks are set to '[]'.
+DEBUG:anaconda.modules.storage.bootloader.bootloader:Bootloader mode is set to 'BootloaderMode.ENABLED'.
+DEBUG:anaconda.modules.storage.bootloader.bootloader:Preferred location is set to 'MBR'.
+DEBUG:anaconda.modules.storage.storage:Created the partitioning CUSTOM.
+DEBUG:anaconda.modules.common.base.base:Kickstarted is set to True.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/Partitioning/1.
+DEBUG:anaconda.modules.common.base.base:Locale is set to en_US.UTF-8.
+DEBUG:anaconda.modules.storage.checker.checker:Constraint 'min_ram' is set to '335544320'.
+DEBUG:anaconda.modules.storage.disk_selection.selection:Disk images are set to '{'azurelinux-desktop-live': '/workspace/live-disk-result/azurelinux-desktop-live.img'}'.
+DEBUG:anaconda.storage:Creating a copy of the storage model.
+DEBUG:blivet:starting Blivet copy
+DEBUG:blivet:finished Blivet copy
+DEBUG:anaconda.storage:Finished a copy of the storage model.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/Task/1.
+INFO:anaconda.core.threads:Running Thread: AnaTaskThread-ScanDevicesTask-1 (140338421839552)
+INFO:anaconda.modules.common.task.task:Scan all devices
+INFO:blivet:setting up disk image file '/workspace/live-disk-result/azurelinux-desktop-live.img' as 'azurelinux-desktop-live'
+DEBUG:blivet:                DeviceTree.get_device_by_name: name: azurelinux-desktop-live ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                DeviceTree.get_device_by_name returned None
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 5
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 6
+DEBUG:blivet:                      FileDevice._set_format: /workspace/live-disk-result/azurelinux-desktop-live.img ; type: None ; current: None ;
+DEBUG:blivet:updated /workspace/live-disk-result/azurelinux-desktop-live.img size to 17.59 GiB (17.59 GiB)
+DEBUG:blivet:                FileDevice.setup: /workspace/live-disk-result/azurelinux-desktop-live.img ; orig: False ; status: True ; controllable: True ;
+DEBUG:blivet:existing 17.59 GiB file /workspace/live-disk-result/azurelinux-desktop-live.img (4)
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 9
+DEBUG:blivet:                           FileDevice.add_child: name: /workspace/live-disk-result/azurelinux-desktop-live.img ; child: tmploop8 ; kids: 0 ;
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 10
+DEBUG:blivet:                      LoopDevice._set_format: tmploop8 ; type: None ; current: None ;
+DEBUG:blivet:                LoopDevice.setup: tmploop8 ; orig: False ; status: False ; controllable: True ;
+DEBUG:blivet:                      LoopDevice.setup_parents: name: tmploop8 ; orig: False ;
+DEBUG:blivet:                        FileDevice.setup: /workspace/live-disk-result/azurelinux-desktop-live.img ; orig: False ; status: True ; controllable: True ;
+DEBUG:blivet:                  LoopDevice._setup: tmploop8 ; orig: False ; status: False ; controllable: True ;
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:blivet:                      LoopDevice.update_sysfs_path: tmploop8 ; status: False ;
+ERROR:blivet:failed to update sysfs path for tmploop8: [Errno 2] No such file or directory: '/dev/tmploop8'
+DEBUG:blivet:                          LoopDevice.read_current_size: exists: True ; path: /dev/tmploop8 ; sysfs_path:  ;
+DEBUG:blivet:updated tmploop8 size to 17.59 GiB (0 B)
+DEBUG:blivet:                    LoopDevice.update_sysfs_path: loop0 ; status: True ;
+DEBUG:blivet:loop0 sysfs_path set to /sys/devices/virtual/block/loop0
+DEBUG:blivet:existing 17.59 GiB loop loop0 (8)
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 13
+DEBUG:blivet:                             LoopDevice.add_child: name: loop0 ; child: azurelinux-desktop-live ; kids: 0 ;
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 14
+DEBUG:blivet:                        DMLinearDevice._set_format: azurelinux-desktop-live ; type: None ; current: None ;
+INFO:program:Running [3] dmsetup --version ...
+INFO:program:stdout[3]: Library version:   1.02.212 (2025-12-15)
+Driver version:    4.50.0
+
+INFO:program:stderr[3]: 
+INFO:program:...done [3] (exit code: 0)
+DEBUG:blivet:                DMLinearDevice.setup: azurelinux-desktop-live ; orig: False ; status: False ; controllable: True ;
+DEBUG:blivet:                    DMLinearDevice.setup_parents: name: azurelinux-desktop-live ; orig: False ;
+DEBUG:blivet:                      LoopDevice.setup: loop0 ; orig: False ; status: True ; controllable: True ;
+DEBUG:blivet:                  DMLinearDevice._setup: azurelinux-desktop-live ; orig: False ; status: False ; controllable: True ;
+DEBUG:blivet:                      LoopDevice.read_current_size: exists: True ; path: /dev/loop0 ; sysfs_path: /sys/devices/virtual/block/loop0 ;
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/loop0/size: 33363838343438300a
+INFO:program:Running [4] dmsetup create azurelinux-desktop-live --table 0 36884480 linear /dev/loop0 0 -u ANACONDA-azurelinux-desktop-live ...
+INFO:program:stdout[4]: 
+INFO:program:stderr[4]: 
+INFO:program:...done [4] (exit code: 0)
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:blivet:                      DMLinearDevice.update_sysfs_path: azurelinux-desktop-live ; status: True ;
+DEBUG:blivet:azurelinux-desktop-live sysfs_path set to /sys/devices/virtual/block/dm-0
+DEBUG:blivet:                          DMLinearDevice.read_current_size: exists: True ; path: /dev/mapper/azurelinux-desktop-live ; sysfs_path: /sys/devices/virtual/block/dm-0 ;
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/dm-0/size: 33363838343438300a
+DEBUG:blivet:updated azurelinux-desktop-live size to 17.59 GiB (17.59 GiB)
+DEBUG:blivet:                    DMLinearDevice.setup_partitions: name: azurelinux-desktop-live ;
+INFO:program:Running... kpartx -a -s /dev/mapper/azurelinux-desktop-live
+DEBUG:program:Return code: 0
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:blivet:                DMLinearDevice.update_sysfs_path: azurelinux-desktop-live ; status: True ;
+DEBUG:blivet:azurelinux-desktop-live sysfs_path set to /sys/devices/virtual/block/dm-0
+DEBUG:blivet:                    DMLinearDevice.read_current_size: exists: True ; path: /dev/mapper/azurelinux-desktop-live ; sysfs_path: /sys/devices/virtual/block/dm-0 ;
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/dm-0/size: 33363838343438300a
+DEBUG:blivet:updated azurelinux-desktop-live size to 17.59 GiB (17.59 GiB)
+DEBUG:blivet:existing 17.59 GiB dm-linear azurelinux-desktop-live (12)
+INFO:blivet:added file /workspace/live-disk-result/azurelinux-desktop-live.img (id 4) to device tree
+INFO:blivet:added loop loop0 (id 8) to device tree
+INFO:blivet:added dm-linear azurelinux-desktop-live (id 12) to device tree
+DEBUG:blivet:                DeviceTree.handle_device: name: azurelinux-desktop-live ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-id/dm-uuid-ANACONDA-azurelinux-desktop-live '
+             '/dev/mapper/azurelinux-desktop-live '
+             '/dev/disk/by-id/dm-name-azurelinux-desktop-live '
+             '/dev/disk/by-diskseq/13',
+ 'DEVNAME': '/dev/dm-0',
+ 'DEVPATH': '/devices/virtual/block/dm-0',
+ 'DEVTYPE': 'disk',
+ 'DISKSEQ': '13',
+ 'DM_ACTIVATION': '1',
+ 'DM_NAME': 'azurelinux-desktop-live',
+ 'DM_UDEV_DISABLE_LIBRARY_FALLBACK_FLAG': '1',
+ 'DM_UDEV_PRIMARY_SOURCE_FLAG': '1',
+ 'DM_UDEV_RULES_VSN': '3',
+ 'DM_UUID': 'ANACONDA-azurelinux-desktop-live',
+ 'ID_BLOCK_SUBSYSTEM': 'dm',
+ 'MAJOR': '252',
+ 'MINOR': '0',
+ 'NVME_HOST_IFACE': 'none',
+ 'SUBSYSTEM': 'block',
+ 'SYS_NAME': 'dm-0',
+ 'SYS_PATH': '/sys/devices/virtual/block/dm-0',
+ 'TAGS': ':systemd:',
+ 'USEC_INITIALIZED': '184135351'} ;
+INFO:blivet:scanning azurelinux-desktop-live (/sys/devices/virtual/block/dm-0)...
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/dm-0/hidden: 300a
+INFO:program:Running [5] lvm lvs --nosuffix --units=b --reportformat json_std -a -o vg_name,lv_name,lv_uuid,lv_size,lv_attr,segtype,origin,pool_lv,data_lv,metadata_lv,lv_role,move_pv,data_percent,metadata_percent,copy_percent,lv_tags --config=backup {backup=0 archive=0} log {level=7 file=/tmp/lvm.log syslog=0} ...
+INFO:program:stdout[5]:   {
+      "report": [
+          {
+              "lv": [
+              ]
+          }
+      ]
+      ,
+      "log": [
+      ]
+  }
+
+INFO:program:stderr[5]: 
+INFO:program:...done [5] (exit code: 0)
+DEBUG:blivet:                  DeviceTree.get_device_by_name: name: azurelinux-desktop-live ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                  DeviceTree.get_device_by_name returned existing 17.59 GiB dm-linear azurelinux-desktop-live (12)
+INFO:program:Running [6] multipath --version ...
+INFO:program:stdout[6]: 
+INFO:program:stderr[6]: 184.241809 | /etc/multipath.conf does not exist, blacklisting all devices.
+184.241818 | You can run "/sbin/mpathconf --enable" to create
+184.241820 | /etc/multipath.conf. See man mpathconf(8) for more details
+Unknown switch: (null)
+multipath-tools v0.13.1 (01/20, 2026)
+Usage:
+  multipath [-v level] [-B|-d|-i|-q|-r] [-b file] [-p policy] [device]
+  multipath [-v level] [-R retries] -f device
+  multipath [-v level] [-R retries] -F
+  multipath [-v level] [-l|-ll] [device]
+  multipath [-v level] [-a|-w] device
+  multipath [-v level] [-A|-W]
+  multipath [-v level] [-i] [-c|-C] device
+  multipath [-v level] [-i] [-u|-U]
+  multipath [-h|-t|-T]
+
+Where:
+  -h      print this usage text
+  -l      show multipath topology (sysfs and DM info)
+  -ll     show multipath topology (maximum info)
+  -e      enable foreign libraries with -l/-ll
+  -f      flush a multipath device map
+  -F      flush all multipath device maps
+  -a      add a device wwid to the wwids file
+  -A      add devices from kernel command line mpath.wwids
+          parameters to wwids file
+  -c      check if a device should be a path in a multipath device
+  -C      check if a multipath device has usable paths
+  -q      allow queue_if_no_path when multipathd is not running
+  -d      dry run, do not create or update devmaps
+  -t      display the currently used multipathd configuration
+  -T      display the multipathd configuration without builtin defaults
+  -r      force devmap reload
+  -i      ignore wwids file
+  -B      treat the bindings file as read only
+  -b fil  bindings file location
+  -w      remove a device from the wwids file
+  -W      reset the wwids file include only the current devices
+  -R num  number of times to retry removes of in-use devices
+  -u      check if the device specified in the program environment should be a
+          path in a multipath device
+  -U      check if the device specified in the program environment is a
+          multipath device with usable paths, see -C flag
+  -p pol  force all maps to specified path grouping policy:
+          . failover            one path per priority group
+          . multibus            all paths in one priority group
+          . group_by_serial     one priority group per serial
+          . group_by_prio       one priority group per priority lvl
+          . group_by_node_name  one priority group per target node
+          . group_by_tpg        one priority group per ALUA target port group
+  -v lvl  verbosity level:
+          . 0 no output
+          . 1 print created devmap names only
+          . 2 default verbosity
+          . 3 print debug information
+  device  action limited to:
+          . multipath named 'device' (ex: mpath0)
+          . multipath whose wwid is 'device' (ex: 60051...)
+          . multipath including the path named 'device' (ex: /dev/sda or
+            /dev/dm-0)
+          . multipath including the path with maj:min 'device' (ex: 8:0)
+
+INFO:program:...done [6] (exit code: 1)
+INFO:blivet:got device: DMLinearDevice instance (0x7fa315cb7a10) --
+  name = azurelinux-desktop-live  status = True  id = 12
+  children = []
+  parents = ['existing 17.59 GiB loop loop0 (8)']
+  uuid = None  size = 17.59 GiB
+  format = existing None
+  major = 0  minor = 0  exists = True  protected = False
+  sysfs path = /sys/devices/virtual/block/dm-0
+  target size = 17.59 GiB  path = /dev/mapper/azurelinux-desktop-live
+  format args = []  original_format = None  target = linear  dm_uuid = ANACONDA-azurelinux-desktop-live
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/dm-0/ro: 300a
+DEBUG:blivet:                  DeviceTree.handle_format: name: azurelinux-desktop-live ;
+DEBUG:blivet:no type or existing type for azurelinux-desktop-live, bailing
+INFO:blivet:resetting Blivet (version 3.13.2) instance <pyanaconda.modules.storage.devicetree.model.InstallerStorage object at 0x7fa316e57d90>
+DEBUG:blivet:lvm filter: clearing the lvm devices list
+INFO:blivet:DeviceTree.populate: ignored_disks is [] ; exclusive_disks is ['azurelinux-desktop-live']
+WARNING:blivet:Failed to call the update_volume_info method: libstoragemgmt functionality not available
+INFO:program:Running [7] mpathconf --find_multipaths y --user_friendly_names y --with_multipathd y ...
+INFO:program:stdout[7]: 
+INFO:program:stderr[7]: 
+INFO:program:...done [7] (exit code: 0)
+INFO:blivet:setting up disk image file '/workspace/live-disk-result/azurelinux-desktop-live.img' as 'azurelinux-desktop-live'
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: azurelinux-desktop-live ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 18
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 19
+DEBUG:blivet:                          FileDevice._set_format: /workspace/live-disk-result/azurelinux-desktop-live.img ; type: None ; current: None ;
+DEBUG:blivet:updated /workspace/live-disk-result/azurelinux-desktop-live.img size to 17.59 GiB (17.59 GiB)
+DEBUG:blivet:                    FileDevice.setup: /workspace/live-disk-result/azurelinux-desktop-live.img ; orig: False ; status: True ; controllable: True ;
+DEBUG:blivet:existing 17.59 GiB file /workspace/live-disk-result/azurelinux-desktop-live.img (17)
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 22
+DEBUG:blivet:                               FileDevice.add_child: name: /workspace/live-disk-result/azurelinux-desktop-live.img ; child: loop0 ; kids: 0 ;
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 23
+DEBUG:blivet:                          LoopDevice._set_format: loop0 ; type: None ; current: None ;
+DEBUG:blivet:                        LoopDevice.update_sysfs_path: loop0 ; status: True ;
+DEBUG:blivet:loop0 sysfs_path set to /sys/devices/virtual/block/loop0
+DEBUG:blivet:                            LoopDevice.read_current_size: exists: True ; path: /dev/loop0 ; sysfs_path: /sys/devices/virtual/block/loop0 ;
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/loop0/size: 33363838343438300a
+DEBUG:blivet:updated loop0 size to 17.59 GiB (17.59 GiB)
+DEBUG:blivet:                    LoopDevice.setup: loop0 ; orig: False ; status: True ; controllable: True ;
+DEBUG:blivet:existing 17.59 GiB loop loop0 (21)
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 26
+DEBUG:blivet:                                 LoopDevice.add_child: name: loop0 ; child: azurelinux-desktop-live ; kids: 0 ;
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 27
+DEBUG:blivet:                            DMLinearDevice._set_format: azurelinux-desktop-live ; type: None ; current: None ;
+DEBUG:blivet:                          DMLinearDevice.update_sysfs_path: azurelinux-desktop-live ; status: True ;
+DEBUG:blivet:azurelinux-desktop-live sysfs_path set to /sys/devices/virtual/block/dm-0
+DEBUG:blivet:                              DMLinearDevice.read_current_size: exists: True ; path: /dev/mapper/azurelinux-desktop-live ; sysfs_path: /sys/devices/virtual/block/dm-0 ;
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/dm-0/size: 33363838343438300a
+DEBUG:blivet:updated azurelinux-desktop-live size to 17.59 GiB (17.59 GiB)
+DEBUG:blivet:                    DMLinearDevice.setup: azurelinux-desktop-live ; orig: False ; status: True ; controllable: True ;
+DEBUG:blivet:                    DMLinearDevice.update_sysfs_path: azurelinux-desktop-live ; status: True ;
+DEBUG:blivet:azurelinux-desktop-live sysfs_path set to /sys/devices/virtual/block/dm-0
+DEBUG:blivet:                        DMLinearDevice.read_current_size: exists: True ; path: /dev/mapper/azurelinux-desktop-live ; sysfs_path: /sys/devices/virtual/block/dm-0 ;
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/dm-0/size: 33363838343438300a
+DEBUG:blivet:updated azurelinux-desktop-live size to 17.59 GiB (17.59 GiB)
+DEBUG:blivet:existing 17.59 GiB dm-linear azurelinux-desktop-live (25)
+INFO:blivet:added file /workspace/live-disk-result/azurelinux-desktop-live.img (id 17) to device tree
+INFO:blivet:added loop loop0 (id 21) to device tree
+INFO:blivet:added dm-linear azurelinux-desktop-live (id 25) to device tree
+DEBUG:blivet:                    DeviceTree.handle_device: name: azurelinux-desktop-live ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-id/dm-uuid-ANACONDA-azurelinux-desktop-live '
+             '/dev/mapper/azurelinux-desktop-live '
+             '/dev/disk/by-id/dm-name-azurelinux-desktop-live '
+             '/dev/disk/by-diskseq/13',
+ 'DEVNAME': '/dev/dm-0',
+ 'DEVPATH': '/devices/virtual/block/dm-0',
+ 'DEVTYPE': 'disk',
+ 'DISKSEQ': '13',
+ 'DM_ACTIVATION': '1',
+ 'DM_NAME': 'azurelinux-desktop-live',
+ 'DM_UDEV_DISABLE_LIBRARY_FALLBACK_FLAG': '1',
+ 'DM_UDEV_PRIMARY_SOURCE_FLAG': '1',
+ 'DM_UDEV_RULES_VSN': '3',
+ 'DM_UUID': 'ANACONDA-azurelinux-desktop-live',
+ 'ID_BLOCK_SUBSYSTEM': 'dm',
+ 'MAJOR': '252',
+ 'MINOR': '0',
+ 'NVME_HOST_IFACE': 'none',
+ 'SUBSYSTEM': 'block',
+ 'SYS_NAME': 'dm-0',
+ 'SYS_PATH': '/sys/devices/virtual/block/dm-0',
+ 'TAGS': ':systemd:',
+ 'USEC_INITIALIZED': '184135351'} ;
+INFO:blivet:scanning azurelinux-desktop-live (/sys/devices/virtual/block/dm-0)...
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/dm-0/hidden: 300a
+INFO:program:Running [8] lvm lvs --nosuffix --units=b --reportformat json_std -a -o vg_name,lv_name,lv_uuid,lv_size,lv_attr,segtype,origin,pool_lv,data_lv,metadata_lv,lv_role,move_pv,data_percent,metadata_percent,copy_percent,lv_tags --config=backup {backup=0 archive=0} log {level=7 file=/tmp/lvm.log syslog=0} ...
+INFO:program:stdout[8]:   {
+      "report": [
+          {
+              "lv": [
+              ]
+          }
+      ]
+      ,
+      "log": [
+      ]
+  }
+
+INFO:program:stderr[8]: 
+INFO:program:...done [8] (exit code: 0)
+DEBUG:blivet:                      DeviceTree.get_device_by_name: name: azurelinux-desktop-live ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                      DeviceTree.get_device_by_name returned existing 17.59 GiB dm-linear azurelinux-desktop-live (25)
+INFO:blivet:got device: DMLinearDevice instance (0x7fa315d2d950) --
+  name = azurelinux-desktop-live  status = True  id = 25
+  children = []
+  parents = ['existing 17.59 GiB loop loop0 (21)']
+  uuid = None  size = 17.59 GiB
+  format = existing None
+  major = 0  minor = 0  exists = True  protected = False
+  sysfs path = /sys/devices/virtual/block/dm-0
+  target size = 17.59 GiB  path = /dev/mapper/azurelinux-desktop-live
+  format args = []  original_format = None  target = linear  dm_uuid = ANACONDA-azurelinux-desktop-live
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/dm-0/ro: 300a
+DEBUG:blivet:                      DeviceTree.handle_format: name: azurelinux-desktop-live ;
+DEBUG:blivet:no type or existing type for azurelinux-desktop-live, bailing
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:blivet:devices to scan: ['sda', 'sda1', 'sda14', 'sda15', 'sda16', 'loop0', 'loop1', 'loop2', 'loop3', 'loop4', 'loop5', 'loop6', 'loop7', 'azurelinux-desktop-live']
+DEBUG:blivet:                  DeviceTree.handle_device: name: sda ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-diskseq/9 '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0 '
+             '/dev/disk/by-id/scsi-3600224806327f99dc24ce8394dd715d9 '
+             '/dev/disk/by-id/wwn-0x600224806327f99dc24ce8394dd715d9',
+ 'DEVNAME': '/dev/sda',
+ 'DEVPATH': '/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda',
+ 'DEVTYPE': 'disk',
+ 'DISKSEQ': '9',
+ 'ID_BUS': 'scsi',
+ 'ID_MODEL': 'Virtual_Disk',
+ 'ID_MODEL_ENC': 'Virtual\\x20Disk\\x20\\x20\\x20\\x20',
+ 'ID_PART_TABLE_TYPE': 'gpt',
+ 'ID_PART_TABLE_UUID': '0e835132-26df-4e46-83f3-204a8655153b',
+ 'ID_PATH': 'acpi-MSFT1000:00-scsi-0:0:0:0',
+ 'ID_PATH_TAG': 'acpi-MSFT1000_00-scsi-0_0_0_0',
+ 'ID_REVISION': '1.0',
+ 'ID_SCSI': '1',
+ 'ID_SERIAL': '3600224806327f99dc24ce8394dd715d9',
+ 'ID_SERIAL_SHORT': '600224806327f99dc24ce8394dd715d9',
+ 'ID_TYPE': 'disk',
+ 'ID_VENDOR': 'Msft',
+ 'ID_VENDOR_ENC': 'Msft\\x20\\x20\\x20\\x20',
+ 'ID_WWN': '0x600224806327f99d',
+ 'ID_WWN_VENDOR_EXTENSION': '0xc24ce8394dd715d9',
+ 'ID_WWN_WITH_EXTENSION': '0x600224806327f99dc24ce8394dd715d9',
+ 'MAJOR': '8',
+ 'MINOR': '0',
+ 'NVME_HOST_IFACE': 'none',
+ 'SUBSYSTEM': 'block',
+ 'SYS_NAME': 'sda',
+ 'SYS_PATH': '/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda',
+ 'TAGS': ':systemd:',
+ 'USEC_INITIALIZED': '178327748'} ;
+INFO:blivet:scanning sda (/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda)...
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/hidden: 300a
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: sda ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+INFO:program:Running [9] mdadm --version ...
+INFO:program:stdout[9]: 
+INFO:program:stderr[9]: mdadm - v4.3 - 2024-02-15
+
+INFO:program:...done [9] (exit code: 0)
+DEBUG:blivet:                   DiskDevicePopulator.run: name: sda ;
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/device/vendor: 4d736674202020200a
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:blivet:sda is a disk
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 31
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 32
+DEBUG:blivet:                           DiskDevice._set_format: sda ; type: None ; current: None ;
+DEBUG:blivet:                         DiskDevice.update_sysfs_path: sda ; status: True ;
+DEBUG:blivet:sda sysfs_path set to /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda
+DEBUG:blivet:                             DiskDevice.read_current_size: exists: True ; path: /dev/sda ; sysfs_path: /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda ;
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/size: 3331343537323830300a
+DEBUG:blivet:updated sda size to 150 GiB (150 GiB)
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/queue/rotational: 310a
+INFO:blivet:added disk sda (id 30) to device tree
+INFO:blivet:got device: DiskDevice instance (0x7fa314c081a0) --
+  name = sda  status = True  id = 30
+  children = []
+  parents = []
+  uuid = None  size = 150 GiB
+  format = existing None
+  major = 8  minor = 0  exists = True  protected = False
+  sysfs path = /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda
+  target size = 150 GiB  path = /dev/sda
+  format args = []  original_format = None  removable = False  wwn = 600224806327f99dc24ce8394dd715d9
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/ro: 300a
+DEBUG:blivet:                    DeviceTree.handle_format: name: sda ;
+DEBUG:blivet:                                EFIFS.supported: supported: True ;
+DEBUG:blivet:get_format('efi') returning EFIFS instance with object id 34
+DEBUG:blivet:                                  MacEFIFS.supported: supported: True ;
+DEBUG:blivet:get_format('macefi') returning MacEFIFS instance with object id 35
+DEBUG:blivet:                                   MacEFIFS.supported: supported: True ;
+DEBUG:blivet:get_format('macefi') returning MacEFIFS instance with object id 36
+DEBUG:blivet:                     DiskLabelFormatPopulator.run: device: sda ; label_type: gpt ;
+DEBUG:blivet:                       DiskDevice.setup: sda ; orig: False ; status: True ; controllable: True ;
+DEBUG:blivet:                        DiskLabel.__init__: uuid: 0e835132-26df-4e46-83f3-204a8655153b ; label: None ; device: /dev/sda ; serial: 3600224806327f99dc24ce8394dd715d9 ; exists: True ;
+DEBUG:blivet:Clear pmbr_boot on parted.Disk instance --
+  type: gpt  primaryPartitionCount: 4
+  lastPartitionNumber: 16  maxPrimaryPartitionCount: 128
+  partitions: [<parted.partition.Partition object at 0x7fa315d2e5d0>, <parted.partition.Partition object at 0x7fa315cf2520>, <parted.partition.Partition object at 0x7fa315cf2190>, <parted.partition.Partition object at 0x7fa315d1c8d0>]
+  device: <parted.device.Device object at 0x7fa314c09a90>
+  PedDisk: <_ped.Disk object at 0x7fa315c90880>
+DEBUG:blivet:get_format('disklabel') returning DiskLabel instance with object id 37
+DEBUG:blivet:                         DiskDevice._set_format: sda ; type: disklabel ; current: None ;
+INFO:blivet:got format: existing gpt disklabel
+DEBUG:blivet:                  DeviceTree.handle_device: name: sda1 ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-id/scsi-3600224806327f99dc24ce8394dd715d9-part1 '
+             '/dev/disk/by-id/wwn-0x600224806327f99dc24ce8394dd715d9-part1 '
+             '/dev/disk/by-label/cloudimg-rootfs '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-label/cloudimg-rootfs '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-partuuid/d5946064-ddae-44fb-9cf0-46591a6fbcbe '
+             '/dev/disk/by-uuid/107607cd-5bf5-48d7-a575-3ea3ded48999 '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-uuid/107607cd-5bf5-48d7-a575-3ea3ded48999 '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-partnum/1 '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part1 '
+             '/dev/disk/by-diskseq/9-part1 '
+             '/dev/disk/by-partuuid/d5946064-ddae-44fb-9cf0-46591a6fbcbe',
+ 'DEVNAME': '/dev/sda1',
+ 'DEVPATH': '/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda1',
+ 'DEVTYPE': 'partition',
+ 'DISKSEQ': '9',
+ 'ID_BUS': 'scsi',
+ 'ID_FS_BLOCKSIZE': '4096',
+ 'ID_FS_LABEL': 'cloudimg-rootfs',
+ 'ID_FS_LABEL_ENC': 'cloudimg-rootfs',
+ 'ID_FS_LASTBLOCK': '39059195',
+ 'ID_FS_SIZE': '159986462720',
+ 'ID_FS_TYPE': 'ext4',
+ 'ID_FS_USAGE': 'filesystem',
+ 'ID_FS_UUID': '107607cd-5bf5-48d7-a575-3ea3ded48999',
+ 'ID_FS_UUID_ENC': '107607cd-5bf5-48d7-a575-3ea3ded48999',
+ 'ID_FS_VERSION': '1.0',
+ 'ID_MODEL': 'Virtual_Disk',
+ 'ID_MODEL_ENC': 'Virtual\\x20Disk\\x20\\x20\\x20\\x20',
+ 'ID_PART_ENTRY_DISK': '8:0',
+ 'ID_PART_ENTRY_NUMBER': '1',
+ 'ID_PART_ENTRY_OFFSET': '2099200',
+ 'ID_PART_ENTRY_SCHEME': 'gpt',
+ 'ID_PART_ENTRY_SIZE': '312473567',
+ 'ID_PART_ENTRY_TYPE': '0fc63daf-8483-4772-8e79-3d69d8477de4',
+ 'ID_PART_ENTRY_UUID': 'd5946064-ddae-44fb-9cf0-46591a6fbcbe',
+ 'ID_PART_TABLE_TYPE': 'gpt',
+ 'ID_PART_TABLE_UUID': '0e835132-26df-4e46-83f3-204a8655153b',
+ 'ID_PATH': 'acpi-MSFT1000:00-scsi-0:0:0:0',
+ 'ID_PATH_TAG': 'acpi-MSFT1000_00-scsi-0_0_0_0',
+ 'ID_REVISION': '1.0',
+ 'ID_SCSI': '1',
+ 'ID_SERIAL': '3600224806327f99dc24ce8394dd715d9',
+ 'ID_SERIAL_SHORT': '600224806327f99dc24ce8394dd715d9',
+ 'ID_TYPE': 'disk',
+ 'ID_VENDOR': 'Msft',
+ 'ID_VENDOR_ENC': 'Msft\\x20\\x20\\x20\\x20',
+ 'ID_WWN': '0x600224806327f99d',
+ 'ID_WWN_VENDOR_EXTENSION': '0xc24ce8394dd715d9',
+ 'ID_WWN_WITH_EXTENSION': '0x600224806327f99dc24ce8394dd715d9',
+ 'MAJOR': '8',
+ 'MINOR': '1',
+ 'NVME_HOST_IFACE': 'none',
+ 'PARTN': '1',
+ 'PARTUUID': 'd5946064-ddae-44fb-9cf0-46591a6fbcbe',
+ 'SUBSYSTEM': 'block',
+ 'SYS_NAME': 'sda1',
+ 'SYS_PATH': '/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda1',
+ 'TAGS': ':systemd:',
+ 'UDISKS_AUTO': '0',
+ 'USEC_INITIALIZED': '178327930'} ;
+INFO:blivet:scanning sda1 (/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda1)...
+WARNING:blivet:hidden is not a valid attribute
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: sda1 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+DEBUG:blivet:                   PartitionDevicePopulator.run: name: sda1 ;
+DEBUG:blivet:                     DeviceTree.get_device_by_name: name: sda1 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                     DeviceTree.get_device_by_name returned None
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+DEBUG:blivet:                     DeviceTree.get_device_by_name: name: sda ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                     DeviceTree.get_device_by_name returned existing 150 GiB disk sda (30) with existing gpt disklabel
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 40
+DEBUG:blivet:                                DiskDevice.add_child: name: sda ; child: sda1 ; kids: 0 ;
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 41
+DEBUG:blivet:                           PartitionDevice._set_format: sda1 ; type: None ; current: None ;
+DEBUG:blivet:                         PartitionDevice.update_sysfs_path: sda1 ; status: True ;
+DEBUG:blivet:sda1 sysfs_path set to /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda1
+DEBUG:blivet:                               PartitionDevice.read_current_size: exists: True ; path: /dev/sda1 ; sysfs_path: /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda1 ;
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda1/size: 3331323437333536370a
+DEBUG:blivet:updated sda1 size to 149 GiB (149 GiB)
+DEBUG:blivet:looking up parted Partition: /dev/sda1
+DEBUG:blivet:                       PartitionDevice.probe: sda1 ; exists: True ;
+DEBUG:blivet:                         PartitionDevice.get_flag: path: /dev/sda1 ; flag: 1 ;
+DEBUG:blivet:                       PartitionDevice.get_flag: path: /dev/sda1 ; flag: 10 ;
+DEBUG:blivet:                       PartitionDevice.get_flag: path: /dev/sda1 ; flag: 12 ;
+DEBUG:blivet:                             PartitionDevice.read_current_size: exists: True ; path: /dev/sda1 ; sysfs_path: /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda1 ;
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda1/size: 3331323437333536370a
+DEBUG:blivet:updated sda1 size to 149 GiB (149 GiB)
+INFO:blivet:added partition sda1 (id 39) to device tree
+INFO:blivet:got device: PartitionDevice instance (0x7fa314c0a120) --
+  name = sda1  status = True  id = 39
+  children = []
+  parents = ['existing 150 GiB disk sda (30) with existing gpt disklabel']
+  uuid = d5946064-ddae-44fb-9cf0-46591a6fbcbe  size = 149 GiB
+  format = existing None
+  major = 8  minor = 1  exists = True  protected = False
+  sysfs path = /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda1
+  target size = 149 GiB  path = /dev/sda1
+  format args = []  original_format = None  grow = None  max size = 0 B  bootable = None
+  part type = 0  primary = None  start sector = None  end sector = None
+  parted_partition = parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314c09be0>  fileSystem: <parted.filesystem.FileSystem object at 0x7fa315d2e850>
+  number: 1  path: /dev/sda1  type: 0
+  name:   active: True  busy: True
+  geometry: <parted.geometry.Geometry object at 0x7fa315d1c6b0>  PedPartition: <_ped.Partition object at 0x7fa314c26890>
+  disk = existing 150 GiB disk sda (30) with existing gpt disklabel
+  start = 2099200  end = 314572766  length = 312473567
+  flags =  type_uuid = 0fc63daf-8483-4772-8e79-3d69d8477de4
+DEBUG:blivet:                    DeviceTree.handle_format: name: sda1 ;
+DEBUG:blivet:                                EFIFS.supported: supported: True ;
+DEBUG:blivet:get_format('efi') returning EFIFS instance with object id 43
+DEBUG:blivet:                                  MacEFIFS.supported: supported: True ;
+DEBUG:blivet:get_format('macefi') returning MacEFIFS instance with object id 44
+DEBUG:blivet:                                   MacEFIFS.supported: supported: True ;
+DEBUG:blivet:get_format('macefi') returning MacEFIFS instance with object id 45
+INFO:blivet:type detected on 'sda1' is 'ext4'
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+INFO:program:Running... udevadm trigger --action=change /dev/sda1
+DEBUG:program:Return code: 0
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+INFO:program:Running [10] resize2fs -P /dev/sda1 ...
+INFO:program:stdout[10]: Estimated minimum size of the filesystem: 8964379
+
+INFO:program:stderr[10]: resize2fs 1.47.3 (8-Jul-2025)
+
+INFO:program:...done [10] (exit code: 0)
+DEBUG:blivet:padding min size from 34.2 GiB up to 34.69 GiB
+DEBUG:blivet:                          Ext4FS.supported: supported: True ;
+DEBUG:blivet:get_format('ext4') returning Ext4FS instance with object id 46
+DEBUG:blivet:                         PartitionDevice._set_format: sda1 ; type: ext4 ; current: None ;
+INFO:blivet:got format: existing ext4 filesystem
+DEBUG:blivet:                  DeviceTree.handle_device: name: sda14 ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-partnum/14 '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part14 '
+             '/dev/disk/by-id/scsi-3600224806327f99dc24ce8394dd715d9-part14 '
+             '/dev/disk/by-id/wwn-0x600224806327f99dc24ce8394dd715d9-part14 '
+             '/dev/disk/by-diskseq/9-part14 '
+             '/dev/disk/by-partuuid/ccf3fcd9-98ff-4182-a399-c83d59a76e3e '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-partuuid/ccf3fcd9-98ff-4182-a399-c83d59a76e3e',
+ 'DEVNAME': '/dev/sda14',
+ 'DEVPATH': '/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda14',
+ 'DEVTYPE': 'partition',
+ 'DISKSEQ': '9',
+ 'ID_BUS': 'scsi',
+ 'ID_MODEL': 'Virtual_Disk',
+ 'ID_MODEL_ENC': 'Virtual\\x20Disk\\x20\\x20\\x20\\x20',
+ 'ID_PART_ENTRY_DISK': '8:0',
+ 'ID_PART_ENTRY_NUMBER': '14',
+ 'ID_PART_ENTRY_OFFSET': '2048',
+ 'ID_PART_ENTRY_SCHEME': 'gpt',
+ 'ID_PART_ENTRY_SIZE': '8192',
+ 'ID_PART_ENTRY_TYPE': '21686148-6449-6e6f-744e-656564454649',
+ 'ID_PART_ENTRY_UUID': 'ccf3fcd9-98ff-4182-a399-c83d59a76e3e',
+ 'ID_PART_TABLE_TYPE': 'gpt',
+ 'ID_PART_TABLE_UUID': '0e835132-26df-4e46-83f3-204a8655153b',
+ 'ID_PATH': 'acpi-MSFT1000:00-scsi-0:0:0:0',
+ 'ID_PATH_TAG': 'acpi-MSFT1000_00-scsi-0_0_0_0',
+ 'ID_REVISION': '1.0',
+ 'ID_SCSI': '1',
+ 'ID_SERIAL': '3600224806327f99dc24ce8394dd715d9',
+ 'ID_SERIAL_SHORT': '600224806327f99dc24ce8394dd715d9',
+ 'ID_TYPE': 'disk',
+ 'ID_VENDOR': 'Msft',
+ 'ID_VENDOR_ENC': 'Msft\\x20\\x20\\x20\\x20',
+ 'ID_WWN': '0x600224806327f99d',
+ 'ID_WWN_VENDOR_EXTENSION': '0xc24ce8394dd715d9',
+ 'ID_WWN_WITH_EXTENSION': '0x600224806327f99dc24ce8394dd715d9',
+ 'MAJOR': '8',
+ 'MINOR': '14',
+ 'NVME_HOST_IFACE': 'none',
+ 'PARTN': '14',
+ 'PARTUUID': 'ccf3fcd9-98ff-4182-a399-c83d59a76e3e',
+ 'SUBSYSTEM': 'block',
+ 'SYS_NAME': 'sda14',
+ 'SYS_PATH': '/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda14',
+ 'TAGS': ':systemd:',
+ 'UDISKS_IGNORE': '1',
+ 'USEC_INITIALIZED': '178328118'} ;
+INFO:blivet:scanning sda14 (/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda14)...
+WARNING:blivet:hidden is not a valid attribute
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: sda14 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+DEBUG:blivet:                   PartitionDevicePopulator.run: name: sda14 ;
+DEBUG:blivet:                     DeviceTree.get_device_by_name: name: sda14 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                     DeviceTree.get_device_by_name returned None
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+DEBUG:blivet:                     DeviceTree.get_device_by_name: name: sda ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                     DeviceTree.get_device_by_name returned existing 150 GiB disk sda (30) with existing gpt disklabel
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 49
+DEBUG:blivet:                                DiskDevice.add_child: name: sda ; child: sda14 ; kids: 1 ;
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 50
+DEBUG:blivet:                           PartitionDevice._set_format: sda14 ; type: None ; current: None ;
+DEBUG:blivet:                         PartitionDevice.update_sysfs_path: sda14 ; status: True ;
+DEBUG:blivet:sda14 sysfs_path set to /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda14
+DEBUG:blivet:                               PartitionDevice.read_current_size: exists: True ; path: /dev/sda14 ; sysfs_path: /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda14 ;
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda14/size: 383139320a
+DEBUG:blivet:updated sda14 size to 4 MiB (4 MiB)
+DEBUG:blivet:looking up parted Partition: /dev/sda14
+DEBUG:blivet:                       PartitionDevice.probe: sda14 ; exists: True ;
+DEBUG:blivet:                         PartitionDevice.get_flag: path: /dev/sda14 ; flag: 1 ;
+DEBUG:blivet:                       PartitionDevice.get_flag: path: /dev/sda14 ; flag: 10 ;
+DEBUG:blivet:                       PartitionDevice.get_flag: path: /dev/sda14 ; flag: 12 ;
+DEBUG:blivet:get_format('biosboot') returning BIOSBoot instance with object id 52
+DEBUG:blivet:                         PartitionDevice._set_format: sda14 ; type: biosboot ; current: None ;
+DEBUG:blivet:                             PartitionDevice.read_current_size: exists: True ; path: /dev/sda14 ; sysfs_path: /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda14 ;
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda14/size: 383139320a
+DEBUG:blivet:updated sda14 size to 4 MiB (4 MiB)
+INFO:blivet:added partition sda14 (id 48) to device tree
+INFO:blivet:got device: PartitionDevice instance (0x7fa314c097f0) --
+  name = sda14  status = True  id = 48
+  children = []
+  parents = ['existing 150 GiB disk sda (30) with existing gpt disklabel']
+  uuid = ccf3fcd9-98ff-4182-a399-c83d59a76e3e  size = 4 MiB
+  format = existing biosboot
+  major = 8  minor = 14  exists = True  protected = False
+  sysfs path = /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda14
+  target size = 4 MiB  path = /dev/sda14
+  format args = []  original_format = None  grow = None  max size = 0 B  bootable = None
+  part type = 0  primary = None  start sector = None  end sector = None
+  parted_partition = parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314c09be0>  fileSystem: None
+  number: 14  path: /dev/sda14  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa315d2ead0>  PedPartition: <_ped.Partition object at 0x7fa314c25580>
+  disk = existing 150 GiB disk sda (30) with existing gpt disklabel
+  start = 2048  end = 10239  length = 8192
+  flags = bios_grub type_uuid = 21686148-6449-6e6f-744e-656564454649
+DEBUG:blivet:                    DeviceTree.handle_format: name: sda14 ;
+DEBUG:blivet:no type or existing type for sda14, bailing
+DEBUG:blivet:                  DeviceTree.handle_device: name: sda15 ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-label/UEFI /dev/disk/by-diskseq/9-part15 '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part15 '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-uuid/3F6C-603D '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-label/UEFI '
+             '/dev/disk/by-id/scsi-3600224806327f99dc24ce8394dd715d9-part15 '
+             '/dev/disk/by-partuuid/fc0a7458-6a49-4172-a31d-75f26b44de0b '
+             '/dev/disk/by-uuid/3F6C-603D '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-partnum/15 '
+             '/dev/disk/by-id/wwn-0x600224806327f99dc24ce8394dd715d9-part15 '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-partuuid/fc0a7458-6a49-4172-a31d-75f26b44de0b',
+ 'DEVNAME': '/dev/sda15',
+ 'DEVPATH': '/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda15',
+ 'DEVTYPE': 'partition',
+ 'DISKSEQ': '9',
+ 'ID_BUS': 'scsi',
+ 'ID_FS_BLOCKSIZE': '512',
+ 'ID_FS_LABEL': 'UEFI',
+ 'ID_FS_LABEL_ENC': 'UEFI',
+ 'ID_FS_SIZE': '111121920',
+ 'ID_FS_TYPE': 'vfat',
+ 'ID_FS_USAGE': 'filesystem',
+ 'ID_FS_UUID': '3F6C-603D',
+ 'ID_FS_UUID_ENC': '3F6C-603D',
+ 'ID_FS_VERSION': 'FAT32',
+ 'ID_MODEL': 'Virtual_Disk',
+ 'ID_MODEL_ENC': 'Virtual\\x20Disk\\x20\\x20\\x20\\x20',
+ 'ID_PART_ENTRY_DISK': '8:0',
+ 'ID_PART_ENTRY_NUMBER': '15',
+ 'ID_PART_ENTRY_OFFSET': '10240',
+ 'ID_PART_ENTRY_SCHEME': 'gpt',
+ 'ID_PART_ENTRY_SIZE': '217088',
+ 'ID_PART_ENTRY_TYPE': 'c12a7328-f81f-11d2-ba4b-00a0c93ec93b',
+ 'ID_PART_ENTRY_UUID': 'fc0a7458-6a49-4172-a31d-75f26b44de0b',
+ 'ID_PART_TABLE_TYPE': 'gpt',
+ 'ID_PART_TABLE_UUID': '0e835132-26df-4e46-83f3-204a8655153b',
+ 'ID_PATH': 'acpi-MSFT1000:00-scsi-0:0:0:0',
+ 'ID_PATH_TAG': 'acpi-MSFT1000_00-scsi-0_0_0_0',
+ 'ID_REVISION': '1.0',
+ 'ID_SCSI': '1',
+ 'ID_SERIAL': '3600224806327f99dc24ce8394dd715d9',
+ 'ID_SERIAL_SHORT': '600224806327f99dc24ce8394dd715d9',
+ 'ID_TYPE': 'disk',
+ 'ID_VENDOR': 'Msft',
+ 'ID_VENDOR_ENC': 'Msft\\x20\\x20\\x20\\x20',
+ 'ID_WWN': '0x600224806327f99d',
+ 'ID_WWN_VENDOR_EXTENSION': '0xc24ce8394dd715d9',
+ 'ID_WWN_WITH_EXTENSION': '0x600224806327f99dc24ce8394dd715d9',
+ 'MAJOR': '8',
+ 'MINOR': '15',
+ 'NVME_HOST_IFACE': 'none',
+ 'PARTN': '15',
+ 'PARTUUID': 'fc0a7458-6a49-4172-a31d-75f26b44de0b',
+ 'SUBSYSTEM': 'block',
+ 'SYS_NAME': 'sda15',
+ 'SYS_PATH': '/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda15',
+ 'TAGS': ':systemd:',
+ 'UDISKS_IGNORE': '1',
+ 'USEC_INITIALIZED': '178328265'} ;
+INFO:blivet:scanning sda15 (/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda15)...
+WARNING:blivet:hidden is not a valid attribute
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: sda15 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+DEBUG:blivet:                   PartitionDevicePopulator.run: name: sda15 ;
+DEBUG:blivet:                     DeviceTree.get_device_by_name: name: sda15 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                     DeviceTree.get_device_by_name returned None
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+DEBUG:blivet:                     DeviceTree.get_device_by_name: name: sda ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                     DeviceTree.get_device_by_name returned existing 150 GiB disk sda (30) with existing gpt disklabel
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 55
+DEBUG:blivet:                                DiskDevice.add_child: name: sda ; child: sda15 ; kids: 2 ;
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 56
+DEBUG:blivet:                           PartitionDevice._set_format: sda15 ; type: None ; current: None ;
+DEBUG:blivet:                         PartitionDevice.update_sysfs_path: sda15 ; status: True ;
+DEBUG:blivet:sda15 sysfs_path set to /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda15
+DEBUG:blivet:                               PartitionDevice.read_current_size: exists: True ; path: /dev/sda15 ; sysfs_path: /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda15 ;
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda15/size: 3231373038380a
+DEBUG:blivet:updated sda15 size to 106 MiB (106 MiB)
+DEBUG:blivet:looking up parted Partition: /dev/sda15
+DEBUG:blivet:                       PartitionDevice.probe: sda15 ; exists: True ;
+DEBUG:blivet:                         PartitionDevice.get_flag: path: /dev/sda15 ; flag: 1 ;
+DEBUG:blivet:                       PartitionDevice.get_flag: path: /dev/sda15 ; flag: 10 ;
+DEBUG:blivet:                       PartitionDevice.get_flag: path: /dev/sda15 ; flag: 12 ;
+DEBUG:blivet:                             PartitionDevice.read_current_size: exists: True ; path: /dev/sda15 ; sysfs_path: /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda15 ;
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda15/size: 3231373038380a
+DEBUG:blivet:updated sda15 size to 106 MiB (106 MiB)
+INFO:blivet:added partition sda15 (id 54) to device tree
+INFO:blivet:got device: PartitionDevice instance (0x7fa314c096a0) --
+  name = sda15  status = True  id = 54
+  children = []
+  parents = ['existing 150 GiB disk sda (30) with existing gpt disklabel']
+  uuid = fc0a7458-6a49-4172-a31d-75f26b44de0b  size = 106 MiB
+  format = existing None
+  major = 8  minor = 15  exists = True  protected = False
+  sysfs path = /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda15
+  target size = 106 MiB  path = /dev/sda15
+  format args = []  original_format = None  grow = None  max size = 0 B  bootable = True
+  part type = 0  primary = None  start sector = None  end sector = None
+  parted_partition = parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314c09be0>  fileSystem: <parted.filesystem.FileSystem object at 0x7fa314c09e80>
+  number: 15  path: /dev/sda15  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa315cf22c0>  PedPartition: <_ped.Partition object at 0x7fa314c267a0>
+  disk = existing 150 GiB disk sda (30) with existing gpt disklabel
+  start = 10240  end = 227327  length = 217088
+  flags = boot, esp type_uuid = c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+DEBUG:blivet:                    DeviceTree.handle_format: name: sda15 ;
+DEBUG:blivet:                                EFIFS.supported: supported: True ;
+DEBUG:blivet:get_format('efi') returning EFIFS instance with object id 58
+INFO:blivet:type detected on 'sda15' is 'efi'
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+INFO:program:Running [11] fsck.vfat -nv /dev/sda15 ...
+INFO:program:stdout[11]: fsck.fat 4.2 (2021-01-31)
+Checking we can access the last sector of the filesystem
+There are differences between boot sector and its backup.
+This is mostly harmless. Differences: (offset:original/backup)
+  65:01/00
+  Not automatically fixing this.
+Boot sector contents:
+System ID "mkfs.fat"
+Media byte 0xf8 (hard disk)
+       512 bytes per logical sector
+       512 bytes per cluster
+        32 reserved sectors
+First FAT starts at byte 16384 (sector 32)
+         2 FATs, 32 bit entries
+    855040 bytes per FAT (= 1670 sectors)
+Root directory start at cluster 2 (arbitrary size)
+Data area starts at byte 1726464 (sector 3372)
+    213663 data clusters (109395456 bytes)
+63 sectors/track, 128 heads
+     10240 hidden sectors
+    217035 sectors total
+Checking for unused clusters.
+Dirty bit is set. Fs was not properly unmounted and some data may be corrupt.
+ Automatically removing dirty bit.
+Checking free cluster summary.
+
+Leaving filesystem unchanged.
+/dev/sda15: 12 files, 12499/213663 clusters
+
+INFO:program:stderr[11]: 
+INFO:program:...done [11] (exit code: 1)
+INFO:blivet:Failed to obtain info for device /dev/sda15: failed to gather fs info: Process reported exit code 1: fsck.fat 4.2 (2021-01-31)
+Checking we can access the last sector of the filesystem
+There are differences between boot sector and its backup.
+This is mostly harmless. Differences: (offset:original/backup)
+  65:01/00
+  Not automatically fixing this.
+Boot sector contents:
+System ID "mkfs.fat"
+Media byte 0xf8 (hard disk)
+       512 bytes per logical sector
+       512 bytes per cluster
+        32 reserved sectors
+First FAT starts at byte 16384 (sector 32)
+         2 FATs, 32 bit entries
+    855040 bytes per FAT (= 1670 sectors)
+Root directory start at cluster 2 (arbitrary size)
+Data area starts at byte 1726464 (sector 3372)
+    213663 data clusters (109395456 bytes)
+63 sectors/track, 128 heads
+     10240 hidden sectors
+    217035 sectors total
+Checking for unused clusters.
+Dirty bit is set. Fs was not properly unmounted and some data may be corrupt.
+ Automatically removing dirty bit.
+Checking free cluster summary.
+
+Leaving filesystem unchanged.
+/dev/sda15: 12 files, 12499/213663 clusters
+
+WARNING:blivet:Failed to obtain current size for device /dev/sda15: No info available for size computation.
+INFO:program:Running [12] fsck.vfat -nv /dev/sda15 ...
+INFO:program:stdout[12]: fsck.fat 4.2 (2021-01-31)
+Checking we can access the last sector of the filesystem
+There are differences between boot sector and its backup.
+This is mostly harmless. Differences: (offset:original/backup)
+  65:01/00
+  Not automatically fixing this.
+Boot sector contents:
+System ID "mkfs.fat"
+Media byte 0xf8 (hard disk)
+       512 bytes per logical sector
+       512 bytes per cluster
+        32 reserved sectors
+First FAT starts at byte 16384 (sector 32)
+         2 FATs, 32 bit entries
+    855040 bytes per FAT (= 1670 sectors)
+Root directory start at cluster 2 (arbitrary size)
+Data area starts at byte 1726464 (sector 3372)
+    213663 data clusters (109395456 bytes)
+63 sectors/track, 128 heads
+     10240 hidden sectors
+    217035 sectors total
+Checking for unused clusters.
+Dirty bit is set. Fs was not properly unmounted and some data may be corrupt.
+ Automatically removing dirty bit.
+Checking free cluster summary.
+
+Leaving filesystem unchanged.
+/dev/sda15: 12 files, 12499/213663 clusters
+
+INFO:program:stderr[12]: 
+INFO:program:...done [12] (exit code: 1)
+WARNING:blivet:Failed to obtain minimum size for device /dev/sda15: failed to get fs min size: Process reported exit code 1: fsck.fat 4.2 (2021-01-31)
+Checking we can access the last sector of the filesystem
+There are differences between boot sector and its backup.
+This is mostly harmless. Differences: (offset:original/backup)
+  65:01/00
+  Not automatically fixing this.
+Boot sector contents:
+System ID "mkfs.fat"
+Media byte 0xf8 (hard disk)
+       512 bytes per logical sector
+       512 bytes per cluster
+        32 reserved sectors
+First FAT starts at byte 16384 (sector 32)
+         2 FATs, 32 bit entries
+    855040 bytes per FAT (= 1670 sectors)
+Root directory start at cluster 2 (arbitrary size)
+Data area starts at byte 1726464 (sector 3372)
+    213663 data clusters (109395456 bytes)
+63 sectors/track, 128 heads
+     10240 hidden sectors
+    217035 sectors total
+Checking for unused clusters.
+Dirty bit is set. Fs was not properly unmounted and some data may be corrupt.
+ Automatically removing dirty bit.
+Checking free cluster summary.
+
+Leaving filesystem unchanged.
+/dev/sda15: 12 files, 12499/213663 clusters
+
+DEBUG:blivet:                            EFIFS.supported: supported: True ;
+DEBUG:blivet:get_format('efi') returning EFIFS instance with object id 59
+DEBUG:blivet:                         PartitionDevice._set_format: sda15 ; type: efi ; current: None ;
+INFO:blivet:got format: existing efi filesystem
+DEBUG:blivet:                  DeviceTree.handle_device: name: sda16 ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-partuuid/3351779b-7c58-4ab6-879a-a78c997ec208 '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-uuid/813a7c03-8693-4ca9-a7f2-d0ab764ddca0 '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-label/BOOT '
+             '/dev/disk/by-diskseq/9-part16 '
+             '/dev/disk/by-uuid/813a7c03-8693-4ca9-a7f2-d0ab764ddca0 '
+             '/dev/disk/by-id/scsi-3600224806327f99dc24ce8394dd715d9-part16 '
+             '/dev/disk/by-id/wwn-0x600224806327f99dc24ce8394dd715d9-part16 '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part/by-partnum/16 '
+             '/dev/disk/by-label/BOOT '
+             '/dev/disk/by-partuuid/3351779b-7c58-4ab6-879a-a78c997ec208 '
+             '/dev/disk/by-path/acpi-MSFT1000:00-scsi-0:0:0:0-part16',
+ 'DEVNAME': '/dev/sda16',
+ 'DEVPATH': '/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda16',
+ 'DEVTYPE': 'partition',
+ 'DISKSEQ': '9',
+ 'ID_BUS': 'scsi',
+ 'ID_FS_BLOCKSIZE': '4096',
+ 'ID_FS_LABEL': 'BOOT',
+ 'ID_FS_LABEL_ENC': 'BOOT',
+ 'ID_FS_LASTBLOCK': '233728',
+ 'ID_FS_SIZE': '957349888',
+ 'ID_FS_TYPE': 'ext4',
+ 'ID_FS_USAGE': 'filesystem',
+ 'ID_FS_UUID': '813a7c03-8693-4ca9-a7f2-d0ab764ddca0',
+ 'ID_FS_UUID_ENC': '813a7c03-8693-4ca9-a7f2-d0ab764ddca0',
+ 'ID_FS_VERSION': '1.0',
+ 'ID_MODEL': 'Virtual_Disk',
+ 'ID_MODEL_ENC': 'Virtual\\x20Disk\\x20\\x20\\x20\\x20',
+ 'ID_PART_ENTRY_DISK': '8:0',
+ 'ID_PART_ENTRY_NUMBER': '16',
+ 'ID_PART_ENTRY_OFFSET': '227328',
+ 'ID_PART_ENTRY_SCHEME': 'gpt',
+ 'ID_PART_ENTRY_SIZE': '1869825',
+ 'ID_PART_ENTRY_TYPE': 'bc13c2ff-59e6-4262-a352-b275fd6f7172',
+ 'ID_PART_ENTRY_UUID': '3351779b-7c58-4ab6-879a-a78c997ec208',
+ 'ID_PART_TABLE_TYPE': 'gpt',
+ 'ID_PART_TABLE_UUID': '0e835132-26df-4e46-83f3-204a8655153b',
+ 'ID_PATH': 'acpi-MSFT1000:00-scsi-0:0:0:0',
+ 'ID_PATH_TAG': 'acpi-MSFT1000_00-scsi-0_0_0_0',
+ 'ID_REVISION': '1.0',
+ 'ID_SCSI': '1',
+ 'ID_SERIAL': '3600224806327f99dc24ce8394dd715d9',
+ 'ID_SERIAL_SHORT': '600224806327f99dc24ce8394dd715d9',
+ 'ID_TYPE': 'disk',
+ 'ID_VENDOR': 'Msft',
+ 'ID_VENDOR_ENC': 'Msft\\x20\\x20\\x20\\x20',
+ 'ID_WWN': '0x600224806327f99d',
+ 'ID_WWN_VENDOR_EXTENSION': '0xc24ce8394dd715d9',
+ 'ID_WWN_WITH_EXTENSION': '0x600224806327f99dc24ce8394dd715d9',
+ 'MAJOR': '259',
+ 'MINOR': '0',
+ 'NVME_HOST_IFACE': 'none',
+ 'PARTN': '16',
+ 'PARTUUID': '3351779b-7c58-4ab6-879a-a78c997ec208',
+ 'SUBSYSTEM': 'block',
+ 'SYS_NAME': 'sda16',
+ 'SYS_PATH': '/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda16',
+ 'TAGS': ':systemd:',
+ 'UDISKS_AUTO': '0',
+ 'UDISKS_IGNORE': '1',
+ 'USEC_INITIALIZED': '178328411'} ;
+INFO:blivet:scanning sda16 (/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda16)...
+WARNING:blivet:hidden is not a valid attribute
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: sda16 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+DEBUG:blivet:                   PartitionDevicePopulator.run: name: sda16 ;
+DEBUG:blivet:                     DeviceTree.get_device_by_name: name: sda16 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                     DeviceTree.get_device_by_name returned None
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+DEBUG:blivet:                     DeviceTree.get_device_by_name: name: sda ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                     DeviceTree.get_device_by_name returned existing 150 GiB disk sda (30) with existing gpt disklabel
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 62
+DEBUG:blivet:                                DiskDevice.add_child: name: sda ; child: sda16 ; kids: 3 ;
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 63
+DEBUG:blivet:                           PartitionDevice._set_format: sda16 ; type: None ; current: None ;
+DEBUG:blivet:                         PartitionDevice.update_sysfs_path: sda16 ; status: True ;
+DEBUG:blivet:sda16 sysfs_path set to /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda16
+DEBUG:blivet:                               PartitionDevice.read_current_size: exists: True ; path: /dev/sda16 ; sysfs_path: /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda16 ;
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda16/size: 313836393832350a
+DEBUG:blivet:updated sda16 size to 913 MiB (913 MiB)
+DEBUG:blivet:looking up parted Partition: /dev/sda16
+DEBUG:blivet:                       PartitionDevice.probe: sda16 ; exists: True ;
+DEBUG:blivet:                         PartitionDevice.get_flag: path: /dev/sda16 ; flag: 1 ;
+DEBUG:blivet:                       PartitionDevice.get_flag: path: /dev/sda16 ; flag: 10 ;
+DEBUG:blivet:                       PartitionDevice.get_flag: path: /dev/sda16 ; flag: 12 ;
+DEBUG:blivet:                             PartitionDevice.read_current_size: exists: True ; path: /dev/sda16 ; sysfs_path: /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda16 ;
+DEBUG:testdata:sysfs attr /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda16/size: 313836393832350a
+DEBUG:blivet:updated sda16 size to 913 MiB (913 MiB)
+INFO:blivet:added partition sda16 (id 61) to device tree
+INFO:blivet:got device: PartitionDevice instance (0x7fa314c09400) --
+  name = sda16  status = True  id = 61
+  children = []
+  parents = ['existing 150 GiB disk sda (30) with existing gpt disklabel']
+  uuid = 3351779b-7c58-4ab6-879a-a78c997ec208  size = 913 MiB
+  format = existing None
+  major = 259  minor = 0  exists = True  protected = False
+  sysfs path = /sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/f8b3781a-1e82-4818-a1c3-63d806ec15bb/host0/target0:0:0/0:0:0:0/block/sda/sda16
+  target size = 913 MiB  path = /dev/sda16
+  format args = []  original_format = None  grow = None  max size = 0 B  bootable = None
+  part type = 0  primary = None  start sector = None  end sector = None
+  parted_partition = parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314c09be0>  fileSystem: <parted.filesystem.FileSystem object at 0x7fa315d2e710>
+  number: 16  path: /dev/sda16  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa315cf23f0>  PedPartition: <_ped.Partition object at 0x7fa314c267f0>
+  disk = existing 150 GiB disk sda (30) with existing gpt disklabel
+  start = 227328  end = 2097152  length = 1869825
+  flags = bls_boot type_uuid = bc13c2ff-59e6-4262-a352-b275fd6f7172
+DEBUG:blivet:                    DeviceTree.handle_format: name: sda16 ;
+DEBUG:blivet:                                EFIFS.supported: supported: True ;
+DEBUG:blivet:get_format('efi') returning EFIFS instance with object id 65
+DEBUG:blivet:                                  MacEFIFS.supported: supported: True ;
+DEBUG:blivet:get_format('macefi') returning MacEFIFS instance with object id 66
+DEBUG:blivet:                                   MacEFIFS.supported: supported: True ;
+DEBUG:blivet:get_format('macefi') returning MacEFIFS instance with object id 67
+INFO:blivet:type detected on 'sda16' is 'ext4'
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+INFO:program:Running... udevadm trigger --action=change /dev/sda16
+DEBUG:program:Return code: 0
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+INFO:program:Running [13] resize2fs -P /dev/sda16 ...
+INFO:program:stdout[13]: 
+INFO:program:stderr[13]: resize2fs 1.47.3 (8-Jul-2025)
+Please run 'e2fsck -f /dev/sda16' first.
+
+
+INFO:program:...done [13] (exit code: 1)
+WARNING:blivet:Failed to obtain minimum size for device /dev/sda16: failed to get fs min size: Process reported exit code 1: resize2fs 1.47.3 (8-Jul-2025)
+Please run 'e2fsck -f /dev/sda16' first.
+
+
+DEBUG:blivet:                          Ext4FS.supported: supported: True ;
+DEBUG:blivet:get_format('ext4') returning Ext4FS instance with object id 68
+DEBUG:blivet:                         PartitionDevice._set_format: sda16 ; type: ext4 ; current: None ;
+INFO:blivet:got format: existing ext4 filesystem
+DEBUG:blivet:                  DeviceTree.handle_device: name: loop0 ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-loop-inode/8:1-2621907 /dev/disk/by-diskseq/12',
+ 'DEVNAME': '/dev/loop0',
+ 'DEVPATH': '/devices/virtual/block/loop0',
+ 'DEVTYPE': 'disk',
+ 'DISKSEQ': '12',
+ 'ID_BLOCK_SUBSYSTEM': 'loop',
+ 'ID_LOOP_BACKING_DEVICE': '8:1',
+ 'ID_LOOP_BACKING_INODE': '2621907',
+ 'MAJOR': '7',
+ 'MINOR': '0',
+ 'NVME_HOST_IFACE': 'none',
+ 'SUBSYSTEM': 'block',
+ 'SYS_NAME': 'loop0',
+ 'SYS_PATH': '/sys/devices/virtual/block/loop0',
+ 'TAGS': ':systemd:',
+ 'USEC_INITIALIZED': '178361494'} ;
+INFO:blivet:scanning loop0 (/sys/devices/virtual/block/loop0)...
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/loop0/hidden: 300a
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: loop0 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned existing 17.59 GiB loop loop0 (21)
+INFO:blivet:got device: LoopDevice instance (0x7fa315d2d590) --
+  name = loop0  status = True  id = 21
+  children = ['existing 17.59 GiB dm-linear azurelinux-desktop-live (25)']
+  parents = ['existing 17.59 GiB file '
+ '/workspace/live-disk-result/azurelinux-desktop-live.img (17)']
+  uuid = None  size = 17.59 GiB
+  format = existing None
+  major = 0  minor = 0  exists = True  protected = False
+  sysfs path = /sys/devices/virtual/block/loop0
+  target size = 17.59 GiB  path = /dev/loop0
+  format args = []  original_format = None
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/loop0/ro: 300a
+DEBUG:blivet:                    DeviceTree.handle_format: name: loop0 ;
+DEBUG:blivet:no type or existing type for loop0, bailing
+DEBUG:blivet:                  DeviceTree.handle_device: name: loop1 ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-diskseq/2',
+ 'DEVNAME': '/dev/loop1',
+ 'DEVPATH': '/devices/virtual/block/loop1',
+ 'DEVTYPE': 'disk',
+ 'DISKSEQ': '2',
+ 'ID_BLOCK_SUBSYSTEM': 'loop',
+ 'MAJOR': '7',
+ 'MINOR': '1',
+ 'NVME_HOST_IFACE': 'none',
+ 'SUBSYSTEM': 'block',
+ 'SYSTEMD_READY': '0',
+ 'SYS_NAME': 'loop1',
+ 'SYS_PATH': '/sys/devices/virtual/block/loop1',
+ 'TAGS': ':systemd:',
+ 'USEC_INITIALIZED': '178361609'} ;
+INFO:blivet:scanning loop1 (/sys/devices/virtual/block/loop1)...
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/loop1/hidden: 300a
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: loop1 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+DEBUG:blivet:                   LoopDevicePopulator.run: name: loop1 ;
+DEBUG:blivet:no device obtained for loop1
+DEBUG:blivet:                  DeviceTree.handle_device: name: loop2 ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-diskseq/3',
+ 'DEVNAME': '/dev/loop2',
+ 'DEVPATH': '/devices/virtual/block/loop2',
+ 'DEVTYPE': 'disk',
+ 'DISKSEQ': '3',
+ 'ID_BLOCK_SUBSYSTEM': 'loop',
+ 'MAJOR': '7',
+ 'MINOR': '2',
+ 'NVME_HOST_IFACE': 'none',
+ 'SUBSYSTEM': 'block',
+ 'SYSTEMD_READY': '0',
+ 'SYS_NAME': 'loop2',
+ 'SYS_PATH': '/sys/devices/virtual/block/loop2',
+ 'TAGS': ':systemd:',
+ 'USEC_INITIALIZED': '178361714'} ;
+INFO:blivet:scanning loop2 (/sys/devices/virtual/block/loop2)...
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/loop2/hidden: 300a
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: loop2 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+DEBUG:blivet:                   LoopDevicePopulator.run: name: loop2 ;
+DEBUG:blivet:no device obtained for loop2
+DEBUG:blivet:                  DeviceTree.handle_device: name: loop3 ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-diskseq/4',
+ 'DEVNAME': '/dev/loop3',
+ 'DEVPATH': '/devices/virtual/block/loop3',
+ 'DEVTYPE': 'disk',
+ 'DISKSEQ': '4',
+ 'ID_BLOCK_SUBSYSTEM': 'loop',
+ 'MAJOR': '7',
+ 'MINOR': '3',
+ 'NVME_HOST_IFACE': 'none',
+ 'SUBSYSTEM': 'block',
+ 'SYSTEMD_READY': '0',
+ 'SYS_NAME': 'loop3',
+ 'SYS_PATH': '/sys/devices/virtual/block/loop3',
+ 'TAGS': ':systemd:',
+ 'USEC_INITIALIZED': '178361821'} ;
+INFO:blivet:scanning loop3 (/sys/devices/virtual/block/loop3)...
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/loop3/hidden: 300a
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: loop3 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+DEBUG:blivet:                   LoopDevicePopulator.run: name: loop3 ;
+DEBUG:blivet:no device obtained for loop3
+DEBUG:blivet:                  DeviceTree.handle_device: name: loop4 ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-diskseq/5',
+ 'DEVNAME': '/dev/loop4',
+ 'DEVPATH': '/devices/virtual/block/loop4',
+ 'DEVTYPE': 'disk',
+ 'DISKSEQ': '5',
+ 'ID_BLOCK_SUBSYSTEM': 'loop',
+ 'MAJOR': '7',
+ 'MINOR': '4',
+ 'NVME_HOST_IFACE': 'none',
+ 'SUBSYSTEM': 'block',
+ 'SYSTEMD_READY': '0',
+ 'SYS_NAME': 'loop4',
+ 'SYS_PATH': '/sys/devices/virtual/block/loop4',
+ 'TAGS': ':systemd:',
+ 'USEC_INITIALIZED': '178361944'} ;
+INFO:blivet:scanning loop4 (/sys/devices/virtual/block/loop4)...
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/loop4/hidden: 300a
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: loop4 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+DEBUG:blivet:                   LoopDevicePopulator.run: name: loop4 ;
+DEBUG:blivet:no device obtained for loop4
+DEBUG:blivet:                  DeviceTree.handle_device: name: loop5 ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-diskseq/6',
+ 'DEVNAME': '/dev/loop5',
+ 'DEVPATH': '/devices/virtual/block/loop5',
+ 'DEVTYPE': 'disk',
+ 'DISKSEQ': '6',
+ 'ID_BLOCK_SUBSYSTEM': 'loop',
+ 'MAJOR': '7',
+ 'MINOR': '5',
+ 'NVME_HOST_IFACE': 'none',
+ 'SUBSYSTEM': 'block',
+ 'SYSTEMD_READY': '0',
+ 'SYS_NAME': 'loop5',
+ 'SYS_PATH': '/sys/devices/virtual/block/loop5',
+ 'TAGS': ':systemd:',
+ 'USEC_INITIALIZED': '178362109'} ;
+INFO:blivet:scanning loop5 (/sys/devices/virtual/block/loop5)...
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/loop5/hidden: 300a
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: loop5 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+DEBUG:blivet:                   LoopDevicePopulator.run: name: loop5 ;
+DEBUG:blivet:no device obtained for loop5
+DEBUG:blivet:                  DeviceTree.handle_device: name: loop6 ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-diskseq/7',
+ 'DEVNAME': '/dev/loop6',
+ 'DEVPATH': '/devices/virtual/block/loop6',
+ 'DEVTYPE': 'disk',
+ 'DISKSEQ': '7',
+ 'ID_BLOCK_SUBSYSTEM': 'loop',
+ 'MAJOR': '7',
+ 'MINOR': '6',
+ 'NVME_HOST_IFACE': 'none',
+ 'SUBSYSTEM': 'block',
+ 'SYSTEMD_READY': '0',
+ 'SYS_NAME': 'loop6',
+ 'SYS_PATH': '/sys/devices/virtual/block/loop6',
+ 'TAGS': ':systemd:',
+ 'USEC_INITIALIZED': '178362213'} ;
+INFO:blivet:scanning loop6 (/sys/devices/virtual/block/loop6)...
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/loop6/hidden: 300a
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: loop6 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+DEBUG:blivet:                   LoopDevicePopulator.run: name: loop6 ;
+DEBUG:blivet:no device obtained for loop6
+DEBUG:blivet:                  DeviceTree.handle_device: name: loop7 ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-diskseq/8',
+ 'DEVNAME': '/dev/loop7',
+ 'DEVPATH': '/devices/virtual/block/loop7',
+ 'DEVTYPE': 'disk',
+ 'DISKSEQ': '8',
+ 'ID_BLOCK_SUBSYSTEM': 'loop',
+ 'MAJOR': '7',
+ 'MINOR': '7',
+ 'NVME_HOST_IFACE': 'none',
+ 'SUBSYSTEM': 'block',
+ 'SYSTEMD_READY': '0',
+ 'SYS_NAME': 'loop7',
+ 'SYS_PATH': '/sys/devices/virtual/block/loop7',
+ 'TAGS': ':systemd:',
+ 'USEC_INITIALIZED': '178362324'} ;
+INFO:blivet:scanning loop7 (/sys/devices/virtual/block/loop7)...
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/loop7/hidden: 300a
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: loop7 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned None
+DEBUG:blivet:                   LoopDevicePopulator.run: name: loop7 ;
+DEBUG:blivet:no device obtained for loop7
+DEBUG:blivet:                  DeviceTree.handle_device: name: azurelinux-desktop-live ; info: {'CURRENT_TAGS': ':systemd:',
+ 'DEVLINKS': '/dev/disk/by-id/dm-uuid-ANACONDA-azurelinux-desktop-live '
+             '/dev/mapper/azurelinux-desktop-live '
+             '/dev/disk/by-id/dm-name-azurelinux-desktop-live '
+             '/dev/disk/by-diskseq/13',
+ 'DEVNAME': '/dev/dm-0',
+ 'DEVPATH': '/devices/virtual/block/dm-0',
+ 'DEVTYPE': 'disk',
+ 'DISKSEQ': '13',
+ 'DM_ACTIVATION': '1',
+ 'DM_NAME': 'azurelinux-desktop-live',
+ 'DM_UDEV_DISABLE_LIBRARY_FALLBACK_FLAG': '1',
+ 'DM_UDEV_PRIMARY_SOURCE_FLAG': '1',
+ 'DM_UDEV_RULES_VSN': '3',
+ 'DM_UUID': 'ANACONDA-azurelinux-desktop-live',
+ 'ID_BLOCK_SUBSYSTEM': 'dm',
+ 'MAJOR': '252',
+ 'MINOR': '0',
+ 'NVME_HOST_IFACE': 'none',
+ 'SUBSYSTEM': 'block',
+ 'SYS_NAME': 'dm-0',
+ 'SYS_PATH': '/sys/devices/virtual/block/dm-0',
+ 'TAGS': ':systemd:',
+ 'USEC_INITIALIZED': '184135351'} ;
+INFO:blivet:scanning azurelinux-desktop-live (/sys/devices/virtual/block/dm-0)...
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/dm-0/hidden: 300a
+DEBUG:blivet:                    DeviceTree.get_device_by_name: name: azurelinux-desktop-live ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                    DeviceTree.get_device_by_name returned existing 17.59 GiB dm-linear azurelinux-desktop-live (25)
+INFO:blivet:got device: DMLinearDevice instance (0x7fa315d2d950) --
+  name = azurelinux-desktop-live  status = True  id = 25
+  children = []
+  parents = ['existing 17.59 GiB loop loop0 (21)']
+  uuid = None  size = 17.59 GiB
+  format = existing None
+  major = 0  minor = 0  exists = True  protected = False
+  sysfs path = /sys/devices/virtual/block/dm-0
+  target size = 17.59 GiB  path = /dev/mapper/azurelinux-desktop-live
+  format args = []  original_format = None  target = linear  dm_uuid = ANACONDA-azurelinux-desktop-live
+DEBUG:testdata:sysfs attr /sys/devices/virtual/block/dm-0/ro: 300a
+DEBUG:blivet:                    DeviceTree.handle_format: name: azurelinux-desktop-live ;
+DEBUG:blivet:no type or existing type for azurelinux-desktop-live, bailing
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:blivet:hiding device existing 149 GiB partition sda1 (39) with existing ext4 filesystem
+DEBUG:blivet:                            DiskDevice.remove_child: name: sda ; child: sda1 ; kids: 4 ;
+INFO:blivet:removed partition sda1 (id 39) from device tree
+INFO:blivet:hiding device existing 4 MiB partition sda14 (48) with existing biosboot
+DEBUG:blivet:                            DiskDevice.remove_child: name: sda ; child: sda14 ; kids: 3 ;
+INFO:blivet:removed partition sda14 (id 48) from device tree
+INFO:blivet:hiding device existing 106 MiB partition sda15 (54) with existing efi filesystem
+DEBUG:blivet:                            DiskDevice.remove_child: name: sda ; child: sda15 ; kids: 2 ;
+INFO:blivet:removed partition sda15 (id 54) from device tree
+INFO:blivet:hiding device existing 913 MiB partition sda16 (61) with existing ext4 filesystem
+DEBUG:blivet:                            DiskDevice.remove_child: name: sda ; child: sda16 ; kids: 1 ;
+INFO:blivet:removed partition sda16 (id 61) from device tree
+INFO:blivet:hiding device existing 150 GiB disk sda (30) with existing gpt disklabel
+INFO:blivet:removed disk sda (id 30) from device tree
+INFO:blivet:edd: collected mbr signatures: {}
+DEBUG:testdata:glob: /sys/firmware/edd/int13_dev*/
+DEBUG:blivet:              DMLinearDevice.teardown: azurelinux-desktop-live ; status: True ; controllable: True ;
+DEBUG:blivet:                  DeviceFormat.teardown: device: /dev/mapper/azurelinux-desktop-live ; type: None ; status: False ;
+DEBUG:blivet:                  DeviceFormat.teardown: device: /dev/mapper/azurelinux-desktop-live ; type: None ; status: False ;
+DEBUG:blivet:not tearing down dm-linear device azurelinux-desktop-live
+DEBUG:anaconda.modules.storage.bootloader.base:Multiple "console=" kernel parameters found: tty1 ttyS0
+DEBUG:anaconda.modules.storage.bootloader.base:Main console set to: ttyS0
+DEBUG:anaconda.modules.storage.bootloader.base:Console is set to ttyS0 with options ''
+INFO:anaconda.modules.storage.bootloader.factory:Created the boot loader EFIGRUB.
+DEBUG:blivet:               DMLinearDevice.teardown: azurelinux-desktop-live ; status: True ; controllable: True ;
+DEBUG:blivet:                   DeviceFormat.teardown: device: /dev/mapper/azurelinux-desktop-live ; type: None ; status: False ;
+DEBUG:blivet:                   DeviceFormat.teardown: device: /dev/mapper/azurelinux-desktop-live ; type: None ; status: False ;
+DEBUG:blivet:not tearing down dm-linear device azurelinux-desktop-live
+INFO:anaconda.core.threads:Thread Done: AnaTaskThread-ScanDevicesTask-1 (140338421839552)
+DEBUG:anaconda.modules.storage.storage:The storage model has changed.
+DEBUG:anaconda.modules.storage.storage:The storage model has changed.
+DEBUG:anaconda.modules.storage.storage:The partitioning NONE is applied.
+DEBUG:anaconda.modules.storage.disk_selection.selection:Selected disks are set to '['DM-azurelinux-desktop-live']'.
+DEBUG:anaconda.modules.storage.partitioning.base:Creating a new storage playground for CUSTOM with selected disks ['DM-azurelinux-desktop-live'].
+DEBUG:anaconda.storage:Creating a copy of the storage model.
+DEBUG:blivet:starting Blivet copy
+DEBUG:blivet:                    PartitionDevice._set_parted_partition: sda1 ;
+DEBUG:blivet:device sda1 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa315cf1a70>  fileSystem: <parted.filesystem.FileSystem object at 0x7fa316e6f650>
+  number: 1  path: /dev/sda1  type: 0
+  name:   active: True  busy: True
+  geometry: <parted.geometry.Geometry object at 0x7fa315cef110>  PedPartition: <_ped.Partition object at 0x7fa31fddeac0>
+DEBUG:blivet:                    PartitionDevice._set_parted_partition: sda14 ;
+DEBUG:blivet:device sda14 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa315cf1a70>  fileSystem: None
+  number: 14  path: /dev/sda14  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa316ddf2f0>  PedPartition: <_ped.Partition object at 0x7fa314c152b0>
+DEBUG:blivet:                    PartitionDevice._set_parted_partition: sda15 ;
+DEBUG:blivet:device sda15 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa315cf1a70>  fileSystem: <parted.filesystem.FileSystem object at 0x7fa315cf1cd0>
+  number: 15  path: /dev/sda15  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa316ddfc50>  PedPartition: <_ped.Partition object at 0x7fa314c151c0>
+DEBUG:blivet:                    PartitionDevice._set_parted_partition: sda16 ;
+DEBUG:blivet:device sda16 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa315cf1a70>  fileSystem: <parted.filesystem.FileSystem object at 0x7fa315cf3360>
+  number: 16  path: /dev/sda16  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314a909f0>  PedPartition: <_ped.Partition object at 0x7fa314c15170>
+DEBUG:blivet:finished Blivet copy
+DEBUG:anaconda.storage:Finished a copy of the storage model.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/Task/2.
+INFO:anaconda.core.threads:Running Thread: AnaTaskThread-CustomPartitioningTask-1 (140338324829888)
+INFO:anaconda.modules.common.task.task:Configure the partitioning
+DEBUG:anaconda.modules.storage.partitioning.automatic.noninteractive_partitioning:Looking at disk: azurelinux-desktop-live
+DEBUG:blivet:            DeviceTree.get_dependent_devices: dep: existing 17.59 GiB dm-linear azurelinux-desktop-live (25) ; hidden: False ;
+DEBUG:blivet:dep is a leaf
+DEBUG:anaconda.modules.storage.partitioning.automatic.noninteractive_partitioning:Removing azurelinux-desktop-live.
+DEBUG:blivet:removing azurelinux-desktop-live
+DEBUG:blivet:               DeviceTree.get_dependent_devices: dep: existing 17.59 GiB dm-linear azurelinux-desktop-live (25) ; hidden: False ;
+DEBUG:blivet:dep is a leaf
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 95
+DEBUG:blivet:                     DMLinearDevice._set_format: azurelinux-desktop-live ; type: None ; current: None ;
+INFO:blivet:registered action: [94] destroy format None on dm-linear azurelinux-desktop-live (id 25)
+DEBUG:anaconda.modules.storage.disk_initialization.configuration:Can azurelinux-desktop-live be initialized?
+DEBUG:anaconda.modules.storage.disk_initialization.configuration:A disk with unrecognized formatting can be initialized.
+DEBUG:anaconda.modules.storage.partitioning.automatic.noninteractive_partitioning:Initializing azurelinux-desktop-live.
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 97
+DEBUG:blivet:                   DMLinearDevice._set_format: azurelinux-desktop-live ; type: None ; current: None ;
+INFO:blivet:registered action: [96] destroy format None on dm-linear azurelinux-desktop-live (id 25)
+DEBUG:blivet:              DiskLabel.__init__: device: /dev/mapper/azurelinux-desktop-live ;
+DEBUG:blivet:selecting None disklabel for azurelinux-desktop-live based on size
+DEBUG:blivet:                    DiskLabel.fresh_parted_disk: device: /dev/mapper/azurelinux-desktop-live ; label_type: gpt ;
+DEBUG:blivet:selecting None disklabel for azurelinux-desktop-live based on size
+DEBUG:blivet:Clear pmbr_boot on parted.Disk instance --
+  type: gpt  primaryPartitionCount: 0
+  lastPartitionNumber: -1  maxPrimaryPartitionCount: 128
+  partitions: []
+  device: <parted.device.Device object at 0x7fa314ad4e90>
+  PedDisk: <_ped.Disk object at 0x7fa314c182c0>
+DEBUG:blivet:get_format('disklabel') returning DiskLabel instance with object id 98
+DEBUG:blivet:                   DMLinearDevice._set_format: azurelinux-desktop-live ; type: disklabel ; current: None ;
+INFO:blivet:registered action: [99] create format gpt disklabel on dm-linear azurelinux-desktop-live (id 25)
+DEBUG:anaconda.modules.storage.bootloader.execution:Execute the bootloader with dry run True.
+DEBUG:anaconda.modules.storage.bootloader.base:new disk list: [DMLinearDevice instance (0x7fa315d2e0d0) --
+  name = azurelinux-desktop-live  status = True  id = 25
+  children = []
+  parents = ['existing 17.59 GiB loop loop0 (21)']
+  uuid = None  size = 17.59 GiB
+  format = non-existent gpt disklabel
+  major = 0  minor = 0  exists = True  protected = False
+  sysfs path = /sys/devices/virtual/block/dm-0
+  target size = 17.59 GiB  path = /dev/mapper/azurelinux-desktop-live
+  format args = []  original_format = None  target = linear  dm_uuid = ANACONDA-azurelinux-desktop-live]
+DEBUG:anaconda.modules.storage.bootloader.execution:Applying bootloader location: MBR
+DEBUG:anaconda.modules.storage.bootloader.execution:Applying drive order: []
+DEBUG:anaconda.modules.storage.bootloader.base:new disk order: []
+DEBUG:anaconda.modules.storage.bootloader.base:Is /workspace/live-disk-result/azurelinux-desktop-live.img a valid stage1 target device?
+DEBUG:anaconda.modules.storage.bootloader.base:stage1 device cannot be of type file
+DEBUG:anaconda.modules.storage.bootloader.base:Is azurelinux-desktop-live a valid stage1 target device?
+DEBUG:anaconda.modules.storage.bootloader.base:stage1 device cannot be of type dm-linear
+DEBUG:anaconda.modules.storage.bootloader.base:Is loop0 a valid stage1 target device?
+DEBUG:anaconda.modules.storage.bootloader.base:stage1 device cannot be of type loop
+DEBUG:anaconda.modules.storage.bootloader.execution:No usable drive with a valid stage1 was found.
+DEBUG:anaconda.modules.storage.bootloader.execution:Use the first usable drive.
+DEBUG:anaconda.modules.storage.bootloader.execution:Using a boot drive: azurelinux-desktop-live
+DEBUG:blivet:                DeviceTree.get_device_by_name: name: azurelinux-desktop-live ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                DeviceTree.get_device_by_name returned existing 17.59 GiB dm-linear azurelinux-desktop-live (25) with non-existent gpt disklabel
+DEBUG:blivet:resolved 'azurelinux-desktop-live' to 'azurelinux-desktop-live' (dm-linear)
+DEBUG:anaconda.modules.storage.partitioning.custom.custom_partitioning:Executing the custom partitioning.
+DEBUG:blivet:                  EFIFS.supported: supported: True ;
+DEBUG:blivet:get_format('EFI System Partition') returning EFIFS instance with object id 100
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 102
+DEBUG:blivet:                     PartitionDevice._set_format: req0 ; type: efi ; current: None ;
+INFO:blivet:added partition req0 (id 101) to device tree
+INFO:blivet:registered action: [104] create device partition req0 (id 101)
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 106
+DEBUG:blivet:                     PartitionDevice._set_format: req0 ; type: efi ; current: efi ;
+INFO:blivet:registered action: [105] create format efi filesystem mounted at /boot/efi on partition req0 (id 101)
+DEBUG:blivet:                XFS.supported: supported: True ;
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+DEBUG:blivet:Kernel module xfs not available
+DEBUG:blivet:get_format('xfs') returning XFS instance with object id 107
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 109
+DEBUG:blivet:                     PartitionDevice._set_format: req1 ; type: xfs ; current: None ;
+INFO:blivet:added partition req1 (id 108) to device tree
+INFO:blivet:registered action: [111] create device partition req1 (id 108)
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 113
+DEBUG:blivet:                     PartitionDevice._set_format: req1 ; type: xfs ; current: xfs ;
+INFO:blivet:registered action: [112] create format xfs filesystem mounted at /boot on partition req1 (id 108)
+DEBUG:blivet:                XFS.supported: supported: True ;
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+DEBUG:blivet:Kernel module xfs not available
+DEBUG:blivet:get_format('xfs') returning XFS instance with object id 114
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 116
+DEBUG:blivet:                     PartitionDevice._set_format: req2 ; type: xfs ; current: None ;
+INFO:blivet:added partition req2 (id 115) to device tree
+INFO:blivet:registered action: [118] create device partition req2 (id 115)
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 120
+DEBUG:blivet:                     PartitionDevice._set_format: req2 ; type: xfs ; current: xfs ;
+INFO:blivet:registered action: [119] create format xfs filesystem mounted at / on partition req2 (id 115)
+DEBUG:blivet:             DMLinearDevice.setup: azurelinux-desktop-live ; orig: False ; status: True ; controllable: True ;
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+DEBUG:blivet:removing all non-preexisting partitions ['req0(id 101)', 'req1(id 108)', 'req2(id 115)'] from disk(s) ['azurelinux-desktop-live']
+DEBUG:blivet:allocate_partitions: disks=['azurelinux-desktop-live'] ; partitions=['req0(id 101)', 'req1(id 108)', 'req2(id 115)']
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+DEBUG:blivet:removing all non-preexisting partitions ['req0(id 101)', 'req1(id 108)', 'req2(id 115)'] from disk(s) ['azurelinux-desktop-live']
+DEBUG:blivet:allocating partition: req0 ; id: 101 ; disks: ['azurelinux-desktop-live'] ;
+boot: True ; primary: False ; size: 600 MiB ; grow: False ; max_size: 0 B ; start: None ; end: None
+DEBUG:blivet:checking freespace on azurelinux-desktop-live
+DEBUG:blivet:get_best_free_space_region: disk=/dev/mapper/azurelinux-desktop-live part_type=0 req_size=600 MiB boot=True best=None grow=False start=None
+DEBUG:blivet:checking 34-36884446 (17.59 GiB)
+DEBUG:blivet:current free range is 34-36884446 (17.59 GiB)
+DEBUG:blivet:updating use_disk to azurelinux-desktop-live, type: 0
+DEBUG:blivet:new free: 34-36884446 / 17.59 GiB
+DEBUG:blivet:new free allows for 0 sectors of growth
+DEBUG:blivet:found free space for bootable request
+DEBUG:blivet:using alignment: parted.Alignment instance --
+  offset: 0  grainSize: 2048
+  PedAlignment: <_ped.Alignment object at 0x7fa315c8e260>
+DEBUG:blivet:adjusted start sector from 34 to 2048
+DEBUG:blivet:created partition mapper/azurelinux-desktop-live1 of 600 MiB and added it to /dev/mapper/azurelinux-desktop-live
+DEBUG:blivet:                PartitionDevice._set_parted_partition: req0 ;
+DEBUG:blivet:device req0 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 1  path: /dev/mapper/azurelinux-desktop-live1  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314b408d0>  PedPartition: <_ped.Partition object at 0x7fa314b37970>
+DEBUG:blivet:                PartitionDevice._set_disk: azurelinux-desktop-live1 ; old: None ; new: azurelinux-desktop-live ;
+DEBUG:blivet:                     DMLinearDevice.add_child: name: azurelinux-desktop-live ; child: azurelinux-desktop-live1 ; kids: 0 ;
+DEBUG:blivet:                PartitionDevice._set_parted_partition: azurelinux-desktop-live1 ;
+DEBUG:blivet:device azurelinux-desktop-live1 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 1  path: /dev/mapper/azurelinux-desktop-live1  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314afa570>  PedPartition: <_ped.Partition object at 0x7fa314af5620>
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+DEBUG:blivet:allocating partition: req1 ; id: 108 ; disks: ['azurelinux-desktop-live'] ;
+boot: False ; primary: False ; size: 1024 MiB ; grow: False ; max_size: 0 B ; start: None ; end: None
+DEBUG:blivet:checking freespace on azurelinux-desktop-live
+DEBUG:blivet:get_best_free_space_region: disk=/dev/mapper/azurelinux-desktop-live part_type=0 req_size=1024 MiB boot=False best=None grow=False start=None
+DEBUG:blivet:checking 34-2047 (1007 KiB)
+DEBUG:blivet:current free range is 34-2047 (1007 KiB)
+DEBUG:blivet:checking 1230848-36884446 (17 GiB)
+DEBUG:blivet:current free range is 1230848-36884446 (17 GiB)
+DEBUG:blivet:updating use_disk to azurelinux-desktop-live, type: 0
+DEBUG:blivet:new free: 1230848-36884446 / 17 GiB
+DEBUG:blivet:new free allows for 0 sectors of growth
+DEBUG:blivet:using alignment: parted.Alignment instance --
+  offset: 0  grainSize: 2048
+  PedAlignment: <_ped.Alignment object at 0x7fa315c8e260>
+DEBUG:blivet:created partition mapper/azurelinux-desktop-live2 of 1024 MiB and added it to /dev/mapper/azurelinux-desktop-live
+DEBUG:blivet:                PartitionDevice._set_parted_partition: req1 ;
+DEBUG:blivet:device req1 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 2  path: /dev/mapper/azurelinux-desktop-live2  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314af9f10>  PedPartition: <_ped.Partition object at 0x7fa314af5350>
+DEBUG:blivet:                PartitionDevice._set_disk: azurelinux-desktop-live2 ; old: None ; new: azurelinux-desktop-live ;
+DEBUG:blivet:                     DMLinearDevice.add_child: name: azurelinux-desktop-live ; child: azurelinux-desktop-live2 ; kids: 1 ;
+DEBUG:blivet:                PartitionDevice._set_parted_partition: azurelinux-desktop-live2 ;
+DEBUG:blivet:device azurelinux-desktop-live2 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 2  path: /dev/mapper/azurelinux-desktop-live2  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314af85f0>  PedPartition: <_ped.Partition object at 0x7fa314af4ef0>
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+DEBUG:blivet:allocating partition: req2 ; id: 115 ; disks: ['azurelinux-desktop-live'] ;
+boot: False ; primary: False ; size: 16 GiB ; grow: True ; max_size: 0 B ; start: None ; end: None
+DEBUG:blivet:checking freespace on azurelinux-desktop-live
+DEBUG:blivet:get_best_free_space_region: disk=/dev/mapper/azurelinux-desktop-live part_type=0 req_size=16 GiB boot=False best=None grow=True start=None
+DEBUG:blivet:checking 34-2047 (1007 KiB)
+DEBUG:blivet:current free range is 34-2047 (1007 KiB)
+DEBUG:blivet:checking 3328000-36884446 (16 GiB)
+DEBUG:blivet:current free range is 3328000-36884446 (16 GiB)
+DEBUG:blivet:evaluating growth potential for new layout
+DEBUG:blivet:calculating growth for disk /dev/mapper/azurelinux-desktop-live
+DEBUG:blivet:using alignment: parted.Alignment instance --
+  offset: 0  grainSize: 2048
+  PedAlignment: <_ped.Alignment object at 0x7fa315c8e260>
+DEBUG:blivet:                PartitionDevice._set_parted_partition: req2 ;
+DEBUG:blivet:device req2 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 3  path: /dev/mapper/azurelinux-desktop-live3  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314af9eb0>  PedPartition: <_ped.Partition object at 0x7fa314af4b80>
+DEBUG:blivet:                PartitionDevice._set_disk: azurelinux-desktop-live3 ; old: None ; new: azurelinux-desktop-live ;
+DEBUG:blivet:                     DMLinearDevice.add_child: name: azurelinux-desktop-live ; child: azurelinux-desktop-live3 ; kids: 2 ;
+DEBUG:blivet:adding request 101 to chunk 36880384 (2048-36882431) on /dev/mapper/azurelinux-desktop-live
+DEBUG:blivet:adding request 108 to chunk 36880384 (2048-36882431) on /dev/mapper/azurelinux-desktop-live
+DEBUG:blivet:adding request 115 to chunk 36880384 (2048-36882431) on /dev/mapper/azurelinux-desktop-live
+DEBUG:blivet:Chunk.grow_requests: 36880384 (2048-36882431) on /dev/mapper/azurelinux-desktop-live start = 2048  end = 36882431
+sector_size = 512 B
+
+DEBUG:blivet:req: PartitionRequest instance --
+id = 101  name = azurelinux-desktop-live1  growable = False
+base = 1228800  growth = 0  max_grow = 0
+done = True
+DEBUG:blivet:req: PartitionRequest instance --
+id = 108  name = azurelinux-desktop-live2  growable = False
+base = 2097152  growth = 0  max_grow = 0
+done = True
+DEBUG:blivet:req: PartitionRequest instance --
+id = 115  name = azurelinux-desktop-live3  growable = True
+base = 33554432  growth = 0  max_grow = 36028796985409536
+done = False
+DEBUG:blivet:request 101 (azurelinux-desktop-live1) growth: 0 (0 B) size: 600 MiB
+DEBUG:blivet:request 108 (azurelinux-desktop-live2) growth: 0 (0 B) size: 1024 MiB
+DEBUG:blivet:request 115 (azurelinux-desktop-live3) growth: 0 (0 B) size: 16 GiB
+DEBUG:blivet:disk /dev/mapper/azurelinux-desktop-live growth: 0 (0 B)
+DEBUG:blivet:                PartitionDevice._set_parted_partition: azurelinux-desktop-live3 ;
+DEBUG:blivet:device azurelinux-desktop-live3 new parted_partition None
+DEBUG:blivet:                PartitionDevice._set_disk: req2 ; old: azurelinux-desktop-live ; new: None ;
+DEBUG:blivet:                         DMLinearDevice.remove_child: name: azurelinux-desktop-live ; child: req2 ; kids: 3 ;
+DEBUG:blivet:total growth: 0 sectors
+DEBUG:blivet:updating use_disk to azurelinux-desktop-live, type: 0
+DEBUG:blivet:new free: 3328000-36884446 / 16 GiB
+DEBUG:blivet:new free allows for 0 sectors of growth
+DEBUG:blivet:using alignment: parted.Alignment instance --
+  offset: 0  grainSize: 2048
+  PedAlignment: <_ped.Alignment object at 0x7fa315c8e260>
+DEBUG:blivet:created partition mapper/azurelinux-desktop-live3 of 16 GiB and added it to /dev/mapper/azurelinux-desktop-live
+DEBUG:blivet:                PartitionDevice._set_parted_partition: req2 ;
+DEBUG:blivet:device req2 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 3  path: /dev/mapper/azurelinux-desktop-live3  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314b3c890>  PedPartition: <_ped.Partition object at 0x7fa314af4db0>
+DEBUG:blivet:                PartitionDevice._set_disk: azurelinux-desktop-live3 ; old: None ; new: azurelinux-desktop-live ;
+DEBUG:blivet:                     DMLinearDevice.add_child: name: azurelinux-desktop-live ; child: azurelinux-desktop-live3 ; kids: 2 ;
+DEBUG:blivet:                PartitionDevice._set_parted_partition: azurelinux-desktop-live3 ;
+DEBUG:blivet:device azurelinux-desktop-live3 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 3  path: /dev/mapper/azurelinux-desktop-live3  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314b3e7b0>  PedPartition: <_ped.Partition object at 0x7fa314ae1da0>
+DEBUG:blivet:grow_partitions: disks=['azurelinux-desktop-live'], partitions=['azurelinux-desktop-live1(id 101)', 'azurelinux-desktop-live2(id 108)', 'azurelinux-desktop-live3(id 115)']
+DEBUG:blivet:growable partitions are ['azurelinux-desktop-live3']
+DEBUG:blivet:adding request 101 to chunk 36880384 (2048-36882431) on /dev/mapper/azurelinux-desktop-live
+DEBUG:blivet:adding request 108 to chunk 36880384 (2048-36882431) on /dev/mapper/azurelinux-desktop-live
+DEBUG:blivet:adding request 115 to chunk 36880384 (2048-36882431) on /dev/mapper/azurelinux-desktop-live
+DEBUG:blivet:disk azurelinux-desktop-live has 1 chunks
+DEBUG:blivet:Chunk.grow_requests: 36880384 (2048-36882431) on /dev/mapper/azurelinux-desktop-live start = 2048  end = 36882431
+sector_size = 512 B
+
+DEBUG:blivet:req: PartitionRequest instance --
+id = 101  name = azurelinux-desktop-live1  growable = False
+base = 1228800  growth = 0  max_grow = 0
+done = True
+DEBUG:blivet:req: PartitionRequest instance --
+id = 108  name = azurelinux-desktop-live2  growable = False
+base = 2097152  growth = 0  max_grow = 0
+done = True
+DEBUG:blivet:req: PartitionRequest instance --
+id = 115  name = azurelinux-desktop-live3  growable = True
+base = 33554432  growth = 0  max_grow = 36028796985409536
+done = False
+DEBUG:blivet:growing partitions on azurelinux-desktop-live
+DEBUG:blivet:partition azurelinux-desktop-live1 (101): 0
+DEBUG:blivet:new geometry for azurelinux-desktop-live1: parted.Geometry instance --
+  start: 2048  end: 1230847  length: 1228800
+  device: <parted.device.Device object at 0x7fa314ad4590>  PedGeometry: <_ped.Geometry object at 0x7fa314c7e5f0>
+DEBUG:blivet:partition azurelinux-desktop-live2 (108): 0
+DEBUG:blivet:new geometry for azurelinux-desktop-live2: parted.Geometry instance --
+  start: 1230848  end: 3327999  length: 2097152
+  device: <parted.device.Device object at 0x7fa314ad4590>  PedGeometry: <_ped.Geometry object at 0x7fa314c7eaa0>
+DEBUG:blivet:partition azurelinux-desktop-live3 (115): 0
+DEBUG:blivet:new geometry for azurelinux-desktop-live3: parted.Geometry instance --
+  start: 3328000  end: 36882431  length: 33554432
+  device: <parted.device.Device object at 0x7fa314ad4590>  PedGeometry: <_ped.Geometry object at 0x7fa314c7d960>
+DEBUG:blivet:removing all non-preexisting partitions ['azurelinux-desktop-live1(id 101)', 'azurelinux-desktop-live2(id 108)', 'azurelinux-desktop-live3(id 115)'] from disk(s) ['azurelinux-desktop-live']
+DEBUG:blivet:                 PartitionDevice._set_parted_partition: azurelinux-desktop-live1 ;
+DEBUG:blivet:device azurelinux-desktop-live1 new parted_partition None
+DEBUG:blivet:                 PartitionDevice._set_disk: req0 ; old: azurelinux-desktop-live ; new: None ;
+DEBUG:blivet:                          DMLinearDevice.remove_child: name: azurelinux-desktop-live ; child: req0 ; kids: 3 ;
+DEBUG:blivet:                 PartitionDevice._set_parted_partition: azurelinux-desktop-live2 ;
+DEBUG:blivet:device azurelinux-desktop-live2 new parted_partition None
+DEBUG:blivet:                 PartitionDevice._set_disk: req1 ; old: azurelinux-desktop-live ; new: None ;
+DEBUG:blivet:                          DMLinearDevice.remove_child: name: azurelinux-desktop-live ; child: req1 ; kids: 2 ;
+DEBUG:blivet:                 PartitionDevice._set_parted_partition: azurelinux-desktop-live3 ;
+DEBUG:blivet:device azurelinux-desktop-live3 new parted_partition None
+DEBUG:blivet:                 PartitionDevice._set_disk: req2 ; old: azurelinux-desktop-live ; new: None ;
+DEBUG:blivet:                          DMLinearDevice.remove_child: name: azurelinux-desktop-live ; child: req2 ; kids: 1 ;
+DEBUG:blivet:back from remove_new_partitions
+DEBUG:blivet:extended: None
+DEBUG:blivet:setting req0 new geometry: parted.Geometry instance --
+  start: 2048  end: 1230847  length: 1228800
+  device: <parted.device.Device object at 0x7fa314ad4590>  PedGeometry: <_ped.Geometry object at 0x7fa314c7e5f0>
+DEBUG:blivet:                PartitionDevice._set_parted_partition: req0 ;
+DEBUG:blivet:device req0 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 1  path: /dev/mapper/azurelinux-desktop-live1  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314a97830>  PedPartition: <_ped.Partition object at 0x7fa314ae1c10>
+DEBUG:blivet:                PartitionDevice._set_disk: azurelinux-desktop-live1 ; old: None ; new: azurelinux-desktop-live ;
+DEBUG:blivet:                     DMLinearDevice.add_child: name: azurelinux-desktop-live ; child: azurelinux-desktop-live1 ; kids: 0 ;
+DEBUG:blivet:                PartitionDevice._set_parted_partition: azurelinux-desktop-live1 ;
+DEBUG:blivet:device azurelinux-desktop-live1 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 1  path: /dev/mapper/azurelinux-desktop-live1  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314bbb4d0>  PedPartition: <_ped.Partition object at 0x7fa314ae2ed0>
+DEBUG:blivet:setting req1 new geometry: parted.Geometry instance --
+  start: 1230848  end: 3327999  length: 2097152
+  device: <parted.device.Device object at 0x7fa314ad4590>  PedGeometry: <_ped.Geometry object at 0x7fa314c7eaa0>
+DEBUG:blivet:                PartitionDevice._set_parted_partition: req1 ;
+DEBUG:blivet:device req1 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 2  path: /dev/mapper/azurelinux-desktop-live2  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314aeeb70>  PedPartition: <_ped.Partition object at 0x7fa314ae1ee0>
+DEBUG:blivet:                PartitionDevice._set_disk: azurelinux-desktop-live2 ; old: None ; new: azurelinux-desktop-live ;
+DEBUG:blivet:                     DMLinearDevice.add_child: name: azurelinux-desktop-live ; child: azurelinux-desktop-live2 ; kids: 1 ;
+DEBUG:blivet:                PartitionDevice._set_parted_partition: azurelinux-desktop-live2 ;
+DEBUG:blivet:device azurelinux-desktop-live2 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 2  path: /dev/mapper/azurelinux-desktop-live2  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314af8cb0>  PedPartition: <_ped.Partition object at 0x7fa314ae30b0>
+DEBUG:blivet:setting req2 new geometry: parted.Geometry instance --
+  start: 3328000  end: 36882431  length: 33554432
+  device: <parted.device.Device object at 0x7fa314ad4590>  PedGeometry: <_ped.Geometry object at 0x7fa314c7d960>
+DEBUG:blivet:                PartitionDevice._set_parted_partition: req2 ;
+DEBUG:blivet:device req2 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 3  path: /dev/mapper/azurelinux-desktop-live3  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314af8410>  PedPartition: <_ped.Partition object at 0x7fa314ae1f30>
+DEBUG:blivet:                PartitionDevice._set_disk: azurelinux-desktop-live3 ; old: None ; new: azurelinux-desktop-live ;
+DEBUG:blivet:                     DMLinearDevice.add_child: name: azurelinux-desktop-live ; child: azurelinux-desktop-live3 ; kids: 2 ;
+DEBUG:blivet:                PartitionDevice._set_parted_partition: azurelinux-desktop-live3 ;
+DEBUG:blivet:device azurelinux-desktop-live3 new parted_partition parted.Partition instance --
+  disk: <parted.disk.Disk object at 0x7fa314bdd4f0>  fileSystem: None
+  number: 3  path: /dev/mapper/azurelinux-desktop-live3  type: 0
+  name:   active: True  busy: False
+  geometry: <parted.geometry.Geometry object at 0x7fa314afaf90>  PedPartition: <_ped.Partition object at 0x7fa314ae32e0>
+DEBUG:blivet:fixing size of non-existent 600 MiB partition azurelinux-desktop-live1 (101) with non-existent efi filesystem mounted at /boot/efi
+DEBUG:blivet:fixing size of non-existent 1024 MiB partition azurelinux-desktop-live2 (108) with non-existent xfs filesystem mounted at /boot
+DEBUG:blivet:fixing size of non-existent 16 GiB partition azurelinux-desktop-live3 (115) with non-existent xfs filesystem mounted at /
+DEBUG:anaconda.modules.storage.bootloader.execution:Execute the bootloader with dry run False.
+DEBUG:anaconda.modules.storage.bootloader.base:new disk list: [DMLinearDevice instance (0x7fa315d2e0d0) --
+  name = azurelinux-desktop-live  status = True  id = 25
+  children = ['non-existent 600 MiB partition azurelinux-desktop-live1 (101) with '
+ 'non-existent efi filesystem mounted at /boot/efi',
+ 'non-existent 1024 MiB partition azurelinux-desktop-live2 (108) with '
+ 'non-existent xfs filesystem mounted at /boot',
+ 'non-existent 16 GiB partition azurelinux-desktop-live3 (115) with '
+ 'non-existent xfs filesystem mounted at /']
+  parents = ['existing 17.59 GiB loop loop0 (21)']
+  uuid = None  size = 17.59 GiB
+  format = non-existent gpt disklabel
+  major = 0  minor = 0  exists = True  protected = False
+  sysfs path = /sys/devices/virtual/block/dm-0
+  target size = 17.59 GiB  path = /dev/mapper/azurelinux-desktop-live
+  format args = []  original_format = None  target = linear  dm_uuid = ANACONDA-azurelinux-desktop-live]
+DEBUG:anaconda.modules.storage.bootloader.execution:Applying bootloader location: MBR
+DEBUG:anaconda.modules.storage.bootloader.execution:Applying drive order: []
+DEBUG:anaconda.modules.storage.bootloader.base:new disk order: []
+DEBUG:anaconda.modules.storage.bootloader.base:Is /workspace/live-disk-result/azurelinux-desktop-live.img a valid stage1 target device?
+DEBUG:anaconda.modules.storage.bootloader.base:stage1 device cannot be of type file
+DEBUG:anaconda.modules.storage.bootloader.base:Is azurelinux-desktop-live a valid stage1 target device?
+DEBUG:anaconda.modules.storage.bootloader.base:stage1 device cannot be of type dm-linear
+DEBUG:anaconda.modules.storage.bootloader.base:Is azurelinux-desktop-live1 a valid stage1 target device?
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_disklabel(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_disklabel(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_size(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_location(azurelinux-desktop-live1) returning True
+WARNING:anaconda.modules.storage.bootloader.base:azurelinux-desktop-live1 not bootable
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_format(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.base:is_valid_stage1_device(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.execution:Found a drive with a valid stage1: azurelinux-desktop-live
+DEBUG:anaconda.modules.storage.bootloader.execution:Use a usable drive with a valid stage1 device.
+DEBUG:anaconda.modules.storage.bootloader.execution:Using a boot drive: azurelinux-desktop-live
+DEBUG:blivet:                DeviceTree.get_device_by_name: name: azurelinux-desktop-live ; incomplete: False ; hidden: False ;
+DEBUG:blivet:                DeviceTree.get_device_by_name returned existing 17.59 GiB dm-linear azurelinux-desktop-live (25) with non-existent gpt disklabel
+DEBUG:blivet:resolved 'azurelinux-desktop-live' to 'azurelinux-desktop-live' (dm-linear)
+DEBUG:anaconda.modules.storage.bootloader.bootloader:Drive is set to 'azurelinux-desktop-live'.
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30803ff70 released
+
+DEBUG:anaconda.modules.storage.bootloader.base:Is azurelinux-desktop-live a valid stage1 target device?
+DEBUG:anaconda.modules.storage.bootloader.base:stage1 device cannot be of type dm-linear
+DEBUG:anaconda.modules.storage.bootloader.base:Is azurelinux-desktop-live1 a valid stage1 target device?
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_disklabel(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_disklabel(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_size(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_location(azurelinux-desktop-live1) returning True
+WARNING:anaconda.modules.storage.bootloader.base:azurelinux-desktop-live1 not bootable
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_format(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.base:is_valid_stage1_device(azurelinux-desktop-live1) returning True
+INFO:anaconda.core.threads:Thread Done: AnaTaskThread-CustomPartitioningTask-1 (140338324829888)
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/Task/3.
+INFO:anaconda.core.threads:Running Thread: AnaTaskThread-StorageValidateTask-1 (140338308048576)
+INFO:anaconda.modules.common.task.task:Validate a storage model
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+DEBUG:anaconda.modules.storage.bootloader.base:Is azurelinux-desktop-live1 a valid stage1 target device?
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_disklabel(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_disklabel(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_size(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_location(azurelinux-desktop-live1) returning True
+WARNING:anaconda.modules.storage.bootloader.base:azurelinux-desktop-live1 not bootable
+DEBUG:anaconda.modules.storage.bootloader.base:_is_valid_format(azurelinux-desktop-live1) returning True
+DEBUG:anaconda.modules.storage.bootloader.base:is_valid_stage1_device(azurelinux-desktop-live1) returning True
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+DEBUG:anaconda.modules.storage.checker.utils:Available memory: 13.94 GiB
+DEBUG:blivet:            DeviceTree.get_device_by_path: path: /dev/mapper/azurelinux-desktop-live1 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:            DeviceTree.get_device_by_path returned non-existent 600 MiB partition azurelinux-desktop-live1 (101) with non-existent efi filesystem mounted at /boot/efi
+DEBUG:blivet:            DeviceTree.get_device_by_path: path: /dev/mapper/azurelinux-desktop-live2 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:            DeviceTree.get_device_by_path returned non-existent 1024 MiB partition azurelinux-desktop-live2 (108) with non-existent xfs filesystem mounted at /boot
+DEBUG:blivet:            DeviceTree.get_device_by_path: path: /dev/mapper/azurelinux-desktop-live3 ; incomplete: False ; hidden: False ;
+DEBUG:blivet:            DeviceTree.get_device_by_path returned non-existent 16 GiB partition azurelinux-desktop-live3 (115) with non-existent xfs filesystem mounted at /
+DEBUG:anaconda.modules.storage.partitioning.validate:Storage check started with constraints {'min_ram': Size (320 MiB), 'root_device_types': set(), 'min_partition_sizes': {'/': Size (250 MiB), '/usr': Size (250 MiB), '/tmp': Size (50 MiB), '/var': Size (384 MiB), '/home': Size (100 MiB), '/boot': Size (1024 MiB), '/boot/efi': Size (500 MiB)}, 'req_partition_sizes': {}, 'must_be_on_linuxfs': {'/tmp', '/usr/share', '/', '/home', '/var', '/usr/lib', '/usr'}, 'must_be_on_root': {'/mnt', '/sbin', '/bin', '/dev', '/lib', '/root', 'lost+found', '/proc', '/etc'}, 'must_not_be_on_root': set(), 'reformat_allowlist': {'/var', '/boot', '/tmp', '/usr'}, 'reformat_blocklist': {'/opt', '/home', '/var/www', '/usr/local'}, 'swap_is_recommended': False, 'luks2_min_ram': Size (128 MiB)}.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_root.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_s390_constraints.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_partition_formatting.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_partition_sizes.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_partition_format_sizes.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_bootloader.
+DEBUG:anaconda.modules.storage.partitioning.validate:Found sanity error: You have not created a bootable partition.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_gpt_biosboot.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_opal_compatibility.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_swap.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_swap_uuid.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_mountpoints_on_linuxfs.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_mountpoints_on_root.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_mountpoints_not_on_root.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_unlocked_devices_have_key.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_luks_devices_have_key.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_luks2_memory_requirements.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_mounted_partitions.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_lvm_destruction.
+DEBUG:anaconda.modules.storage.partitioning.validate:Run sanity check verify_requests.
+DEBUG:anaconda.modules.storage.partitioning.validate:Storage check finished with failure(s).
+INFO:anaconda.core.threads:Thread Done: AnaTaskThread-StorageValidateTask-1 (140338308048576)
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/Task/4.
+DEBUG:dasbus.connection:Publishing an object at /org/fedoraproject/Anaconda/Modules/Storage/Task/5.
+INFO:anaconda.core.threads:Running Thread: AnaTaskThread-UnmountFilesystemsTask-1 (140338291267264)
+INFO:anaconda.modules.common.task.task:Unmount filesystems
+DEBUG:blivet:                  BindFS.supported: supported: False ;
+DEBUG:blivet:get_format('bind') returning BindFS instance with object id 121
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 123
+DEBUG:blivet:                     DirectoryDevice._set_format: /dev ; type: bind ; current: None ;
+DEBUG:blivet:updated /dev size to 3.93 KiB (3.93 KiB)
+DEBUG:blivet:                      TmpFS.supported: supported: True ;
+DEBUG:blivet:get_format('tmpfs') returning TmpFS instance with object id 125
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 127
+DEBUG:blivet:                     NoDevice._set_format: tmpfs ; type: tmpfs ; current: None ;
+DEBUG:blivet:                    DevPtsFS.supported: supported: False ;
+DEBUG:blivet:get_format('devpts') returning DevPtsFS instance with object id 129
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 131
+DEBUG:blivet:                     NoDevice._set_format: devpts ; type: devpts ; current: None ;
+DEBUG:blivet:                    SysFS.supported: supported: False ;
+DEBUG:blivet:get_format('sysfs') returning SysFS instance with object id 133
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 135
+DEBUG:blivet:                     NoDevice._set_format: sysfs ; type: sysfs ; current: None ;
+DEBUG:blivet:                    ProcFS.supported: supported: False ;
+DEBUG:blivet:get_format('proc') returning ProcFS instance with object id 137
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 139
+DEBUG:blivet:                     NoDevice._set_format: proc ; type: proc ; current: None ;
+DEBUG:blivet:                    SELinuxFS.supported: supported: False ;
+DEBUG:blivet:get_format('selinuxfs') returning SELinuxFS instance with object id 141
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 143
+DEBUG:blivet:                     NoDevice._set_format: selinuxfs ; type: selinuxfs ; current: None ;
+DEBUG:blivet:                    USBFS.supported: supported: False ;
+DEBUG:blivet:get_format('usbfs') returning USBFS instance with object id 145
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 147
+DEBUG:blivet:                     NoDevice._set_format: usbfs ; type: usbfs ; current: None ;
+DEBUG:blivet:                  BindFS.supported: supported: False ;
+DEBUG:blivet:get_format('bind') returning BindFS instance with object id 149
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 151
+DEBUG:blivet:                     DirectoryDevice._set_format: /run ; type: bind ; current: None ;
+DEBUG:blivet:updated /run size to 4 KiB (4 KiB)
+DEBUG:blivet:                    EFIVarFS.supported: supported: False ;
+DEBUG:blivet:get_format('efivarfs') returning EFIVarFS instance with object id 153
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 155
+DEBUG:blivet:                     NoDevice._set_format: efivarfs ; type: efivarfs ; current: None ;
+DEBUG:blivet:                      TmpFS.supported: supported: True ;
+DEBUG:blivet:get_format('tmpfs') returning TmpFS instance with object id 157
+DEBUG:blivet:get_format('None') returning DeviceFormat instance with object id 159
+DEBUG:blivet:                     NoDevice._set_format: tmpfs ; type: tmpfs ; current: None ;
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+DEBUG:blivet:            TmpFS.teardown: device: tmpfs ; type: tmpfs ; status: True ;
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+INFO:program:Running... umount /dev/shm
+DEBUG:program:Return code: 0
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30805fbf0 released
+
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+DEBUG:blivet:            EFIVarFS.teardown: device: efivarfs ; type: efivarfs ; status: False ;
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+DEBUG:blivet:            SysFS.teardown: device: sysfs ; type: sysfs ; status: False ;
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+DEBUG:blivet:            BindFS.teardown: device: /run ; type: bind ; status: False ;
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+INFO:program:[libmkod] custom logging function 0x7fa31f63a930 registered
+
+INFO:program:[libmkod] context 0x7fa30809d300 released
+
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+DEBUG:blivet:            ProcFS.teardown: device: proc ; type: proc ; status: False ;
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+DEBUG:testdata:sysfs attr /sys/class/block/sda/device/model: 5669727475616c204469736b202020200a
+DEBUG:blivet:            TmpFS.teardown: device: tmpfs ; type: tmpfs ; status: True ;
+INFO:program:Running... udevadm settle --timeout=300
+DEBUG:program:Return code: 0
+INFO:program:Running... umount /tmp
+INFO:program:stderr:
+INFO:program:b'umount: /tmp: target is busy.'
+DEBUG:program:Return code: 32
+INFO:program:Running... lsof /tmp
+DEBUG:program:Return code: -11
+INFO:anaconda.core.threads:Thread Failed: AnaTaskThread-UnmountFilesystemsTask-1 (140338291267264)
+ERROR:anaconda.modules.common.task.task:Thread AnaTaskThread-UnmountFilesystemsTask-1 has failed: Traceback (most recent call last):
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/core/threads.py", line 281, in run
+    threading.Thread.run(self)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/lib64/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/modules/common/task/task.py", line 97, in _thread_run_callback
+    self._task_run_callback()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/modules/common/task/task.py", line 110, in _task_run_callback
+    self._set_result(self.run())
+                     ~~~~~~~~^^
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/modules/storage/teardown.py", line 43, in run
+    self._storage.umount_filesystems(swapoff=False)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/site-packages/blivet/threads.py", line 48, in run_with_lock
+    return m(*args, **kwargs)
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/modules/storage/devicetree/model.py", line 519, in umount_filesystems
+    self.fsset.umount_filesystems(swapoff=swapoff)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/modules/storage/devicetree/fsset.py", line 504, in umount_filesystems
+    device.format.teardown()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/blivet/threads.py", line 48, in run_with_lock
+    return m(*args, **kwargs)
+  File "/usr/lib/python3.14/site-packages/blivet/formats/__init__.py", line 645, in teardown
+    self._teardown(**kwargs)
+    ~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/site-packages/blivet/threads.py", line 48, in run_with_lock
+    return m(*args, **kwargs)
+  File "/usr/lib/python3.14/site-packages/blivet/formats/fs.py", line 707, in _teardown
+    raise FSError("umount of %s failed (%d)" % (mountpoint, rc))
+blivet.errors.FSError: umount of /tmp failed (32)
+
+INFO:anaconda.core.threads:Thread Done: AnaTaskThread-UnmountFilesystemsTask-1 (140338291267264)
+WARNING:dasbus.server.handler:The call org.fedoraproject.Anaconda.Task.Finish has failed with an exception:
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/site-packages/dasbus/server/handler.py", line 455, in _method_callback
+    result = self._handle_call(
+        interface_name,
+    ...<2 lines>...
+        **additional_args
+    )
+  File "/usr/lib/python3.14/site-packages/dasbus/server/handler.py", line 265, in _handle_call
+    return handler(*parameters, **additional_args)
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/modules/common/task/task_interface.py", line 115, in Finish
+    self.implementation.finish()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/modules/common/task/task.py", line 176, in finish
+    thread_manager.raise_if_error(self._thread_name)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/core/threads.py", line 172, in raise_if_error
+    raise exc_info[1]
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/core/threads.py", line 281, in run
+    threading.Thread.run(self)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/lib64/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/modules/common/task/task.py", line 97, in _thread_run_callback
+    self._task_run_callback()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/modules/common/task/task.py", line 110, in _task_run_callback
+    self._set_result(self.run())
+                     ~~~~~~~~^^
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/modules/storage/teardown.py", line 43, in run
+    self._storage.umount_filesystems(swapoff=False)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/site-packages/blivet/threads.py", line 48, in run_with_lock
+    return m(*args, **kwargs)
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/modules/storage/devicetree/model.py", line 519, in umount_filesystems
+    self.fsset.umount_filesystems(swapoff=swapoff)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.14/site-packages/pyanaconda/modules/storage/devicetree/fsset.py", line 504, in umount_filesystems
+    device.format.teardown()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/blivet/threads.py", line 48, in run_with_lock
+    return m(*args, **kwargs)
+  File "/usr/lib/python3.14/site-packages/blivet/formats/__init__.py", line 645, in teardown
+    self._teardown(**kwargs)
+    ~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/site-packages/blivet/threads.py", line 48, in run_with_lock
+    return m(*args, **kwargs)
+  File "/usr/lib/python3.14/site-packages/blivet/formats/fs.py", line 707, in _teardown
+    raise FSError("umount of %s failed (%d)" % (mountpoint, rc))
+blivet.errors.FSError: umount of /tmp failed (32)
