@@ -358,6 +358,41 @@ check the **exact installed package version's actual source** (pull the
 NEVRA into a disposable container and read its files), not just
 whatever's newest on GitHub.
 
+### Bug #8 - RESOLVED: EFI stub written to the wrong vendor directory
+
+The next disk-image failure occurred during `gen_grub_cfgstub`, after
+the package transaction had selected Azure Linux shim and GRUB packages.
+Those packages place their EFI binaries in `EFI/azurelinux`, but the
+Anaconda profile still defaulted to `efi_dir = fedora`. It consequently
+tried to create `EFI/fedora/grub.cfg.stb` in a directory that does not
+exist.
+
+Fix: `scripts/configure-anaconda-efi-vendor.py` changes only the
+expected profile setting, with an exact-source guard so an upstream
+profile change fails loudly. It runs alongside the existing Anaconda
+image-install patch in the workflow and the local builder.
+
+The original CI failure is retained in the disk-image artifact from run
+`29721732924`. A complete privileged Podman rebuild then installed the
+bootloader through `EFI/azurelinux`; the trimmed evidence in
+`findings/logs/local-disk-image-efi-and-sparsify-2026-07-20.log` shows
+successful stub generation, default selection, and configuration
+generation.
+
+### Bug #9 - RESOLVED: sparsifying compressed qcow2 erased guest data
+
+The first successful local Anaconda install produced a bootable raw image,
+then ran `virt-sparsify --in-place` after converting it to compressed
+qcow2. The command reported success but left a tiny virtual disk whose
+mapped contents were all zero. This was a post-processing error, not an
+Anaconda or GRUB failure.
+
+Fix: sparsify the raw image with `LIBGUESTFS_BACKEND=direct`, convert that
+result to compressed zstd qcow2, then resize the qcow2. A full local
+rebuild completed with a 3.0 GiB qcow2, a valid nonzero allocation map,
+and a clean `qemu-img check`. The same sequence is now used by CI and
+the local builder.
+
 ### Process note: `actionlint` needs `shellcheck` installed
 
 `actionlint` only checks `run:` shell with `shellcheck` if
@@ -465,14 +500,14 @@ touching CI:
 3. **`-S 4k` (sparse-size) on all three conversions**: tightens the
    zero-run-length threshold qemu-img uses to treat bytes as a hole on
    output, instead of leaving it at qemu-img's own default.
-4. **`virt-sparsify --in-place`** on the qcow2, right after the resize
-   step, before any of the three conversions read it. Anaconda's own
+4. **`virt-sparsify --in-place`** on the raw image, before conversion to
+   qcow2. Anaconda's own
    install/cleanup (dnf cache, package `%post` scripts, journal/temp
    file churn) leaves non-zero garbage in what's logically free space -
    none of the above (sparse detection, `-c`/zstd, `-S`) can shrink
    data it can't recognize as zero. `--in-place` avoids needing a
-   second temporary copy of a 64G image; it rewrites already-allocated
-   clusters to zero in place instead. Needs `libguestfs-tools-c`
+   second temporary copy; it rewrites already-allocated clusters to zero
+   in place before compression. Needs `libguestfs-tools-c`
    (installed inside the same privileged Fedora container container that
    already builds the qcow2). GitHub-hosted runners have no KVM (see
    this repo's own runner notes elsewhere in this file), so libguestfs
@@ -502,8 +537,6 @@ Workstation/Player compatibility `monolithicSparse` was chosen for in
 the first place, and 7z compression on top of `monolithicSparse` gets
 most of the same size win without that trade-off.
 
-**Open**: none of this has been through a real CI build yet as of this
-writing - the qemu-img flag combinations are confirmed correct against
-synthetic test images, but the actual size deltas on real guest data,
-and `virt-sparsify`'s real runtime under TCG on a 64G image, are only
-provable via a real release run.
+**Open**: the raw-first sequence is confirmed by a complete local Podman
+build. A release disk-image run is still needed to measure its runtime and
+asset sizes in the GitHub-hosted build environment.
