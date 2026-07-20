@@ -236,6 +236,21 @@ This addresses the prior launcher failure, where the rendered filename did
 not match the filename the launcher copied, leaving Anaconda without
 `/run/install/ks.cfg`.
 
+## Installer manual QA
+
+The `2026.07.20` installer ISO was booted in QEMU with real OVMF firmware,
+a fresh virtio target disk, GTK display, and serial logging.
+
+The GRUB menu contained only `Install Azure Linux Desktop` and `Try Azure
+Linux Desktop (Live)`. It did not contain Ubuntu entries from the build
+runner. This confirms the `os-prober` hardening and Azure Linux Desktop
+branding are reaching the installer boot path too.
+
+Running `install-azl` and selecting the standard option printed the expected
+EFI, `/boot`, LVM, swap, and root storage configuration before starting
+Anaconda. The previous `cp: cannot stat '/root/azl-install.ks'` and missing
+`/run/install/ks.cfg` errors did not recur.
+
 ## Build-container cleanup error
 
 The new live ISO build completed Anaconda installation successfully but
