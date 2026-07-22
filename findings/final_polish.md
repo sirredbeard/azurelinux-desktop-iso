@@ -18,6 +18,78 @@ This section tracks the current polish fixes split into:
 
 ### (b) Full rebuild/runtime-verification fixes (shipped to GitHub Actions)
 
+**Installer release workflow result (run 29960854403):** `success`  
+URL: https://github.com/sirredbeard/azurelinux-desktop/actions/runs/29960854403
+
+**Live release workflow result (run 29960854444):** `success`  
+URL: https://github.com/sirredbeard/azurelinux-desktop/actions/runs/29960854444
+
+**Installer artifact downloaded and verified:**
+
+- Download method: `scripts/Get-AzureLinuxDesktop.ps1 -Install -OutputDirectory /home/fedora/azl-work/release-verify-2026.07.22-round2`
+- Reassembled ISO checksum: `149ed64cdaf6b951198a2535380534a83907af712ba2537787c4a8927d98805d`
+
+**Live artifact downloaded and verified:**
+
+- Download method: `scripts/Get-AzureLinuxDesktop.ps1 -Live -OutputDirectory /home/fedora/azl-work/release-verify-2026.07.22-round2-live`
+- Reassembled ISO checksum: `bdb112cec6e24c0bf3678575c80ca06dee3fa10d1946ea2ee97db1b69f16fe5f`
+
+**Installer filesystem verification (mounted runtime rootfs):**
+
+1. `anaconda-launcher.sh` includes admin shell injection fix:
+   - `user --name=%s --groups=wheel --****** --iscrypted --shell=/usr/bin/pwsh`
+2. `opt/azl-desktop-assets/desktop/dotnet.desktop` now points to helper:
+   - `Exec=/usr/local/bin/azl-dotnet-terminal`
+3. `opt/azl-desktop-assets/bin/azl-dotnet-terminal` present and executable.
+4. `opt/azl-desktop-assets/dbus/org.azurelinux.PowerShell.service` present with:
+   - `Exec=/usr/libexec/gnome-terminal-server --app-id org.azurelinux.PowerShell`
+5. Rendered `root/azl-install.ks` includes target staging lines for:
+   - `azl-dotnet-terminal`
+   - `org.azurelinux.PowerShell.service`
+   - updated `azl-powershell-terminal` pathing
+
+**Per-fix status after installer rebuild verification:**
+
+- Installer-created admin shell default (`--shell=/usr/bin/pwsh`): **fixed in installer artifact filesystem**.
+- `.NET` launcher packaging/staging: **fixed in installer artifact filesystem**.
+- PowerShell D-Bus service packaging/staging: **fixed in installer artifact filesystem**.
+- Runtime GUI ownership/icon behavior: **pending boot/session verification** on rebuilt artifacts.
+
+**Live filesystem verification (mounted `LiveOS/squashfs.img`):**
+
+1. `usr/share/applications/dotnet.desktop` now points to helper:
+   - `Exec=/usr/local/bin/azl-dotnet-terminal`
+2. `usr/local/bin/azl-dotnet-terminal` present and executable.
+3. `usr/share/dbus-1/services/org.azurelinux.PowerShell.service` present with:
+   - `Exec=/usr/libexec/gnome-terminal-server --app-id org.azurelinux.PowerShell`
+4. `usr/local/bin/azl-powershell-terminal` present and calling:
+   - `gnome-terminal --app-id org.azurelinux.PowerShell --title=PowerShell -- /usr/bin/pwsh`
+
+**Per-fix status after live rebuild filesystem verification:**
+
+- `.NET` launcher packaging/staging: **fixed in live artifact filesystem**.
+- PowerShell D-Bus service packaging/staging: **fixed in live artifact filesystem**.
+- Runtime GUI ownership/icon behavior: **pending boot/session verification** on rebuilt artifacts.
+- Fresh installed-root verification from this new build: **pending** (existing `installer-20260722-fixed.qcow2` snapshot predates this rebuild cycle and is not valid evidence for new-runtime outcomes).
+
+**Systematic filesystem validation pass (scripted, 2026-07-22):**
+
+- Reusable script: `scripts/verify-final-polish-filesystems.sh`
+- Evidence log excerpt: `findings/logs/final-polish-filesystem-validation-2026-07-22.log`
+- Live ISO (`bdb112...`) confirms launcher fixes are shipped on disk:
+  - `dotnet.desktop -> Exec=/usr/local/bin/azl-dotnet-terminal`
+  - `org.azurelinux.PowerShell.service` present with terminal-server app-id
+  - `azl-powershell-terminal` launching with `--app-id org.azurelinux.PowerShell`
+- Installer ISO (`149ed6...`) confirms staged runtime assets are present:
+  - `/opt/azl-desktop-assets/desktop/dotnet.desktop`
+  - `/opt/azl-desktop-assets/bin/azl-dotnet-terminal`
+  - `/opt/azl-desktop-assets/dbus/org.azurelinux.PowerShell.service`
+  - `/opt/azl-desktop-assets/bin/azl-powershell-terminal`
+  - `/root/azl-install.ks`
+- Installed qcow snapshot (`2e04b2...`) still shows pre-fix runtime state for `.NET`/PowerShell assets; this snapshot predates the current rebuild and is retained only as historical comparison evidence.
+- Scripted package diff (live root vs installed snapshot) captured and attached in the same log excerpt (`1175` vs `1029` RPMs in this comparison pair).
+
+
 These need rebuilt artifacts and GUI/runtime boot validation, not just static/container checks:
 
 - PowerShell dock active-indicator ownership (`org.azurelinux.PowerShell` vs `org.gnome.Terminal`)
@@ -37,9 +109,9 @@ These need rebuilt artifacts and GUI/runtime boot validation, not just static/co
 **GitHub Actions dispatch status (full-rebuild category):**
 
 - `release-live-iso.yml` (ISO-only requested): https://github.com/sirredbeard/azurelinux-desktop/actions/runs/29960854444  
-  Status at dispatch check: `pending` (head SHA `2c71482355922e6d34937a7b3736ed3aa9fbbb22`)
+  Final status: `success` (head SHA `2c71482355922e6d34937a7b3736ed3aa9fbbb22`)
 - `release-installer-iso.yml`: https://github.com/sirredbeard/azurelinux-desktop/actions/runs/29960854403  
-  Status at dispatch check: `in_progress` (head SHA `2c71482355922e6d34937a7b3736ed3aa9fbbb22`)
+  Final status: `success` (head SHA `2c71482355922e6d34937a7b3736ed3aa9fbbb22`)
 
 Result capture plan for this same tracker section after completion:
 

@@ -21,13 +21,21 @@ README for the full backstory.
    system-level change outside Azure Linux/Fedora when it's genuinely
    necessary. This applies to build tooling too, not just runtime packages -
    see "Build tooling" below for why that's more constrained than it sounds.
-3. **Keep the live ISO/VM and installer ISO aligned with each other** in package
-   set and configuration wherever the two can reasonably share anything.
-4. **Findings survive.** Every real bug, dead end, or piece of research goes
+3. **Keep the release artifacts aligned on what matters.** The live ISO/VM,
+   installer ISO, and installed target should stay aligned on package origin
+   policy, custom tools, and user-facing behavior wherever their lifecycles
+   can reasonably share it. The hybrid container is part of that parity check
+   for repo/source priority and project-specific tools, but remains a canary:
+   no full GNOME/GDM/Mutter desktop stack.
+4. **Findings survive, and verification stays systematic.** Every real bug,
+   dead end, or piece of research goes
    in `findings/*.md` - written for the next person (human or LLM) who hits
    the same wall, not just as a changelog. Findings get pruned for
    relevance over time, not left to grow forever, but the actual lessons
    learned are preserved even when a specific bug's blow-by-blow is cut.
+   Work issue-by-issue: capture evidence, apply one scoped fix, verify on
+   filesystem plus runtime behavior, record the result, then move to the next
+   issue.
 5. **Logs earn their place.** `findings/logs/` holds only logs that are
    actually referenced by something in `findings/*.md`, trimmed to the
    relevant excerpt where the full log isn't needed. It is not a dumping
@@ -39,13 +47,13 @@ README for the full backstory.
 7. **README.md documents the system, not superlatives.** Focus on what's
    actually included and what packages/components come from Azure Linux
    directly, not package counts or percentages, and not marketing language.
-8. **Prove product fixes locally first, without turning local emulation into
-   the project.** Reproduce the affected GitHub Actions path in the Fedora
-   Podman build environment before pushing or dispatching another run, then
-   inspect the produced artifact, not just the command exit code. Stop when
-   local validation has demonstrated the product fix and an environment-only
-   mismatch remains: GitHub Actions is the authoritative build path. Do not
-   spend open-ended time making Podman behave exactly like an Actions runner.
+8. **Split validation intentionally: local quick proofs first, intensive runs
+   in Actions only when needed.** Start with the fastest meaningful local
+   proof (container/overlay/package-resolve/config-render checks, then mount
+   and inspect artifacts). Use GitHub Actions for rebuild-heavy, time-
+   expensive, or environment-authoritative checks after local proof is
+   complete. Do not spend open-ended time making Podman behave exactly like an
+   Actions runner when the product fix is already demonstrated locally.
 9. **Release artifacts are the final evidence.** Download every published ISO
    and disk image with the project downloader, verify its checksum, run the
    matching scripts in `/scripts/`, and compare mounted package/configuration
@@ -75,16 +83,20 @@ README for the full backstory.
    configuration rendering, artifact construction, and runtime behavior in
    that order. Stop a line of investigation once it no longer increases
    confidence in the intended product behavior.
-3. **Escalate repeated blockers early.** After multiple informed attempts,
+3. **Run a documented issue loop.** For each issue: state the observed
+   failure, capture concrete evidence, apply one scoped fix, verify both
+   on-disk and runtime behavior, then record pass/fail in `findings/` before
+   moving on.
+4. **Escalate repeated blockers early.** After multiple informed attempts,
    dispatch a research agent to find upstream reports, established fixes, and
    environmental constraints. Then step back and compare the cost of another
    workaround with the project's actual goal.
-4. **Choose the authoritative path deliberately.** Local Podman testing is
+5. **Choose the authoritative path deliberately.** Local Podman testing is
    valuable preflight coverage. GitHub Actions is authoritative for its
    published artifacts. When a host-only difference remains after local
    product proof, build in Actions and test the resulting artifact locally
    instead of trying to reproduce every runner detail.
-5. **Preserve the decision.** Record the failure, evidence, scope of any
+6. **Preserve the decision.** Record the failure, evidence, scope of any
    workaround, and the remaining validation in `findings/`. Keep referenced
    excerpts in `findings/logs/`. Update these instructions when the lesson is
    general enough to prevent the next avoidable rabbit hole.
@@ -125,11 +137,12 @@ README for the full backstory.
   cancellation is diagnosed and its relevant excerpt is retained in
   `findings/logs/`, delete the run so the Actions list stays useful.
 - **Nightly publication and focused debugging**: `nightly-release.yml` builds
-  the live ISO, qcow2, installer ISO, and hybrid container from the current
-  default branch. VHDX, VDI, and VMDK are derivative qcow2 formats and stay
-  disabled unless they are explicitly requested. It deletes all preceding
-  GitHub releases, tags, and hybrid GHCR versions first, so the project has
-  one current set of artifacts rather than a release archive. For debugging
+  the live ISO, qcow2, VHDX, VDI, VMDK, installer ISO, and hybrid container
+  from the current default branch. VHDX/VDI/VMDK are derivative qcow2 formats,
+  so in iterative debugging runs they should remain optional and only be
+  dispatched when explicitly requested. It deletes all preceding GitHub
+  releases, tags, and hybrid GHCR versions first, so the project has one
+  current set of artifacts rather than a release archive. For debugging
   outside the nightly run, build only the requested format. When validation
   needs released artifacts, dispatch the matching release workflow rather
   than a build-only workflow so `Get-AzureLinuxDesktop.ps1` is tested against
