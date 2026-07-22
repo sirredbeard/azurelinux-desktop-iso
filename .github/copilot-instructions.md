@@ -36,6 +36,11 @@ README for the full backstory.
    Work issue-by-issue: capture evidence, apply one scoped fix, verify on
    filesystem plus runtime behavior, record the result, then move to the next
    issue.
+   Keep `findings/final_polish.md` as the active working set only: once an
+   issue is confirmed resolved (filesystem + runtime/programmatic/manual
+   confirmation), move detailed notes/evidence to
+   `findings/final_polish_finished.md` and leave only a short summary plus a
+   reference in `final_polish.md`.
 5. **Logs earn their place.** `findings/logs/` holds only logs that are
    actually referenced by something in `findings/*.md`, trimmed to the
    relevant excerpt where the full log isn't needed. It is not a dumping
@@ -154,6 +159,10 @@ README for the full backstory.
   pushing workflow or script changes, lint all Bash with ShellCheck, all
   workflow files with actionlint (after confirming ShellCheck is on PATH), and
   all PowerShell with PSScriptAnalyzer.
+- **Wallpaper/background scope**: do not introduce a new RPM/package solely
+  for wallpaper or desktop background changes while closing final-polish
+  issues. Resolve background behavior within existing image assets,
+  configuration, and package sets.
 
 ## Build architecture (as of this writing)
 

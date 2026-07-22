@@ -2,6 +2,10 @@
 
 ## Fix execution tracker (2026-07-22)
 
+Resolved issues are moved to `findings/final_polish_finished.md` after
+filesystem + runtime/manual confirmation. This file keeps only active work,
+brief resolved summaries, and references to finished sections.
+
 This section tracks the current polish fixes split into:
 
 - **(a) local container/overlay-verifiable fixes**
@@ -262,6 +266,10 @@ Key points:
 
 ## Issue 2 — No Plymouth During Installer ISO Boot
 
+**Decision (2026-07-22):** Selected **Option B**. Target behavior is a
+graphical Plymouth installer boot path (live-ISO-style splash), not a
+Plymouth-disabled text-only path.
+
 ### Root Cause Analysis
 
 **A. `console=ttyS0,115200` forces Plymouth text mode (primary cause)**
@@ -369,6 +377,16 @@ dracut --force  # Regenerates with hostonly=no, but will now find the theme
 ```xml
 kernelcmdline="console=tty0 enforcing=0 audit=0 inst.lang=en_US.UTF-8 inst.nokill quiet rhgb"
 ```
+
+**Applied in source for next build cycle:** `kiwi/azl-desktop-installer.kiwi`
+now uses:
+
+```xml
+kernelcmdline="console=tty0 rhgb quiet enforcing=0 audit=0 inst.lang=en_US.UTF-8 inst.nokill"
+```
+
+This removes installer-boot serial-console forcing and keeps graphical boot
+arguments aligned with the selected Option B path.
 
 > **Note on `plymouth.ignore-serial-consoles`**: The C flag `PLY_DEVICE_MANAGER_FLAGS_IGNORE_SERIAL_CONSOLES` is set by `plymouthd`'s own command-line argument `--ignore-serial-consoles`, not by a kernel parameter. To activate it via systemd/dracut without modifying `plymouth-pretrigger.sh`, create a dracut module overlay that adds `--ignore-serial-consoles` to the `plymouthd` invocation. Alternatively, the `plymouthd.defaults` approach via a custom `plymouthd.conf` does not have this option — patching `plymouth-pretrigger.sh` is required:
 ```bash
