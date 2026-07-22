@@ -35,6 +35,7 @@ DISK_GB="${4:-30}"
 WORKDIR="${AZL_QEMU_WORKDIR:-$HOME/azl-work}"
 DISK="$WORKDIR/${NAME}.qcow2"
 LOG="$WORKDIR/${NAME}-qemu-stdout.log"
+INPUT_DEVICE="${AZL_QEMU_INPUT_DEVICE:-usb-tablet}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=scripts/qemu-uefi-common.sh
@@ -42,6 +43,27 @@ source "$SCRIPT_DIR/qemu-uefi-common.sh"
 
 mkdir -p "$WORKDIR"
 MONITOR_SOCK="$(azl_qemu_monitor_socket "$WORKDIR" "$NAME")"
+azl_find_ovmf
+OVMF_VARS="$(azl_prepare_ovmf_vars "$WORKDIR" "$NAME")"
+
+case "$INPUT_DEVICE" in
+    usb-tablet)
+        INPUT_ARGS=(-device qemu-xhci -device usb-tablet)
+        ;;
+    usb-mouse)
+        INPUT_ARGS=(-device qemu-xhci -device usb-mouse)
+        ;;
+    virtio-tablet)
+        INPUT_ARGS=(-device virtio-tablet-pci)
+        ;;
+    virtio-mouse)
+        INPUT_ARGS=(-device virtio-mouse-pci)
+        ;;
+    *)
+        echo "error: AZL_QEMU_INPUT_DEVICE must be usb-tablet, usb-mouse, virtio-tablet, or virtio-mouse" >&2
+        exit 1
+        ;;
+esac
 
 if [ ! -f "$DISK" ]; then
     echo "Creating new ${DISK_GB}G target disk: $DISK"
@@ -52,6 +74,8 @@ else
 fi
 
 echo "Booting $ISO as '$NAME' (${RAM_MB}MB RAM, installing to $DISK)"
+echo "Input: $INPUT_DEVICE"
+echo "Firmware: UEFI ($AZL_OVMF_CODE)"
 echo "Monitor socket: $MONITOR_SOCK"
 echo "Log: $LOG"
 
@@ -60,9 +84,12 @@ DISPLAY="${DISPLAY:-:0}" qemu-system-x86_64 \
     -m "$RAM_MB" -smp 2 \
     -enable-kvm \
     -cpu host \
+    -drive if=pflash,format=raw,readonly=on,file="$AZL_OVMF_CODE" \
+    -drive if=pflash,format=raw,file="$OVMF_VARS" \
     -cdrom "$ISO" \
     -boot d \
     -drive file="$DISK",format=qcow2,if=virtio \
+    "${INPUT_ARGS[@]}" \
     -display gtk \
     -monitor "unix:$MONITOR_SOCK,server,nowait" \
     -vga virtio \

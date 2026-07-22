@@ -1,8 +1,9 @@
 name: Nightly Azure Linux Desktop Release
 
 # The project intentionally keeps no release/archive history. Each nightly
-# build replaces the preceding live ISO, disk-image formats, installer ISO,
-# and hybrid container with artifacts built from the current default branch.
+# build replaces the preceding live ISO, disk-image formats, and installer
+# ISO with artifacts built from the current default branch. The hybrid
+# publication replaces its latest and UTC-date tags from the same revision.
 on:
   schedule:
     - cron: "30 05 * * *"
@@ -11,6 +12,8 @@ on:
 permissions:
   contents: write
   packages: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: azurelinux-desktop-publication
@@ -45,41 +48,15 @@ jobs:
               git push origin --delete "refs/tags/$tag"
             done
 
-      - name: Delete previous hybrid container versions
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PACKAGE_NAME: ${{ github.event.repository.name }}/hybrid
-        run: |
-          set -euo pipefail
-
-          package_path="${PACKAGE_NAME//\//%2F}"
-          error_log="$RUNNER_TEMP/ghcr-versions-error.log"
-          if ! version_ids=$(gh api --paginate \
-            "/user/packages/container/$package_path/versions?per_page=100" \
-            --jq '.[].id' 2>"$error_log"); then
-            if grep -q "HTTP 404" "$error_log"; then
-              echo "No hybrid package exists yet."
-              exit 0
-            fi
-            cat "$error_log" >&2
-            exit 1
-          fi
-
-          while IFS= read -r version_id; do
-            [ -n "$version_id" ] || continue
-            gh api --method DELETE \
-              "/user/packages/container/$package_path/versions/$version_id"
-          done <<<"$version_ids"
-
   publish-live-images:
     needs: remove-previous-publication
     uses: ./.github/workflows/release-live-iso.yml
     with:
       build_iso: true
       build_qcow2: true
-      build_vhdx: true
-      build_vdi: true
-      build_vmdk: true
+      build_vhdx: false
+      build_vdi: false
+      build_vmdk: false
 
   publish-installer:
     needs: remove-previous-publication

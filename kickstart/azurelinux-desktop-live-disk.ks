@@ -429,7 +429,9 @@ cp -v /workspace/assets/icons/edit.svg /mnt/sysimage/usr/share/pixmaps/edit.svg
 cp -v /workspace/assets/icons/powershell.png /mnt/sysimage/usr/share/pixmaps/powershell.png
 cp -v /workspace/assets/icons/dotnet.svg /mnt/sysimage/usr/share/pixmaps/dotnet.svg
 cp -v /workspace/assets/desktop/edit.desktop /mnt/sysimage/usr/share/applications/edit.desktop
-cp -v /workspace/assets/desktop/powershell.desktop /mnt/sysimage/usr/share/applications/powershell.desktop
+cp -v /workspace/assets/bin/azl-powershell-terminal /mnt/sysimage/usr/local/bin/azl-powershell-terminal
+chmod 0755 /mnt/sysimage/usr/local/bin/azl-powershell-terminal
+cp -v /workspace/assets/desktop/org.azurelinux.PowerShell.desktop /mnt/sysimage/usr/share/applications/org.azurelinux.PowerShell.desktop
 cp -v /workspace/assets/desktop/dotnet.desktop /mnt/sysimage/usr/share/applications/dotnet.desktop
 
 # Same story for the plymouth boot splash - it's just our own static
@@ -464,16 +466,18 @@ else
     echo "WARNING: could not resolve a linux-x64.rpm asset URL for github/app latest release" >&2
 fi
 
-# GitHub Copilot CLI (the standalone `copilot` terminal agent, not the
-# older `gh copilot` extension) has no RPM either - Microsoft/GitHub ship
-# it as an install script + prebuilt binary drop. Run the installer
-# against the mounted target root's /usr/local/bin so it lands in the
-# actual image, not this transient build-host shell.
-curl -fsSL https://gh.io/copilot-install -o /mnt/sysimage/root/thirdparty/copilot-install.sh
-if [ ! -s /mnt/sysimage/root/thirdparty/copilot-install.sh ]; then
-    echo "WARNING: copilot-install.sh download failed or is empty" >&2
-    rm -f /mnt/sysimage/root/thirdparty/copilot-install.sh
-fi
+# GitHub Copilot CLI is a standalone binary archive. Stage the archive and
+# verify its published checksum while network access exists; the later
+# chrooted post only extracts the verified local payload.
+COPILOT_ARCHIVE="copilot-linux-x64.tar.gz"
+curl -fL --retry 3 -o "/mnt/sysimage/root/thirdparty/$COPILOT_ARCHIVE" \
+    "https://github.com/github/copilot-cli/releases/latest/download/$COPILOT_ARCHIVE"
+curl -fL --retry 3 -o /mnt/sysimage/root/thirdparty/copilot-SHA256SUMS.txt \
+    https://github.com/github/copilot-cli/releases/latest/download/SHA256SUMS.txt
+(
+    cd /mnt/sysimage/root/thirdparty
+    grep -E " [*]?$COPILOT_ARCHIVE$" copilot-SHA256SUMS.txt | sha256sum -c -
+)
 
 # microsoft/edit - Microsoft's small modeless terminal text editor. No
 # RPM, ships as a tar.gz per-arch on GitHub releases. Same "ask the API
@@ -694,9 +698,9 @@ dconf update || true
 if [ -f /root/thirdparty/github-copilot.rpm ]; then
     rpm -i /root/thirdparty/github-copilot.rpm || true
 fi
-if [ -f /root/thirdparty/copilot-install.sh ]; then
-    bash /root/thirdparty/copilot-install.sh --install-dir /usr/local/bin || true
-fi
+tar -xzf /root/thirdparty/copilot-linux-x64.tar.gz -C /usr/local/bin copilot
+chmod 0755 /usr/local/bin/copilot
+test -x /usr/local/bin/copilot
 if [ -f /root/thirdparty/edit.tar.gz ]; then
     tar -xzf /root/thirdparty/edit.tar.gz -C /tmp \
         && install -m 0755 /tmp/edit /usr/local/bin/edit \
@@ -771,7 +775,7 @@ EOF
 # So: patch livesys-gnome's own favorite-apps= line in place instead of
 # fighting it with a second override file. Desktop IDs confirmed against
 # the actual installed .desktop files: microsoft-edge-canary.desktop,
-# code-insiders.desktop, powershell.desktop (our own launcher, see
+# code-insiders.desktop, org.azurelinux.PowerShell.desktop (our own launcher, see
 # assets/desktop/), "GitHub Copilot.desktop" (the Tauri app really does
 # ship it with a literal space in the filename/ID), and
 # org.gnome.Nautilus.desktop. Five apps, matches the latest explicit dock
@@ -802,7 +806,7 @@ EOF
 # so the favorite-apps override, welcome-tour suppression, and branding
 # copy always run regardless of whether that one file exists this boot.
 if [ -f /usr/libexec/livesys/sessions.d/livesys-gnome ]; then
-    sed -i "s|^favorite-apps=.*|favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'powershell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']|" \
+    sed -i "s|^favorite-apps=.*|favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'org.azurelinux.PowerShell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']|" \
         /usr/libexec/livesys/sessions.d/livesys-gnome
 fi
 
@@ -1138,7 +1142,7 @@ fi
 # defaults through the persistent system dconf database.
 cat > /etc/dconf/db/local.d/01-azl-desktop-favorites << 'DCONF'
 [org/gnome/shell]
-favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'powershell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']
+favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'org.azurelinux.PowerShell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']
 welcome-dialog-last-shown-version='4294967295'
 DCONF
 dconf update

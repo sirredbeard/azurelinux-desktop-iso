@@ -25,6 +25,15 @@ assert_rpm_source() {
 }
 
 dnf5 repolist --enabled | tee "$LOG_DIR/enabled-repositories.log"
+dnf5 install -y --refresh \
+    kernel azurelinux-desktop-policy \
+    | tee "$LOG_DIR/usbhid-kmod-resolve.log"
+grep -Fq "azurelinux-desktop-policy" "$LOG_DIR/usbhid-kmod-resolve.log"
+grep -Fq "azurelinux-desktop-usbhid-kmod" "$LOG_DIR/usbhid-kmod-resolve.log"
+kver="$(rpm -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' kernel-core)"
+test -f "/usr/lib/modules/$kver/extra/azurelinux-desktop/usbhid.ko"
+modinfo -F vermagic "/usr/lib/modules/$kver/extra/azurelinux-desktop/usbhid.ko" \
+    | grep -Fq "$kver"
 run_dnf dnf-update update --refresh -y
 run_dnf dnf-upgrade upgrade -y
 run_dnf dnf-install-samples install -y \
@@ -37,11 +46,19 @@ assert_rpm_source telegraf '.azl4'
 assert_rpm_source dconf-editor '.fc43'
 assert_rpm_source gnome-sudoku '.fc43'
 assert_rpm_source python3-idle '.fc43'
+assert_rpm_source gnome-backgrounds '.fc43'
+assert_rpm_source gnome-terminal '.fc43'
+test -s /etc/dconf/db/local
+DCONF_PROFILE=user dconf read /org/gnome/desktop/background/picture-uri-dark \
+    | grep -Fq "file:///usr/share/backgrounds/gnome/adwaita-d.jxl"
+test -x /usr/local/bin/azl-powershell-terminal
+test -f /usr/share/applications/org.azurelinux.PowerShell.desktop
+grep -Fxq 'StartupWMClass=org.azurelinux.PowerShell' /usr/share/applications/org.azurelinux.PowerShell.desktop
 
 {
     echo '=== RPM versions ==='
     rpm -q \
-        ovfenv telegraf dconf-editor gnome-sudoku python3-idle \
+        ovfenv telegraf dconf-editor gnome-sudoku python3-idle gnome-backgrounds gnome-terminal \
         microsoft-edge-canary code-insiders gh github-desktop github \
         powershell dotnet-sdk-11.0 dotnet-runtime-11.0 dnf5 flatpak
     echo

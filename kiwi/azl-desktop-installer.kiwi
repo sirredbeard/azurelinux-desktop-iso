@@ -87,6 +87,7 @@
         <package name="iproute" />
         <package name="kernel" />
         <package name="kernel-modules" />
+        <package name="openssl" />
         <package name="selinux-policy-targeted" />
         <package name="setup" />
         <package name="shadow-utils" />

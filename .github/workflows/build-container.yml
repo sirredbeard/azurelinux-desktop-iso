@@ -28,9 +28,15 @@ on:
 permissions:
   contents: read
   packages: write
+  pages: write
+  id-token: write
 
 jobs:
+  prepare-kernel-modules:
+    uses: ./.github/workflows/publish-usbhid-kmod.yml
+
   build-and-publish:
+    needs: prepare-kernel-modules
     runs-on: ubuntu-24.04
     steps:
       - name: Check out repo

@@ -196,53 +196,20 @@ Escape during that short window still exposes GRUB recovery entries.
 
 ### GTK cursor regression
 
-Local comparison on the released qcow2 showed the same failed pointer path
-with all of the following:
+The released live ISO was tested through the GTK helper with QEMU's xHCI USB
+tablet attached. Pointer input works. The two graphical helpers now make that
+input path their default, matching the existing VNC helpers. Set
+`AZL_QEMU_INPUT_DEVICE` to select another supported USB or virtio input device
+for a focused comparison.
 
-* GTK on Wayland with virtio VGA, xHCI, and USB tablet.
-* GTK through XWayland with the same absolute device.
-* GTK on Wayland with no tablet and QEMU's normal relative mouse.
-* SDL on Wayland with the normal relative mouse.
+The earlier GTK and SDL experiments established only that Wayland frontend
+pointer grabbing is not a useful guest-input control. Cursor visibility and
+keyboard-grab options do not repair a missing guest driver.
 
-SDL grabbed input and keyboard controls worked, but guest pointer controls did
-not. That ruled out a GTK-only cursor-surface problem, but did not prove the
-guest had a working driver for either QEMU mouse transport. The same GTK
-relative-mouse comparison is also being booted from the published live ISO.
-
-The strongest local change window is July 16 through 20: QEMU 11.0.0,
-Mutter, and a release-candidate host kernel changed on July 16; a July 20
-system upgrade changed Wayland from 1.25.0 to 1.26.0 and Mesa from 26.1.4 to
-26.1.5. The project QEMU helpers originally used plain GTK with no tablet or
-cursor options, so the later helper experiments did not introduce the
-regression. Upstream research is needed before treating this as a guest or
-image problem. QEMU has open upstream reports for related GTK and Wayland
-virtio-GPU cursor failures:
-[GTK cursor position](https://gitlab.com/qemu-project/qemu/-/work_items/761)
-and [virtio-GPU cursor buffers](https://gitlab.com/qemu-project/qemu/-/work_items/2315).
-
-The host had repeated Bluetooth headset profile failures in the same period.
-BlueZ 5.87-4 explicitly carries crash fixes, and a retained GNOME Shell abort
-was triggered by an audio card-profile assertion. Neither is a pointer stack
-trace, so neither establishes causation. The full local timeline and the
-reason for that restraint are in
-[`logs/qemu-pointer-host-timeline-2026-07-21.log`](logs/qemu-pointer-host-timeline-2026-07-21.log).
-
-Upstream source review explains the shared GTK and SDL behavior. Both QEMU
-frontends use relative pointer mode and pointer warping to establish and
-maintain a guest grab. GTK's native Wayland `gdk_wayland_device_warp()` is a
-no-op, while QEMU consumes the first click to begin a relative grab. SDL has
-the same class of Wayland warp/confinement limitation. That fits the local
-result: keyboard input works, while pointer input never reaches the guest
-through either frontend. `show-cursor` only changes visibility and
-`grab-on-hover` only changes keyboard grab, so neither belongs in the helper
-as an input fix. The original plain GTK helpers are retained.
-
-That frontend investigation remains useful for QEMU/Wayland behavior, but
-the later VNC controls and direct kernel comparison below supersede it as an
-explanation for the Azure image's missing mouse. A short `WAYLAND_DEBUG=1`
-trace confirmed that the compositor sent QEMU motion and button events; it
-did not establish that the guest kernel had a driver capable of receiving
-them.
+The VNC control and direct kernel comparison below settled the project issue:
+the host can deliver QEMU pointer input, while the Azure guest lacks the USB
+HID driver needed to consume the tablet device. The project-owned exact-kernel
+module path is documented in [`azure-kernel-usbhid.md`](azure-kernel-usbhid.md).
 
 ### Fedora VNC control: host input path works
 
@@ -358,10 +325,17 @@ whether the existing Azure base and Fedora GUI boundary works when the missing
 drivers are present, but it must not become an image dependency. Its complete
 local installroot transaction passed with 1,169 packages: the Fedora kernel
 family resolved to `6.17.1-300.fc43`, while `systemd` remained the Azure
-build. The disposable control branch then built and uploaded its qcow2
-successfully in GitHub Actions. The next evidence needed is its USB-tablet
-and PS/2-mouse boot test, not another dependency experiment. The product fix
-belongs upstream in Azure Linux's x86_64 kernel configuration:
+build. The first disposable control run then resolved and downloaded almost
+the entire image transaction in both ISO and disk paths, but Azure package
+transport failed on the final `clevis-luks-21-13.azl4` RPM. Directly checking
+that exact published RPM afterward returned the expected 35,146-byte object,
+so this is a transient repository-download failure, not a kernel-policy or
+dependency failure. The retained excerpt is in
+[`logs/fedora-kernel-control-download-29893981896.log`](logs/fedora-kernel-control-download-29893981896.log).
+
+The next evidence needed is the unchanged control build followed by its
+USB-tablet and PS/2-mouse boot test, not another dependency experiment. The
+product fix belongs upstream in Azure Linux's x86_64 kernel configuration:
 [`base/comps/kernel/6.18-x86_64-azl.config`](https://github.com/microsoft/azurelinux/blob/4.0/base/comps/kernel/6.18-x86_64-azl.config).
 That source explicitly disables `CONFIG_INPUT_MOUSE` and `CONFIG_USB_HID`.
 The minimal Azure Linux change is `CONFIG_INPUT_MOUSE=y`,
@@ -373,6 +347,29 @@ release. Kernel command-line options configure code that was compiled in or
 built as a module; they cannot create `psmouse.ko` or `usbhid.ko` when the
 Azure build omitted both. Do not describe the cursor problem as a GNOME,
 libinput, VNC, or host Wayland failure going forward.
+
+### Live-media livenet console noise
+
+The released live ISO's boot initramfs includes both `livenet` and
+`/lib/url-lib.sh`. The visible `get_url_handler: command not found` line is
+therefore not a missing file or the reason the session has no mouse. Its
+`parse-livenet.sh` calls `get_url_handler` once before it sources the file
+that defines that function, then correctly sources it and continues.
+
+This is a known dracut ordering bug, reported upstream in
+[dracut-ng issue 1240](https://github.com/dracut-ng/dracut/issues/1240).
+Current upstream `parse-livenet.sh` sources the URL helper before using the
+function. The live builder now applies that narrow upstream-equivalent fix
+before Lorax creates the boot initramfs. It retains `livenet`: the normal ISO
+path does not need it, but retaining it avoids silently dropping supported
+network-backed live-root and live-update scenarios.
+
+The reusable patch is
+[`scripts/patch-dracut-livenet-hook.sh`](../scripts/patch-dracut-livenet-hook.sh).
+It was run against the local dracut hook and leaves no bare pre-source
+`get_url_handler` call. Inspect the next ISO's initramfs and boot it before
+calling the visual presentation fixed; this change removes the misleading
+console error but does not itself restyle Plymouth.
 
 ## Plymouth
 
@@ -516,9 +513,22 @@ Both templates now receive the clean GDM configuration, persisted Fedora
 package boundary, dconf favorites, welcome suppression, GNOME Software
 preferences, initial-setup marker, and DNF5 polkit authorization.
 
+Both also use the host-matched Adwaita light/dark background defaults and
+the project PowerShell launcher. The launcher starts a GNOME Terminal server
+with the `org.azurelinux.PowerShell` application ID before opening `pwsh`, so
+the Wayland dock can distinguish it from ordinary Terminal windows.
+
+Azure Linux does not bake an account into its installer templates. The
+desktop renderer retains that behavior: both rendered kickstarts have no
+`rootpw` or `user --name` directive, leaving account creation to Anaconda.
+The source templates retain one masked legacy user line only because the
+masked value cannot be safely changed through the project patch path; the
+renderer strips it. That source-only cleanup does not affect generated ISO
+behavior.
+
 The templates were compared outside their storage stanza and found to have
-no other functional drift before the most recent changes. Rendered
-kickstart validation remains pending.
+no other functional drift. The remaining runtime validation is a graphical
+first login after installation, including the PowerShell dock identity.
 
 ## GRUB
 
@@ -586,6 +596,43 @@ This addresses the prior launcher failure, where the rendered filename did
 not match the filename the launcher copied, leaving Anaconda without
 `/run/install/ks.cfg`.
 
+## Release 2026.07.22 static verification
+
+The published installer ISO and live qcow2 were downloaded with
+`scripts/Get-AzureLinuxDesktop.ps1`. The downloader reassembled both split
+assets and verified their published SHA-256 manifests:
+
+- `azurelinux-desktop-install.iso`:
+  `e6609c5a08006bc878bdd4189fc92d5f415016d55e2a79104b30dbcc251b94f0`
+- `azurelinux-desktop-live.qcow2`:
+  `1a5caa170df853dae330a1f6f11e1ac3a2d829a4f72efae2a5ce28fdf5814545`
+
+Read-only QCOW inspection confirmed the persistent live image includes the
+PowerShell desktop entry and launcher helper. The helper starts
+`/usr/libexec/gnome-terminal-server` with
+`org.azurelinux.PowerShell`, then opens `pwsh` through the same application
+ID. The shipped GNOME Terminal accepts that hidden `--app-id` option.
+
+The live disk's compiled dconf database contains the host-matched Adwaita
+light and dark backgrounds and the PowerShell desktop ID in GNOME favorites.
+Both Adwaita files and the GNOME Terminal server are present. The disk still
+uses the intended Fedora-style `liveuser` autologin and `pwsh` login shell.
+Its Azure kernel, desktop policy RPM, and `usbhid` module all have matching
+`6.18.31-1.6.azl4` identities.
+
+The installer runtime carries the standard and encrypted rendered
+kickstarts, plus the staged PowerShell helper and desktop entry. Neither
+rendered kickstart has a `rootpw` or `user --name` directive. Both request
+GNOME Terminal, GNOME backgrounds, PowerShell, and the desktop policy. The
+embedded offline repository includes those RPMs and the matching `usbhid`
+RPM. Their target post-install sections copy the helper and desktop file,
+write the same Adwaita URIs and PowerShell favorite, and run `dconf update`.
+
+This establishes published-artifact parity for the new files and rendered
+configuration. It does not replace graphical validation: boot the qcow2 to
+confirm dock grouping, and install each installer path to confirm first-login
+behavior.
+
 ## Installer manual QA
 
 The `2026.07.20` installer ISO was booted in QEMU with real OVMF firmware,
@@ -601,6 +648,38 @@ EFI, `/boot`, LVM, swap, and root storage configuration before starting
 Anaconda. The previous `cp: cannot stat '/root/azl-install.ks'` and missing
 `/run/install/ks.cfg` errors did not recur.
 
+## Installer interaction correction
+
+The first `2026.07.22` installer QA run exposed two separate problems before
+an installation began:
+
+- `scripts/qemu-test-install-iso.sh` sourced its OVMF helper but never
+  attached the firmware. It therefore booted QEMU as BIOS while the standard
+  kickstart requested an EFI partition. Anaconda correctly rejected that
+  contradiction and asked for a BIOS boot partition.
+- The upstream-derived launcher always runs Anaconda in text mode. With no
+  account directive in the generated kickstart, that UI exposes separate
+  storage, root-password, and user-creation spokes. That is not the intended
+  desktop installer flow.
+
+The standard template now uses `clearpart --all --initlabel` with
+`autopart --type=lvm`, so the selected disk is cleared and partitioned
+automatically. The encrypted option retains automatic LUKS/LVM provisioning.
+The QEMU helpers now attach OVMF code and a per-test writable variable store,
+matching the UEFI layout the ISO actually targets.
+
+Before launching Anaconda, the installer asks for one administrator username
+and a confirmed password. The launcher hashes that password in the installer
+runtime, injects a temporary wheel-user directive into its generated
+kickstart, and locks root. Anaconda therefore receives a complete account
+configuration and does not require separate root or user spokes. OpenSSL is
+included in both the installer runtime and offline target package set for
+this hash step.
+
+The template rendering test confirms each mode has exactly a locked root and
+one generated administrator directive. A new installer ISO must still prove
+the graphical interaction end to end.
+
 ## Build-container cleanup error
 
 The new live ISO build completed Anaconda installation successfully but
@@ -612,13 +691,53 @@ Fedora build containers.
 and test qcow2 build environments. This removes the error at its source
 without changing the image payload.
 
+## Released artifact static parity
+
+The current release ISO and QCOW2 were downloaded with the project downloader
+and verified against their published checksums. Their resolved package
+inventories contain the same 1,175 packages after normalized sorting.
+
+Both roots contain the same exact kernel policy and USB HID module, the
+persistent Pages repository, `/usr/local/bin/copilot`, `/usr/local/bin/edit`,
+and the configured light and dark backgrounds. The QCOW2 module vermagic
+matches its installed kernel.
+
+The installer runtime is intentionally smaller. Its package inventory contains
+426 packages. It carries 1,050 unique RPMs in its offline repository, with
+121 direct package requests in the rendered kickstart. Anaconda resolves the
+target system from that offline closure. The exact installed-target rpmdb is
+therefore a runtime check after a real installation, not a property of the
+installer squashfs.
+
+The offline closure includes the policy and module RPMs, Edge Canary,
+PowerShell, GitHub CLI and Desktop, the .NET preview runtime and SDK, and
+GNOME backgrounds. Both installer choices request the policy package. The
+target post-install script writes the Pages repository and the rendered
+kickstart installs the GitHub Copilot application, Copilot CLI, edit, the
+PowerShell dock launcher, and the background configuration on the target
+disk.
+
+The live ISO, QCOW2, and canary already contain the expected application
+surface for their roles. The live and QCOW2 carry the exact policy/module
+pair. The canary carries the same repository configuration and proves a fresh
+policy/module transaction, but does not retain a kernel package because it is
+not a bootable image.
+
 ## Remaining runtime checks
 
-1. Replace the pre-fix live ISO with the fresh release ISO and repeat the
-   static live-to-qcow comparison.
-2. Start a graphical qcow2 session to verify autologin, dock rendering,
-   welcome suppression, keyring behavior, GNOME Software behavior, Flatpak,
-   and DNF5 polkit in a real user session.
-3. Run both installer selections to a target disk, then verify the resulting
-   installed systems have the same persistent configuration and package
-   boundary as the qcow2.
+1. Boot the released live ISO and qcow2 through the normal USB-tablet path.
+   The released ISO now has confirmed GTK pointer input. Confirm the same
+   path in the QCOW2 after its next rebuild.
+2. Provide a documented persistent live-storage path before treating large
+   Flatpak installation as supported on an 8 GiB live session. Fedora's
+   supported USB path is `livecd-iso-to-disk --overlay-size-mb` plus an
+   optional `--home-size-mb`, which creates the named overlay file and
+   `home.img` layout dracut expects. Azure's own LiveOS tooling is
+   intentionally stateless. The live builder now also requests a 4 GiB
+   live root: Flatpak checks the root filesystem's reported free space before
+   consuming the separate RAM overlay, so the earlier smaller root rejected
+   a runtime transaction despite the available overlay capacity. Verify this
+   against the next ISO before calling live Flatpak installation fixed.
+3. Run both installer selections to a target disk. Confirm each installed
+   target retains the Pages repository and has the same paired kernel/module
+   policy and relevant desktop package boundary as the qcow2.

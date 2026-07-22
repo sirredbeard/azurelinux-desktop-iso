@@ -17,7 +17,7 @@
 # explicit claw-back.
 #
 # This is the same "resolve the whole real package list through the whole
-# real repo scheme" approach the older podman-test-azl4-fedora43.sh
+# real repo scheme" approach the older podman-test-azl4-fedora.sh
 # already used (manually, eyeballing Azure/Fedora counts, live packages
 # only) - wired up here as a real pass/fail CI check, covering both
 # images' package sets, not just live's.
@@ -92,7 +92,7 @@ podman run --rm \
         dnf5 install -y \
             --setopt=reposdir=/work/repos \
             --installroot=/mnt/azl \
-            --releasever=44 \
+            --releasever=43 \
             --setopt=install_weak_deps=True \
             --best \
             "${PKGS[@]}" \

@@ -90,15 +90,15 @@ on:
       build_vhdx:
         description: "Build and release the VHDX disk image (Hyper-V)"
         type: boolean
-        default: true
+        default: false
       build_vdi:
         description: "Build and release the VDI disk image (VirtualBox)"
         type: boolean
-        default: true
+        default: false
       build_vmdk:
         description: "Build and release the VMDK disk image (VMware)"
         type: boolean
-        default: true
+        default: false
   workflow_call:
     inputs:
       build_iso:
@@ -109,16 +109,18 @@ on:
         default: true
       build_vhdx:
         type: boolean
-        default: true
+        default: false
       build_vdi:
         type: boolean
-        default: true
+        default: false
       build_vmdk:
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   create-release:
@@ -141,7 +143,11 @@ jobs:
           name: Azure Linux Desktop ${{ steps.tag.outputs.tag }}
           body_path: .github/release-notes-template.md
 
+  prepare-kernel-modules:
+    uses: ./.github/workflows/publish-usbhid-kmod.yml
+
   build-iso:
+    needs: prepare-kernel-modules
     uses: ./.github/workflows/build-live-iso.yml
     with:
       build_iso: ${{ inputs.build_iso }}
@@ -149,8 +155,10 @@ jobs:
       build_vhdx: false
       build_vdi: false
       build_vmdk: false
+      prepare_kernel_modules: false
 
   build-disk-images:
+    needs: prepare-kernel-modules
     uses: ./.github/workflows/build-live-iso.yml
     with:
       build_iso: false
@@ -161,6 +169,7 @@ jobs:
       build_vhdx: ${{ inputs.build_vhdx }}
       build_vdi: ${{ inputs.build_vdi }}
       build_vmdk: ${{ inputs.build_vmdk }}
+      prepare_kernel_modules: false
 
   release-iso:
     needs: [create-release, build-iso]

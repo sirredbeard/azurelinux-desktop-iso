@@ -14,9 +14,6 @@
 # findings/gh-actions-installer-iso-build.md for the real incident this
 # comment is guarding against).
 # Differences from upstream, all deliberate:
-#   - a real "cinnamon" user account + working GDM autologin, since this is
-#     a GNOME desktop people are meant to actually log into, not a
-#     locked-root cloud base image
 #   - a third %post --nochroot block staging this project's own
 #     branding/tooling extras (Copilot, microsoft/edit, Flathub,
 #     Plymouth theme, dock favorites, dark mode) into the installed
@@ -35,26 +32,17 @@ firewall --enabled --ssh
 network --hostname=azurelinux-desktop
 services --enabled=sshd,systemd-networkd,systemd-resolved,gdm,NetworkManager
 
-# cinnamon: this project's one persistent default account - wheel/sudo,
-# GDM autologin, matching the live ISO's own "liveuser" autologin
-# experience so trying it and keeping it feel the same. Password is a
-# known, documented placeholder (see README.md), not a real security
-# boundary for a personal proof of concept - --plaintext keeps this
-# kickstart human-readable instead of hiding behind a hash nobody can
-# eyeball.
-rootpw --lock
+# The renderer removes the remaining legacy user directive so account
+# creation stays interactive, matching Azure Linux's installer templates.
 user --name=cinnamon --groups=wheel --plaintext --password=cinnamon --gecos="Cinnamon"
+
+rootpw --lock
 
 bootloader --location=mbr --append="console=ttyS0,115200 console=tty0"
 reboot --eject
 
 clearpart --all --initlabel
-part /boot/efi --fstype=efi --size=600
-part /boot --fstype=ext4 --size=1024
-part pv.01 --size=1 --grow
-volgroup vg_azl pv.01
-logvol swap --vgname=vg_azl --name=lv_swap --fstype=swap --size=2048
-logvol / --vgname=vg_azl --name=lv_root --fstype=ext4 --size=1 --grow
+autopart --type=lvm
 
 @@PACKAGES@@
 
@@ -85,7 +73,9 @@ if [ -d "$ASSETS" ]; then
     cp -v "$ASSETS/icons/powershell.png" /mnt/sysroot/usr/share/pixmaps/powershell.png
     cp -v "$ASSETS/icons/dotnet.svg" /mnt/sysroot/usr/share/pixmaps/dotnet.svg
     cp -v "$ASSETS/desktop/edit.desktop" /mnt/sysroot/usr/share/applications/edit.desktop
-    cp -v "$ASSETS/desktop/powershell.desktop" /mnt/sysroot/usr/share/applications/powershell.desktop
+    cp -v "$ASSETS/bin/azl-powershell-terminal" /mnt/sysroot/usr/local/bin/azl-powershell-terminal
+    chmod 0755 /mnt/sysroot/usr/local/bin/azl-powershell-terminal
+    cp -v "$ASSETS/desktop/org.azurelinux.PowerShell.desktop" /mnt/sysroot/usr/share/applications/org.azurelinux.PowerShell.desktop
     cp -v "$ASSETS/desktop/dotnet.desktop" /mnt/sysroot/usr/share/applications/dotnet.desktop
     cp -v "$ASSETS/plymouth/azurelinux/azurelinux.plymouth" /mnt/sysroot/usr/share/plymouth/themes/azurelinux/azurelinux.plymouth
     cp -v "$ASSETS/plymouth/azurelinux/azurelinux.script" /mnt/sysroot/usr/share/plymouth/themes/azurelinux/azurelinux.script
@@ -249,12 +239,12 @@ color-scheme='prefer-dark'
 gtk-theme='Adwaita-dark'
 
 [org/gnome/desktop/background]
-picture-uri='file:///usr/share/backgrounds/gnome/symbolic-l.png'
-picture-uri-dark='file:///usr/share/backgrounds/gnome/symbolic-d.png'
+picture-uri='file:///usr/share/backgrounds/gnome/adwaita-l.jxl'
+picture-uri-dark='file:///usr/share/backgrounds/gnome/adwaita-d.jxl'
 picture-options='zoom'
 
 [org/gnome/shell]
-favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'powershell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']
+favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'org.azurelinux.PowerShell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']
 welcome-dialog-last-shown-version='4294967295'
 EOF
 cat > /etc/dconf/profile/user << 'EOF'
@@ -275,12 +265,6 @@ cat >> /usr/share/gnome-shell/search-providers/org.gnome.Software-search-provide
 DefaultDisabled=true
 EOF
 glib-compile-schemas /usr/share/glib-2.0/schemas
-
-# Anaconda creates a persistent account, unlike the ISO's runtime user.
-# Mark it initialized once so GNOME does not show first-run onboarding.
-install -d -o cinnamon -g cinnamon /home/cinnamon/.config
-touch /home/cinnamon/.config/gnome-initial-setup-done
-chown cinnamon:cinnamon /home/cinnamon/.config/gnome-initial-setup-done
 
 rpm -i /root/thirdparty/github-copilot.rpm
 tar -xzf /root/thirdparty/copilot-linux-x64.tar.gz -C /usr/local/bin copilot
@@ -306,7 +290,6 @@ if [ -x /usr/bin/pwsh ]; then
         echo /usr/bin/pwsh >> /etc/shells
     fi
     usermod --shell /usr/bin/pwsh root 2>/dev/null || true
-    usermod --shell /usr/bin/pwsh cinnamon 2>/dev/null || true
 fi
 
 mkdir -p /etc/xdg
@@ -319,18 +302,8 @@ x-scheme-handler/about=microsoft-edge-canary.desktop
 x-scheme-handler/unknown=microsoft-edge-canary.desktop
 EOF
 
-echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/90-wheel-nopasswd
-chmod 0440 /etc/sudoers.d/90-wheel-nopasswd
-mkdir -p /etc/gdm
-cat > /etc/gdm/custom.conf << 'EOF'
-[daemon]
-AutomaticLoginEnable=True
-AutomaticLogin=cinnamon
-EOF
-
-# GNOME Software uses DNF5 in this image. The default account is an
-# active local wheel user with passwordless sudo, so let it authorize
-# DNF5 and PackageKit actions without an unusable password prompt.
+# GNOME Software uses DNF5 in this image. Let the locally authenticated,
+# active administrator authorize its DNF5 and PackageKit actions.
 mkdir -p /etc/polkit-1/rules.d
 cat > /etc/polkit-1/rules.d/49-azl-desktop-packagekit.rules << 'EOF'
 polkit.addRule(function(action, subject) {
@@ -383,7 +356,5 @@ OnlyShowIn=GNOME;
 NoDisplay=true
 X-GNOME-Autostart-Notify=false
 EOF
-rm -f /home/cinnamon/.local/share/keyrings/login.keyring 2>/dev/null || true
-
 rpm -qa --qf '%{name}-%{version}-%{release}.%{arch}\n' | sort > /var/log/azl-desktop-install-package-list.txt
 %end

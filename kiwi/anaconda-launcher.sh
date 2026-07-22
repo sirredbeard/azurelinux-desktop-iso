@@ -47,16 +47,61 @@ echo "  2) Encrypted disk (LUKS)"
 echo ""
 read -rp "Select installation type [1]: " CHOICE
 
+collect_admin_account() {
+    while :; do
+        read -r -p "Administrator username: " ADMIN_USER
+        if [[ "$ADMIN_USER" =~ ^[a-z_][a-z0-9_-]*[$]?$ ]]; then
+            break
+        fi
+        echo "Use a lowercase username beginning with a letter or underscore." >&2
+    done
+
+    while :; do
+        read -r -s -p "Administrator password: " ADMIN_PASSWORD
+        echo
+        read -r -s -p "Confirm administrator password: " ADMIN_PASSWORD_CONFIRM
+        echo
+        if [ -n "$ADMIN_PASSWORD" ] && [ "$ADMIN_PASSWORD" = "$ADMIN_PASSWORD_CONFIRM" ]; then
+            break
+        fi
+        echo "Passwords must be non-empty and match." >&2
+    done
+
+    ADMIN_PASSWORD_HASH="$(printf '%s\n' "$ADMIN_PASSWORD" | openssl passwd -6 -stdin)"
+    unset ADMIN_PASSWORD ADMIN_PASSWORD_CONFIRM
+}
+
+write_kickstart_with_admin_user() {
+    local template="$1"
+    local account_directive
+
+    umask 077
+    account_directive="$(mktemp /run/install/account.XXXXXX)"
+    printf 'user --name=%s --groups=wheel --password=%s --iscrypted\n' \
+        "$ADMIN_USER" "$ADMIN_PASSWORD_HASH" > "$account_directive"
+    awk -v account_directive="$account_directive" '
+        /^%packages/ && !inserted {
+            while ((getline line < account_directive) > 0) print line
+            close(account_directive)
+            inserted = 1
+        }
+        { print }
+    ' "$template" > /run/install/ks.cfg
+    rm -f "$account_directive"
+}
+
+collect_admin_account
+
 case "$CHOICE" in
     2)
         echo "*** Disk encryption ENABLED ***"
         echo "  Anaconda will prompt you for the LUKS passphrase during install."
         echo ""
-        cp /root/azl-install-encrypted.ks /run/install/ks.cfg
+        write_kickstart_with_admin_user /root/azl-install-encrypted.ks
         ;;
     *)
         echo "*** Standard installation (offline) ***"
-        cp /root/azl-install.ks /run/install/ks.cfg
+        write_kickstart_with_admin_user /root/azl-install.ks
         ;;
 esac
 

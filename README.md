@@ -64,7 +64,7 @@ There are two separate ISOs here, built two different ways, on purpose.
 
 **The live ISO** (`kickstart/azurelinux-desktop-live.ks`) is what you boot to try the desktop without touching a disk. It's fed to [`lorax`](https://github.com/weldr/lorax) and `livemedia-creator --no-virt`, which runs a real `anaconda --dirinstall` package install against Azure Linux's own repos plus a pinned Fedora repo for GNOME and everything GNOME needs, then squashes the result into a live-bootable ISO. Lorax is the right tool here because it's built specifically for producing live media, and the live ISO isn't trying to be anything else. The build runs on GitHub Actions ([`.github/workflows/build-live-iso.yml`](.github/workflows/build-live-iso.yml)) from a clean runner every time.
 
-**The installer ISO** (`kiwi/`) is what you boot to actually install the desktop to a disk. This one is built with [KIWI-NG](https://github.com/OSInside/kiwi), because that's what Microsoft's own real Azure Linux 4.0 installer ISO is built with. I looked at `microsoft/azurelinux`'s own `base/images/vm-iso-installer/` directory and copied its approach: a `.kiwi` image description bootstraps a minimal live-boot environment (just enough to run a text-mode Anaconda, nothing desktop-related), `config.sh` downloads every real target package plus dependencies into an offline repo baked onto the ISO, and a kickstart template gets its package list filled in from that same list at build time. The kickstart installs entirely offline, no network needed at install time, same as the real thing. What's different from upstream is the package list itself (the full GNOME + Microsoft/GitHub stack instead of Azure Linux's minimal cloud base), the extra network fetches for GitHub Copilot/edit/Flathub done during that same build-time window, and a real default account (`cinnamon`) instead of a locked-root cloud image. Full writeup of that decision in [`findings/gh-actions-installer-iso-build.md`](findings/gh-actions-installer-iso-build.md). The build runs on GitHub Actions too ([`.github/workflows/build-installer-iso.yml`](.github/workflows/build-installer-iso.yml)), same clean-runner-every-time approach.
+**The installer ISO** (`kiwi/`) is what you boot to actually install the desktop to a disk. This one is built with [KIWI-NG](https://github.com/OSInside/kiwi), because that's what Microsoft's own real Azure Linux 4.0 installer ISO is built with. I looked at `microsoft/azurelinux`'s own `base/images/vm-iso-installer/` directory and copied its approach: a `.kiwi` image description bootstraps a minimal live-boot environment (just enough to run a text-mode Anaconda, nothing desktop-related), `config.sh` downloads every real target package plus dependencies into an offline repo baked onto the ISO, and a kickstart template gets its package list filled in from that same list at build time. The kickstart installs entirely offline, no network needed at install time, same as the real thing. What's different from upstream is the package list itself (the full GNOME + Microsoft/GitHub stack instead of Azure Linux's minimal cloud base) and the extra network fetches for GitHub Copilot/edit/Flathub done during that same build-time window. Account setup remains interactive, matching Azure Linux's installer templates. Full writeup of that decision in [`findings/gh-actions-installer-iso-build.md`](findings/gh-actions-installer-iso-build.md). The build runs on GitHub Actions too ([`.github/workflows/build-installer-iso.yml`](.github/workflows/build-installer-iso.yml)), same clean-runner-every-time approach.
 
 **The disk images** (qcow2/VHDX/VDI/VMDK) skip the ISO/install step entirely and boot straight to a desktop. They come from the same `azurelinux-desktop-live.ks` kickstart as the live ISO, but run through `livemedia-creator --make-disk` instead of `--make-iso`, so the disk-image variant enables one extra thing the ISO doesn't need: `azl-growroot.service`, a small oneshot unit (`cloud-utils-growpart` + `xfs_growfs`) that grows the root partition/filesystem to fill whatever size the disk gets resized to after the anaconda install finishes, since Anaconda only sizes the partition to the small disk it's given at install time. `build-disk-image` ([`.github/workflows/build-live-iso.yml`](.github/workflows/build-live-iso.yml)) runs the anaconda install and produces the base qcow2; three independent jobs (`build-vhdx`, `build-vdi`, `build-vmdk`) each take that qcow2 and run a single `qemu-img convert` to produce the other three formats, each with its own `workflow_dispatch` input so any one of them can be rebuilt without re-running the anaconda install or the other conversions. Full trace of the bugs that came up building this (partition growth, VHDX losing its resize, a unit-enablement ordering bug) in [`findings/gh-actions-live-iso-build.md`](findings/gh-actions-live-iso-build.md).
 
@@ -150,7 +150,7 @@ sha256sum -c azurelinux-desktop-live.vhdx.7z.sha256
 
 (swap `azurelinux-desktop-live.vhdx` for `azurelinux-desktop-live.vdi` or `azurelinux-desktop-live.vmdk` for the other two - same pattern.)
 
-[`scripts/qemu-test-live-iso.sh`](scripts/qemu-test-live-iso.sh) boots the reassembled live ISO with `-cpu host` and a real GTK window, so you can actually watch the desktop come up instead of squinting at serial output:
+[`scripts/qemu-test-live-iso.sh`](scripts/qemu-test-live-iso.sh) boots the reassembled live ISO with `-cpu host`, a QEMU USB tablet, and a real GTK window, so you can actually watch the desktop and test pointer input instead of squinting at serial output. The USB tablet is deliberate: it exercises the image's project-provided `usbhid` module rather than QEMU's default PS/2 mouse path, which the Azure kernel does not provide. Set `AZL_QEMU_INPUT_DEVICE` to `usb-mouse`, `virtio-tablet`, or `virtio-mouse` to test another supported input path.
 
 ```bash
 ./scripts/qemu-test-live-iso.sh /path/to/azurelinux-desktop-live.iso
@@ -161,6 +161,28 @@ sha256sum -c azurelinux-desktop-live.vhdx.7z.sha256
 ```bash
 ./scripts/qemu-test-install-iso.sh /path/to/azurelinux-desktop-install.iso
 ```
+
+### Live-session storage
+
+The ISO uses the standard Fedora LiveOS model: the normal read-only ISO has a
+temporary RAM-backed writable layer. It is fine for trying the desktop, but
+large Flatpak installs need more reported root filesystem space than a
+throwaway session should promise. The image reserves a larger live root for
+that check; changes still disappear at shutdown.
+
+For a portable live USB that keeps installed applications and files, use
+Fedora's `livecd-iso-to-disk` with a persistent overlay and home filesystem.
+The target must be the intended USB partition, not a mounted path:
+
+```bash
+sudo livecd-iso-to-disk --reset-mbr --overlay-size-mb 8192 \
+  --home-size-mb 8192 --unencrypted-home \
+  /path/to/azurelinux-desktop-live.iso /dev/sdX1
+```
+
+Replace `/dev/sdX1` carefully: this rewrites that target. Azure Linux's own
+LiveOS tooling is explicitly stateless, so persistence is a Fedora LiveOS USB
+deployment choice rather than an ISO default.
 
 [`scripts/qemu-test-disk-image.sh`](scripts/qemu-test-disk-image.sh) boots a qcow2/VHDX disk image directly (headless, serial console, real UEFI/OVMF firmware, `-snapshot` by default so it never modifies the artifact):
 
@@ -189,9 +211,9 @@ Real hardware should work the same way once you have burned or flashed the live 
 
 ### Default accounts
 
-The live ISO and pre-built disk images autologin as `liveuser` (no password, passwordless `sudo`) - there's nothing to type in, they are throwaway test images.
+The live ISO and pre-built disk images autologin as Fedora-style `liveuser` (no password, passwordless `sudo`) - there's nothing to type in, they are throwaway test images.
 
-The installer ISO creates a real, persistent account named `cinnamon` on the installed system (`wheel`/`sudo`, GDM autologin after the first boot). Its password is a known, deliberately public placeholder - **`cinnamon`** - not a real security boundary for a personal proof of concept; change it (`passwd cinnamon`) on any install you actually care about securing.
+The installer collects the installed system's administrator account during setup, matching Azure Linux's installer behavior.
 
 ## Where do I get help
 

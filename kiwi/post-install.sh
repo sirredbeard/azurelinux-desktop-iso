@@ -27,6 +27,15 @@ GRUB_CMDLINE_LINUX="console=ttyS0,115200 console=tty0"
 GRUB_DISABLE_RECOVERY=true
 GRUBDEF
 
+cat > /etc/yum.repos.d/azl-desktop-kmods.repo << 'REPO'
+[azl-desktop-kmods]
+name=Azure Linux Desktop kernel modules
+baseurl=https://sirredbeard.github.io/azurelinux-desktop/repo
+enabled=1
+gpgcheck=0
+cost=1
+REPO
+
 # --- Encrypted disk: regenerate initramfs with LUKS support ---
 if [ -f /etc/crypttab ] && [ -s /etc/crypttab ]; then
     echo "LUKS detected — regenerating initramfs with crypt module..."

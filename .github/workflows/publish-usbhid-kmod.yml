@@ -1,0 +1,137 @@
+name: Build and publish Azure Linux USB HID kmod repository
+
+on:
+  schedule:
+    - cron: "17 */4 * * *"
+  workflow_dispatch:
+    inputs:
+      republish:
+        description: "Rebuild and redeploy repository metadata"
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      republish:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: azurelinux-desktop-kmod-repository
+  cancel-in-progress: false
+
+env:
+  KMOD_REPO_URL: https://sirredbeard.github.io/azurelinux-desktop/repo
+
+jobs:
+  detect-new-kernel:
+    runs-on: ubuntu-24.04
+    outputs:
+      build_required: ${{ steps.detect.outputs.build_required }}
+      kernel_nevra: ${{ steps.detect.outputs.kernel_nevra }}
+    steps:
+      - id: detect
+        env:
+          AZL_BASE_URL: https://packages.microsoft.com/azurelinux/4.0/beta/base/x86_64
+        run: |
+          set -euo pipefail
+          kernel_nevra="$(
+            docker run --rm mcr.microsoft.com/azurelinux-beta/base/core:4.0 \
+              bash -c "dnf5 repoquery --setopt=reposdir=/dev/null \
+                --repofrompath=azl-base,$AZL_BASE_URL --repo=azl-base --available \
+                --latest-limit=1 --qf '%{name}-%{version}-%{release}.%{arch}' kernel"
+          )"
+          test -n "$kernel_nevra"
+          echo "kernel_nevra=$kernel_nevra" >> "$GITHUB_OUTPUT"
+
+          rpm_name="azurelinux-desktop-policy-${kernel_nevra#kernel-}.rpm"
+          if [[ "${{ inputs.republish || 'false' }}" != 'true' ]] &&
+              curl --fail --silent --show-error --location \
+              "$KMOD_REPO_URL/manifest.txt" | grep -Fxq "$rpm_name"; then
+            echo "build_required=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "build_required=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish:
+    needs: detect-new-kernel
+    if: ${{ needs.detect-new-kernel.outputs.build_required == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the current exact-kernel RPM in Azure Linux
+        run: |
+          mkdir -p kmod-output
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            mcr.microsoft.com/azurelinux-beta/base/core:4.0 \
+            bash /workspace/scripts/build-usbhid-kmod.sh /workspace/kmod-output \
+              "${{ needs.detect-new-kernel.outputs.kernel_nevra }}"
+
+      - name: Preserve published RPMs and generate repository metadata
+        run: |
+          set -euo pipefail
+          mkdir -p site/repo
+          if curl --fail --location --retry 3 "$KMOD_REPO_URL/manifest.txt" \
+              -o prior-manifest.txt; then
+            while IFS= read -r rpm; do
+              [ -n "$rpm" ] || continue
+              case "$rpm" in
+                azurelinux-desktop-usbhid-kmod-*|azurelinux-desktop-policy-*) ;;
+                *) continue ;;
+              esac
+              curl --fail --location --retry 3 "$KMOD_REPO_URL/$rpm" \
+                -o "site/repo/$rpm"
+            done < prior-manifest.txt
+          fi
+          cp -v kmod-output/*.rpm site/repo/
+          sudo apt-get update
+          sudo apt-get install -y createrepo-c
+          createrepo_c --update site/repo
+          find site/repo -maxdepth 1 -type f -name '*.rpm' -printf '%f\n' | sort \
+            > site/repo/manifest.txt
+
+      - name: Validate exact-kernel dependency resolution
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE/site/repo:/repo:ro" \
+            mcr.microsoft.com/azurelinux-beta/base/core:4.0 \
+            bash -exc '
+              dnf5 install -y \
+                --setopt=reposdir=/dev/null \
+                --setopt=azl-base.gpgcheck=0 \
+                --setopt=azl-desktop-kmods.gpgcheck=0 \
+                --repofrompath=azl-base,https://packages.microsoft.com/azurelinux/4.0/beta/base/x86_64 \
+                --repofrompath=azl-desktop-kmods,file:///repo \
+                --repo=azl-base --repo=azl-desktop-kmods \
+                kernel azurelinux-desktop-policy
+              kver=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}" kernel-core)
+              test -f "/usr/lib/modules/$kver/extra/azurelinux-desktop/usbhid.ko"
+            ' 2>&1 | tee kmod-dnf-resolve.log
+          grep -Fq "azurelinux-desktop-usbhid-kmod" kmod-dnf-resolve.log
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Verify published repository metadata
+        run: |
+          curl --fail --location --retry 12 --retry-delay 5 \
+            "$KMOD_REPO_URL/repodata/repomd.xml" >/dev/null

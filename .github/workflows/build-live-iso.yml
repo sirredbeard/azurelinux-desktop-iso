@@ -92,13 +92,17 @@ on:
       build_vhdx:
         description: "Convert the qcow2 to VHDX (Hyper-V)"
         type: boolean
-        default: true
+        default: false
       build_vdi:
         description: "Convert the qcow2 to VDI (VirtualBox)"
         type: boolean
-        default: true
+        default: false
       build_vmdk:
         description: "Convert the qcow2 to VMDK (VMware)"
+        type: boolean
+        default: false
+      prepare_kernel_modules:
+        description: "Publish or verify the matching kernel module repository before building"
         type: boolean
         default: true
   workflow_call:
@@ -111,17 +115,30 @@ on:
         default: true
       build_vhdx:
         type: boolean
-        default: true
+        default: false
       build_vdi:
         type: boolean
-        default: true
+        default: false
       build_vmdk:
+        type: boolean
+        default: false
+      prepare_kernel_modules:
         type: boolean
         default: true
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
+  prepare-kernel-modules:
+    if: ${{ inputs.prepare_kernel_modules }}
+    uses: ./.github/workflows/publish-usbhid-kmod.yml
+
   build-iso:
-    if: ${{ inputs.build_iso }}
+    needs: prepare-kernel-modules
+    if: ${{ always() && inputs.build_iso && (needs.prepare-kernel-modules.result == 'success' || needs.prepare-kernel-modules.result == 'skipped') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 180
 
@@ -199,6 +216,7 @@ jobs:
                 --project "Azure Linux Desktop" \
                 --releasever 43 \
                 --volid AZLDESKTOP \
+                --live-rootfs-size 4 \
                 --extra-boot-args "rd.live.overlay.overlayfs=1" \
                 --logfile /workspace/livemedia-build.log
             '
@@ -254,7 +272,7 @@ jobs:
 
       # This is the actual, real rpmdb from the build that just ran - not a
       # podman dry-run snapshot from an earlier point in time. Download this
-      # artifact and drop it in over findings/final-package-list.txt by hand
+      # artifact and drop it in over findings/live-package-list.txt by hand
       # after a build you're happy with; not auto-committed here on purpose
       # (keeps this workflow read-only against the repo, no extra
       # contents:write permission or bot-commit noise needed for a personal
@@ -289,7 +307,8 @@ jobs:
   # build-vmdk), so re-running just one of those conversions never has
   # to redo this job's ~15-20 minute anaconda build.
   build-disk-image:
-    if: ${{ inputs.build_disk_image || inputs.build_vhdx || inputs.build_vdi || inputs.build_vmdk }}
+    needs: prepare-kernel-modules
+    if: ${{ always() && (inputs.build_disk_image || inputs.build_vhdx || inputs.build_vdi || inputs.build_vmdk) && (needs.prepare-kernel-modules.result == 'success' || needs.prepare-kernel-modules.result == 'skipped') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     # This build was unstable for a long time (see
@@ -448,12 +467,12 @@ jobs:
           # same desktop defaults through the persistent system dconf database.
           cat > /etc/dconf/db/local.d/01-azl-desktop-favorites << 'DCONF'
           [org/gnome/shell]
-          favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'powershell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']
+          favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'org.azurelinux.PowerShell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']
           welcome-dialog-last-shown-version='4294967295'
 
           [org/gnome/desktop/background]
-          picture-uri='file:///usr/share/backgrounds/gnome/symbolic-l.png'
-          picture-uri-dark='file:///usr/share/backgrounds/gnome/symbolic-d.png'
+          picture-uri='file:///usr/share/backgrounds/gnome/adwaita-l.jxl'
+          picture-uri-dark='file:///usr/share/backgrounds/gnome/adwaita-d.jxl'
           picture-options='zoom'
           DCONF
           dconf update

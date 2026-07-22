@@ -34,8 +34,17 @@ on:
   workflow_dispatch: {}
   workflow_call: {}
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
+  prepare-kernel-modules:
+    uses: ./.github/workflows/publish-usbhid-kmod.yml
+
   build-iso:
+    needs: prepare-kernel-modules
     runs-on: ubuntu-24.04
     timeout-minutes: 180
 
@@ -236,6 +245,18 @@ jobs:
                 -extract /boot/x86_64/loader/initrd /tmp/iso-extract/initrd.img
               lsinitrd /tmp/iso-extract/initrd.img | grep -F "usr/lib64/plymouth/script.so"
               lsinitrd /tmp/iso-extract/initrd.img | grep -F "usr/share/plymouth/themes/azurelinux/azurelinux.plymouth"
+
+              # Keep the runtime environment actual rpmdb as a separate
+              # artifact. The installer uses this root before any target disk
+              # exists, so it is the package boundary this inventory records.
+              mkdir -p /tmp/iso-extract/rootfs
+              mount -o loop,ro \
+                /tmp/iso-extract/squash-out/LiveOS/rootfs.img \
+                /tmp/iso-extract/rootfs
+              rpm --root /tmp/iso-extract/rootfs -qa \
+                --qf "%{name}-%{version}-%{release}.%{arch}\n" | sort \
+                > /workspace/installer-result/final-package-list.txt
+              umount /tmp/iso-extract/rootfs
             '
 
       - name: Upload build log (always, even on failure)
@@ -275,3 +296,12 @@ jobs:
           path: installer-result/final-kickstart.ks
           retention-days: 7
           if-no-files-found: warn
+
+      - name: Upload resolved installer package list artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: azurelinux-desktop-installer-package-list
+          path: installer-result/final-package-list.txt
+          retention-days: 7
+          if-no-files-found: error

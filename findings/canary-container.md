@@ -1,4 +1,4 @@
-# Hybrid container publishing - what it is and three bugs found building it
+# Canary container - what it is and three bugs found building it
 
 `scripts/build-hybrid-container.sh` + `.github/workflows/build-container.yml`
 publish a small OCI image to GHCR (`ghcr.io/sirredbeard/azurelinux-desktop/hybrid`)

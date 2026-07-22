@@ -45,6 +45,7 @@ INSTALL_PKGS=(
     efibootmgr
     kernel
     kernel-modules
+    azurelinux-desktop-policy
     openssh-server
     openssh-clients
     sudo
@@ -52,6 +53,7 @@ INSTALL_PKGS=(
     tar
     ncurses
     ca-certificates
+    openssl
     setup
     shadow-utils
     util-linux
@@ -363,6 +365,7 @@ dnf5 download \
     --arch=noarch \
     --repofrompath=azl-base,https://packages.microsoft.com/azurelinux/4.0/beta/base/x86_64 \
     --repofrompath=azl-microsoft,https://packages.microsoft.com/azurelinux/4.0/beta/microsoft/x86_64 \
+    --repofrompath=azl-desktop-kmods,https://sirredbeard.github.io/azurelinux-desktop/repo \
     --repofrompath=fedora43,https://dl.fedoraproject.org/pub/fedora/linux/releases/43/Everything/x86_64/os/ \
     --repofrompath=fedora43-updates,https://dl.fedoraproject.org/pub/fedora/linux/updates/43/Everything/x86_64/ \
     --repofrompath=ms-prod,https://packages.microsoft.com/rhel/9/prod/ \
@@ -374,6 +377,7 @@ dnf5 download \
     --repofrompath=rpmfusion-nonfree,https://download1.rpmfusion.org/nonfree/fedora/releases/43/Everything/x86_64/os/ \
     --setopt=azl-base.cost=1 \
     --setopt=azl-microsoft.cost=1 \
+    --setopt=azl-desktop-kmods.cost=1 \
     --setopt=ms-prod.cost=1 \
     --setopt=vscode.cost=1 \
     --setopt=edge-canary.cost=1 \
@@ -388,7 +392,7 @@ dnf5 download \
     --setopt=ms-prod.excludepkgs="$MS_PROD_EXCLUDES" \
     --setopt=fedora43.excludepkgs="$FEDORA_EXCLUDES" \
     --setopt=fedora43-updates.excludepkgs="$FEDORA_EXCLUDES" \
-    --repo=azl-base --repo=azl-microsoft --repo=fedora43 --repo=fedora43-updates \
+    --repo=azl-base --repo=azl-microsoft --repo=azl-desktop-kmods --repo=fedora43 --repo=fedora43-updates \
     --repo=ms-prod --repo=vscode --repo=edge-canary --repo=gh-cli --repo=github-desktop \
     --repo=rpmfusion-free --repo=rpmfusion-nonfree \
     --resolve \
@@ -648,5 +652,12 @@ render_kickstart() {
 
 render_kickstart /root/azl-install.ks.in /root/azl-install.ks
 render_kickstart /root/azl-install-encrypted.ks.in /root/azl-install-encrypted.ks
+
+# Azure Linux's installer does not embed a default account. Keep the desktop
+# templates account-free; anaconda-launcher.sh collects the administrator
+# credentials and inserts a hashed account directive into its temporary copy.
+sed -i \
+    -e '/^user --name=cinnamon /d' \
+    /root/azl-install.ks /root/azl-install-encrypted.ks
 
 echo "=== kiwi/config.sh complete ==="

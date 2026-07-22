@@ -89,6 +89,10 @@ PKGS=(
     dnf5
     glib2
     gtk4
+    dconf
+    gsettings-desktop-schemas
+    gnome-backgrounds
+    gnome-terminal
     curl
     tar
     flatpak
@@ -154,6 +158,7 @@ echo "=== Resolving hybrid package set into $ROOTFS ==="
 podman run --rm \
     -v "$WORKDIR:/work:Z" \
     -v "$ROOTFS:/mnt/azl:Z" \
+    -v "$REPO_ROOT/assets:/assets:ro,Z" \
     registry.fedoraproject.org/fedora:43 bash -exo pipefail -c '
         # /mnt/azl/etc/yum.repos.d/azl-hybrid.repo already exists here -
         # it is the same bind-mounted $ROOTFS the host wrote it into
@@ -173,6 +178,31 @@ podman run --rm \
             --setopt=reposdir=/work/repos \
             --installroot=/mnt/azl --releasever=43 \
             /work/github-copilot.rpm
+
+        install -Dm0755 /assets/bin/azl-powershell-terminal \
+            /mnt/azl/usr/local/bin/azl-powershell-terminal
+        install -Dm0644 /assets/desktop/org.azurelinux.PowerShell.desktop \
+            /mnt/azl/usr/share/applications/org.azurelinux.PowerShell.desktop
+        install -Dm0644 /assets/icons/powershell.png \
+            /mnt/azl/usr/share/pixmaps/powershell.png
+
+        mkdir -p /mnt/azl/etc/dconf/db/local.d /mnt/azl/etc/dconf/profile
+        cat > /mnt/azl/etc/dconf/db/local.d/00-azl-desktop-defaults << "EOF"
+[org/gnome/desktop/interface]
+color-scheme="prefer-dark"
+gtk-theme="Adwaita-dark"
+
+[org/gnome/desktop/background]
+picture-uri="file:///usr/share/backgrounds/gnome/adwaita-l.jxl"
+picture-uri-dark="file:///usr/share/backgrounds/gnome/adwaita-d.jxl"
+picture-options="zoom"
+EOF
+        cat > /mnt/azl/etc/dconf/profile/user << "EOF"
+user-db:user
+system-db:local
+EOF
+        chroot /mnt/azl dconf update
+        test -s /mnt/azl/etc/dconf/db/local
 
         curl -fL --retry 3 -o /work/copilot-linux-x64.tar.gz \
             https://github.com/github/copilot-cli/releases/latest/download/copilot-linux-x64.tar.gz

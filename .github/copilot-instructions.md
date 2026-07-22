@@ -134,14 +134,15 @@ README for the full backstory.
   cancellation is diagnosed and its relevant excerpt is retained in
   `findings/logs/`, delete the run so the Actions list stays useful.
 - **Nightly publication and focused debugging**: `nightly-release.yml` builds
-  the live ISO, qcow2, VHDX, VDI, VMDK, installer ISO, and hybrid container
-  from the current default branch. It deletes all preceding GitHub releases,
-  tags, and hybrid GHCR versions first, so the project has one current set of
-  artifacts rather than a release archive. For debugging outside the nightly
-  run, build only the requested format. When validation needs released
-  artifacts, dispatch the matching release workflow rather than a build-only
-  workflow so `Get-AzureLinuxDesktop.ps1` is tested against the actual
-  published assets.
+  the live ISO, qcow2, installer ISO, and hybrid container from the current
+  default branch. VHDX, VDI, and VMDK are derivative qcow2 formats and stay
+  disabled unless they are explicitly requested. It deletes all preceding
+  GitHub releases, tags, and hybrid GHCR versions first, so the project has
+  one current set of artifacts rather than a release archive. For debugging
+  outside the nightly run, build only the requested format. When validation
+  needs released artifacts, dispatch the matching release workflow rather
+  than a build-only workflow so `Get-AzureLinuxDesktop.ps1` is tested against
+  the actual published assets.
 - **Parity, linting, and reusable scripts**: carry a package, repository,
   side-load, or priority change through every applicable live, installer, and
   hybrid path. Add build/test/download helpers under `/scripts/`, run them

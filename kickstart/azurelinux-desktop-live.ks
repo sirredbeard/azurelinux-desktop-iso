@@ -100,6 +100,7 @@ shutdown
 # reasoning as the grub2/shim/fuse3 fix above.
 repo --name=azl-base --baseurl=https://packages.microsoft.com/azurelinux/4.0/beta/base/x86_64 --cost=1 --excludepkgs=hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-efi-x64-cdboot,grub2-tools,grub2-tools-extra,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas,dnf5,dnf5daemon-server,dnf5daemon-server-polkit,libdnf5,libdnf5-cli,libdnf5-plugin-actions,libdnf5-plugin-appstream,libdnf5-plugin-expired-pgp-keys,libdnf5-plugin-local
 repo --name=azl-microsoft --baseurl=https://packages.microsoft.com/azurelinux/4.0/beta/microsoft/x86_64 --cost=1 --excludepkgs=hunspell-en,grub2,grub2-pc,grub2-pc-modules,grub2-efi-x64,grub2-efi-x64-modules,grub2-efi-x64-cdboot,grub2-tools,grub2-tools-extra,grub2-tools-minimal,grub2-common,shim,shim-x64,gsettings-desktop-schemas
+repo --name=azl-desktop-kmods --baseurl=https://sirredbeard.github.io/azurelinux-desktop/repo --cost=1
 # Claw-back excludepkgs: forces these specific base/system packages back
 # onto Azure Linux's own build instead of Fedora's, on top of the cost=
 # tie-break above - cost= only decides between mirrors offering the exact
@@ -156,6 +157,7 @@ shim
 efibootmgr
 kernel
 kernel-modules
+azurelinux-desktop-policy
 openssh-server
 openssh-clients
 sudo
@@ -429,8 +431,17 @@ cp -v /workspace/assets/icons/edit.svg /mnt/sysimage/usr/share/pixmaps/edit.svg
 cp -v /workspace/assets/icons/powershell.png /mnt/sysimage/usr/share/pixmaps/powershell.png
 cp -v /workspace/assets/icons/dotnet.svg /mnt/sysimage/usr/share/pixmaps/dotnet.svg
 cp -v /workspace/assets/desktop/edit.desktop /mnt/sysimage/usr/share/applications/edit.desktop
-cp -v /workspace/assets/desktop/powershell.desktop /mnt/sysimage/usr/share/applications/powershell.desktop
+cp -v /workspace/assets/bin/azl-powershell-terminal /mnt/sysimage/usr/local/bin/azl-powershell-terminal
+chmod 0755 /mnt/sysimage/usr/local/bin/azl-powershell-terminal
+cp -v /workspace/assets/desktop/org.azurelinux.PowerShell.desktop /mnt/sysimage/usr/share/applications/org.azurelinux.PowerShell.desktop
 cp -v /workspace/assets/desktop/dotnet.desktop /mnt/sysimage/usr/share/applications/dotnet.desktop
+
+# Lorax builds the boot initramfs from this target root after %post. Patch the
+# target's older livenet hook, not the Fedora build container's dracut copy.
+install -D -m 0755 /workspace/scripts/patch-dracut-livenet-hook.sh \
+    /mnt/sysimage/usr/local/libexec/patch-dracut-livenet-hook.sh
+chroot /mnt/sysimage /usr/local/libexec/patch-dracut-livenet-hook.sh
+rm -f /mnt/sysimage/usr/local/libexec/patch-dracut-livenet-hook.sh
 
 # Same story for the plymouth boot splash - it's just our own static
 # theme files checked into the repo (assets/plymouth/azurelinux/), plus
@@ -464,16 +475,18 @@ else
     echo "WARNING: could not resolve a linux-x64.rpm asset URL for github/app latest release" >&2
 fi
 
-# GitHub Copilot CLI (the standalone `copilot` terminal agent, not the
-# older `gh copilot` extension) has no RPM either - Microsoft/GitHub ship
-# it as an install script + prebuilt binary drop. Run the installer
-# against the mounted target root's /usr/local/bin so it lands in the
-# actual image, not this transient build-host shell.
-curl -fsSL https://gh.io/copilot-install -o /mnt/sysimage/root/thirdparty/copilot-install.sh
-if [ ! -s /mnt/sysimage/root/thirdparty/copilot-install.sh ]; then
-    echo "WARNING: copilot-install.sh download failed or is empty" >&2
-    rm -f /mnt/sysimage/root/thirdparty/copilot-install.sh
-fi
+# GitHub Copilot CLI is a standalone binary archive. Stage the archive and
+# verify its published checksum while network access exists; the later
+# chrooted post only extracts the verified local payload.
+COPILOT_ARCHIVE="copilot-linux-x64.tar.gz"
+curl -fL --retry 3 -o "/mnt/sysimage/root/thirdparty/$COPILOT_ARCHIVE" \
+    "https://github.com/github/copilot-cli/releases/latest/download/$COPILOT_ARCHIVE"
+curl -fL --retry 3 -o /mnt/sysimage/root/thirdparty/copilot-SHA256SUMS.txt \
+    https://github.com/github/copilot-cli/releases/latest/download/SHA256SUMS.txt
+(
+    cd /mnt/sysimage/root/thirdparty
+    grep -E " [*]?$COPILOT_ARCHIVE$" copilot-SHA256SUMS.txt | sha256sum -c -
+)
 
 # microsoft/edit - Microsoft's small modeless terminal text editor. No
 # RPM, ships as a tar.gz per-arch on GitHub releases. Same "ask the API
@@ -614,6 +627,15 @@ sed -i '/^\[azl-microsoft\]/,/^\[/ s/^enabled=1/enabled=1\nexclude=hunspell-en g
 sed -i '/^\[azl-base\]/,/^\[/ s/^exclude=/&grub2-tools-extra /' /etc/yum.repos.d/azurelinux.repo 2>/dev/null || true
 sed -i '/^\[azl-microsoft\]/,/^\[/ s/^exclude=/&grub2-tools-extra /' /etc/yum.repos.d/azurelinux.repo 2>/dev/null || true
 
+cat > /etc/yum.repos.d/azl-desktop-kmods.repo << 'EOF'
+[azl-desktop-kmods]
+name=Azure Linux Desktop kernel modules
+baseurl=https://sirredbeard.github.io/azurelinux-desktop/repo
+enabled=1
+gpgcheck=0
+cost=1
+EOF
+
 systemctl set-default graphical.target
 systemctl enable gdm.service
 
@@ -682,8 +704,8 @@ color-scheme='prefer-dark'
 gtk-theme='Adwaita-dark'
 
 [org/gnome/desktop/background]
-picture-uri='file:///usr/share/backgrounds/gnome/symbolic-l.png'
-picture-uri-dark='file:///usr/share/backgrounds/gnome/symbolic-d.png'
+picture-uri='file:///usr/share/backgrounds/gnome/adwaita-l.jxl'
+picture-uri-dark='file:///usr/share/backgrounds/gnome/adwaita-d.jxl'
 picture-options='zoom'
 EOF
 cat > /etc/dconf/profile/user << 'EOF'
@@ -700,9 +722,9 @@ dconf update || true
 if [ -f /root/thirdparty/github-copilot.rpm ]; then
     rpm -i /root/thirdparty/github-copilot.rpm || true
 fi
-if [ -f /root/thirdparty/copilot-install.sh ]; then
-    bash /root/thirdparty/copilot-install.sh --install-dir /usr/local/bin || true
-fi
+tar -xzf /root/thirdparty/copilot-linux-x64.tar.gz -C /usr/local/bin copilot
+chmod 0755 /usr/local/bin/copilot
+test -x /usr/local/bin/copilot
 if [ -f /root/thirdparty/edit.tar.gz ]; then
     tar -xzf /root/thirdparty/edit.tar.gz -C /tmp \
         && install -m 0755 /tmp/edit /usr/local/bin/edit \
@@ -777,7 +799,7 @@ EOF
 # So: patch livesys-gnome's own favorite-apps= line in place instead of
 # fighting it with a second override file. Desktop IDs confirmed against
 # the actual installed .desktop files: microsoft-edge-canary.desktop,
-# code-insiders.desktop, powershell.desktop (our own launcher, see
+# code-insiders.desktop, org.azurelinux.PowerShell.desktop (our own launcher, see
 # assets/desktop/), "GitHub Copilot.desktop" (the Tauri app really does
 # ship it with a literal space in the filename/ID), and
 # org.gnome.Nautilus.desktop. Five apps, matches the latest explicit dock
@@ -808,7 +830,7 @@ EOF
 # so the favorite-apps override, welcome-tour suppression, and branding
 # copy always run regardless of whether that one file exists this boot.
 if [ -f /usr/libexec/livesys/sessions.d/livesys-gnome ]; then
-    sed -i "s|^favorite-apps=.*|favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'powershell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']|" \
+    sed -i "s|^favorite-apps=.*|favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'org.azurelinux.PowerShell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']|" \
         /usr/libexec/livesys/sessions.d/livesys-gnome
 fi
 
