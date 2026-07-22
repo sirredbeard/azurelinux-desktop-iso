@@ -1,4 +1,4 @@
-name: Publish fresh Azure Linux Desktop artifacts
+name: Nightly Azure Linux Desktop Release
 
 # The project intentionally keeps no release/archive history. Each nightly
 # build replaces the preceding live ISO, disk-image formats, installer ISO,

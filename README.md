@@ -8,7 +8,11 @@ This is the bare-metal follow-up to [Azure Linux Desktop: a Build 2026 mashup of
 
 This is a personal side project, explored for fun. **It is not affiliated with, sponsored by, or endorsed by Microsoft, the Fedora Project, Red Hat, the GNOME Foundation, or GitHub.** The package mixing required to accomplish this *will inevitably result in broken dependencies*. Be prepared to handle that. 
 
-Some very basic testing is done on the outgoing images, I also build a minimal container to test the hybrid Azure Linux and Fedora dnf priority scheme adopted here. Nonetheless, **I do not recommend running this in production.** That's why live ISOs and VM images are available for you to explore this. An installer ISO is available if you dare to install on bare metal. I haven't tested it yet.
+Some basic testing is done on the outgoing images. A hybrid Azure Linux and
+Fedora container is built to test our weird package mizing. Nonetheless, **I do not recommend
+running this in production.** That's why live ISOs and VM images are available
+for you to explore this. An installer ISO is available if you dare to install
+on bare metal. I haven't tested it yet.
 
 Third-party RPM packages are likely to get confused by the repo mixing here. When an application has a Fedora-compatible repository or binary, that is the most likely RPM path to work. I strongly encourage using [Flatpak](https://flatpak.org/) for applications where it is available instead. Flatpak is configured with Flathub and tested as working on the images.
 
@@ -81,12 +85,18 @@ Five stages, each one a higher bar than the last:
 
 1. **podman, full resolve/installroot.** Before anything touches lorax/kiwi or a real ISO build, the full package set gets resolved and installed into a throwaway root filesystem with `dnf --installroot`, using [`scripts/podman-test-azl4-fedora.sh`](scripts/podman-test-azl4-fedora.sh). It parses the real repo/cost/excludepkgs setup and `%packages` list straight out of `kickstart/azurelinux-desktop-live.ks`, so it always tests what the live ISO would actually resolve, not a hand-maintained copy of it. Fast, cheap, and it is where every packaging conflict so far actually got caught, before a full ISO build was ever spent on it.
 2. **podman, repo-origin canary.** [`scripts/test-container-repos.sh`](scripts/test-container-repos.sh) resolves the union of the real live and installer package inputs through the kickstart-parsed repository policy, then checks the packages the policy explicitly places on either side. It is the quick "did repo policy drift?" check for iteration, not a second desktop build.
-3. **Local QEMU/OVMF artifact checks.** The QEMU helpers in
+3. **Published hybrid-container canary.** Every published hybrid container
+   runs `dnf5 update` and `upgrade`, installs representative Azure and Fedora
+   packages, verifies their origins, records the custom project-tool versions,
+   and installs Firefox plus Flatseal from Flathub. Its DNF,
+   repository, origin, version, and Flatpak logs are retained as Actions
+   artifacts.
+4. **Local QEMU/OVMF artifact checks.** The QEMU helpers in
    [`scripts/`](scripts/) boot downloaded release artifacts with real UEFI
    firmware and hardware acceleration when it is available. GitHub-hosted
    runners are not used for guest boot testing.
-4. **local QEMU/KVM, real window.** Once the automated headless checks look sane, the actual built ISO can be booted locally in QEMU/KVM with a real GTK window. [`scripts/qemu-test-live-iso.sh`](scripts/qemu-test-live-iso.sh) boots the live ISO for manual desktop QA. [`scripts/qemu-test-install-iso.sh`](scripts/qemu-test-install-iso.sh) does the same for the installer ISO against a persistent qcow2 target disk.
-5. **Bare metal.** Not done yet. I have not booted this on real hardware. That is the next milestone once the live ISO itself is fully solid in QEMU.
+5. **local QEMU/KVM, real window.** Once the automated headless checks look sane, the actual built ISO can be booted locally in QEMU/KVM with a real GTK window. [`scripts/qemu-test-live-iso.sh`](scripts/qemu-test-live-iso.sh) boots the live ISO for manual desktop QA. [`scripts/qemu-test-install-iso.sh`](scripts/qemu-test-install-iso.sh) does the same for the installer ISO against a persistent qcow2 target disk.
+6. **Bare metal.** Not done yet. I have not booted this on real hardware. That is the next milestone once the live ISO itself is fully solid in QEMU.
 
 ## What else
 

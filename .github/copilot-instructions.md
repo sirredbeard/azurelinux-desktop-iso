@@ -218,8 +218,12 @@ README for the full backstory.
   it can be pulled and inspected without a full ISO/disk-image build.
   Keep its package and repository policy aligned with the image inputs,
   but keep its scope narrow: repo-mixing and priority regression checks,
-  not the desktop's runtime suite. The separate guest runtime work is
-  tracked in [issue #3](https://github.com/sirredbeard/azurelinux-desktop/issues/3).
+  not the desktop's runtime suite. `test-container.yml` runs after each
+  publication and must keep covering DNF update/upgrade, Azure and Fedora
+  package origins, the project-specific tools, and representative Flatpaks.
+  Preserve its version and transaction logs as workflow artifacts. The
+  separate guest runtime work is tracked in
+  [issue #3](https://github.com/sirredbeard/azurelinux-desktop/issues/3).
 - **Download script**: `scripts/Get-AzureLinuxDesktop.ps1` mirrors
   whatever image formats the release actually publishes - keep its
   `-Kvm`/`-Hyperv`/`-VirtualBox`/`-VMWare`-style options and README's

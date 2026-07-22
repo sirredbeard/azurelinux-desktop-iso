@@ -1,4 +1,4 @@
-name: Publish hybrid AZL+Fedora container
+name: Publish hybrid Azure Linux and Fedora testing container
 
 # Called by nightly-release.yml and available for manual runs. Publishes a
 # small OCI container image
@@ -57,3 +57,10 @@ jobs:
         run: |
           podman push "ghcr.io/${{ github.repository }}/hybrid:latest"
           podman push "ghcr.io/${{ github.repository }}/hybrid:${{ env.date_tag }}"
+
+  test-published-container:
+    needs: build-and-publish
+    uses: ./.github/workflows/test-container.yml
+    with:
+      image_ref: ghcr.io/${{ github.repository }}/hybrid:latest
+    secrets: inherit
