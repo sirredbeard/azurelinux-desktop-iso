@@ -21,14 +21,7 @@ README for the full backstory.
    system-level change outside Azure Linux/Fedora when it's genuinely
    necessary. This applies to build tooling too, not just runtime packages -
    see "Build tooling" below for why that's more constrained than it sounds.
-2. **Don't maintain parallel, hand-synced environment definitions.** If the
-   live ISO, the installer ISO, and the disk images each need their own
-   from-scratch package list and post-install config, they will drift out of
-   sync with each other over time, silently. One source of truth, or a
-   generated/derived second one, beats three hand-maintained ones. This is
-   an active, unresolved architecture question as of this writing - see
-   "Current known issues" below.
-3. **Keep the live and installer ISOs aligned with each other** in package
+3. **Keep the live ISO/VM and installer ISO aligned with each other** in package
    set and configuration wherever the two can reasonably share anything.
 4. **Findings survive.** Every real bug, dead end, or piece of research goes
    in `findings/*.md` - written for the next person (human or LLM) who hits
@@ -71,8 +64,6 @@ README for the full backstory.
     custom package/repository/tool in that canary, but do not add GNOME, GDM,
     Mutter, or a desktop package group merely to make it look like an image.
     GUI library dependencies pulled by the selected tools are expected.
-    Broader runtime coverage is tracked in [issue #3](https://github.com/sirredbeard/azurelinux-desktop/issues/3)
-    and is not a reason to turn the canary into a second image build.
 
 ## Problem-solving approach
 
@@ -179,13 +170,6 @@ README for the full backstory.
   `xfs_growfs`), and the VHDX conversion was sourced from the pre-resize
   raw image instead of the resized qcow2 (fixed by reordering the
   conversion). Both confirmed fixed against two consecutive real CI runs.
-- **mkosi migration: abandoned.** A pivot to `mkosi` was explored and
-  partially attempted earlier in this project's history, but per explicit
-  user preference ("I really don't want a massive migration... make the
-  current approach work ideally") it was dropped once the anaconda/UEFI
-  fix above actually worked. Any leftover mkosi-related files/branches are
-  historical, not the current build path - don't resurrect this without
-  the user asking for it again.
 - **Why not just use Azure Linux's own Image Customizer/KIWI-NG for disk
   images**, which is what Microsoft's own Azure Linux release process
   actually uses: its own CI needs `losetup -P` (partition-scanning loop
@@ -222,9 +206,7 @@ README for the full backstory.
   not the desktop's runtime suite. `test-container.yml` runs after each
   publication and must keep covering DNF update/upgrade, Azure and Fedora
   package origins, the project-specific tools, and representative Flatpaks.
-  Preserve its version and transaction logs as workflow artifacts. The
-  separate guest runtime work is tracked in
-  [issue #3](https://github.com/sirredbeard/azurelinux-desktop/issues/3).
+  Preserve its version and transaction logs as workflow artifacts.
 - **Download script**: `scripts/Get-AzureLinuxDesktop.ps1` mirrors
   whatever image formats the release actually publishes - keep its
   `-Kvm`/`-Hyperv`/`-VirtualBox`/`-VMWare`-style options and README's
