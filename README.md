@@ -81,7 +81,10 @@ Five stages, each one a higher bar than the last:
 
 1. **podman, full resolve/installroot.** Before anything touches lorax/kiwi or a real ISO build, the full package set gets resolved and installed into a throwaway root filesystem with `dnf --installroot`, using [`scripts/podman-test-azl4-fedora.sh`](scripts/podman-test-azl4-fedora.sh). It parses the real repo/cost/excludepkgs setup and `%packages` list straight out of `kickstart/azurelinux-desktop-live.ks`, so it always tests what the live ISO would actually resolve, not a hand-maintained copy of it. Fast, cheap, and it is where every packaging conflict so far actually got caught, before a full ISO build was ever spent on it.
 2. **podman, repo-origin canary.** [`scripts/test-container-repos.sh`](scripts/test-container-repos.sh) resolves the union of the real live and installer package inputs through the kickstart-parsed repository policy, then checks the packages the policy explicitly places on either side. It is the quick "did repo policy drift?" check for iteration, not a second desktop build.
-3. **headless QEMU/OVMF, no KVM.** [`.github/workflows/test-images.yml`](.github/workflows/test-images.yml) builds a test-only qcow2 variant from the same kickstart, boots it headless in QEMU with real UEFI/OVMF firmware and a serial console, and waits for either a boot marker ([`scripts/test-boot-smoke.sh`](scripts/test-boot-smoke.sh)) or the guest's own PASS/FAIL markers from a first-boot oneshot test unit ([`scripts/test-post-boot-checks.sh`](scripts/test-post-boot-checks.sh) + [`scripts/test-in-guest-checks.sh`](scripts/test-in-guest-checks.sh)). This is intentionally slow - GitHub-hosted runners do not expose nested KVM, so the VM runs under pure TCG software emulation - but it is the first actually automated "does it boot, does `dnf upgrade` finish, does Flathub still work" gate.
+3. **Local QEMU/OVMF artifact checks.** The QEMU helpers in
+   [`scripts/`](scripts/) boot downloaded release artifacts with real UEFI
+   firmware and hardware acceleration when it is available. GitHub-hosted
+   runners are not used for guest boot testing.
 4. **local QEMU/KVM, real window.** Once the automated headless checks look sane, the actual built ISO can be booted locally in QEMU/KVM with a real GTK window. [`scripts/qemu-test-live-iso.sh`](scripts/qemu-test-live-iso.sh) boots the live ISO for manual desktop QA. [`scripts/qemu-test-install-iso.sh`](scripts/qemu-test-install-iso.sh) does the same for the installer ISO against a persistent qcow2 target disk.
 5. **Bare metal.** Not done yet. I have not booted this on real hardware. That is the next milestone once the live ISO itself is fully solid in QEMU.
 
@@ -171,7 +174,8 @@ sha256sum -c azurelinux-desktop-live.vhdx.7z.sha256
 ./scripts/test-container-repos.sh
 ```
 
-The full headless suite lives in [`.github/workflows/test-images.yml`](.github/workflows/test-images.yml). It builds a dedicated test qcow2, runs the boot-smoke check, then boots that same qcow2 again and lets the guest itself run `dnf upgrade`, package-origin assertions, and a real Flathub install over the serial console. [`scripts/test-post-boot-checks.sh`](scripts/test-post-boot-checks.sh) is that second host-side wrapper; it expects the test-only qcow2 variant the workflow builds, not a release artifact.
+The local QEMU helpers remain available for focused boot and installer checks.
+They are not part of a GitHub Actions guest-testing workflow.
 
 The `-Kvm`/`-Hyperv`/`-VirtualBox`/`-VMWare` disk images all skip the install step entirely - boot the qcow2 straight in QEMU/KVM, attach the VHDX to a Hyper-V Generation 2 VM, attach the VDI to a VirtualBox VM, or attach the VMDK to a VMware Workstation/Player VM (all UEFI-only, same as the installed system itself), and you're at the desktop with no Anaconda run needed. All four are converted from the same 64G-grown qcow2, so they're the same disk contents in different container formats - VDI and VMDK just haven't been boot-tested in this project yet, since this dev environment deliberately has no VirtualBox or VMware installed.
 

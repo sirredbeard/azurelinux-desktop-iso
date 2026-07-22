@@ -18,14 +18,16 @@ concrete shape.
   first boot as a oneshot systemd unit.
 - `scripts/test-post-boot-checks.sh` - host-side wrapper, waits for
   `AZL_TEST_RESULT PASS`/`FAIL` over serial console.
-- `.github/workflows/test-images.yml` - manual workflow: fast container
-  check, then test qcow2 build, then boot-smoke and post-boot checks.
+
+The former GitHub Actions guest-test workflow was removed. These helpers are
+kept for local artifact checks, where QEMU can use normal hardware
+acceleration instead of a multi-hour CI emulation run.
 
 ## Why a test-only systemd unit, not serial-console typing
 
 The live/session path is graphical autologin with PowerShell as default
-shell, and GitHub-hosted runners only get TCG emulation. A oneshot unit
-in an otherwise identical test image is simpler and more deterministic.
+shell. A oneshot unit in an otherwise identical test image is simpler and
+more deterministic than trying to type commands through a serial console.
 
 ## The repo-origin check
 
@@ -39,10 +41,9 @@ implemented check uses two signals:
 
 ## Scope choices
 
-Manual-only (`workflow_dispatch`) for now. Builds a dedicated test
-qcow2, not the release artifact - the extra guest-check unit shouldn't
-ship in release images. The variant is rendered from the shared
-kickstart (one source of truth).
+Local-only. Builds a dedicated test qcow2, not the release artifact - the
+extra guest-check unit should not ship in release images. The variant is
+rendered from the shared kickstart (one source of truth).
 
 ## Two real bugs in the oneshot test unit, both hit only via real CI boots
 

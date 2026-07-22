@@ -88,7 +88,7 @@ azl_qemu_is_iso() {
 # Emits the right -accel/-cpu pair as newline-separated QEMU args: KVM+host
 # passthrough when /dev/kvm exists and is actually usable (real dev
 # hardware, self-hosted runners with nested virt), TCG software emulation
-# otherwise (GitHub-hosted runners, which don't expose KVM). Callers should
+# otherwise. Callers should
 # read this into an array with mapfile/readarray, not word-split it, in
 # case a future accel needs an argument containing a space.
 azl_qemu_accel_args() {

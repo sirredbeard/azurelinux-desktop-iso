@@ -3,7 +3,7 @@
 # counterpart to the local/manual QEMU scripts: UEFI only, serial log only.
 # Uses KVM automatically when /dev/kvm is present and usable (real hardware,
 # self-hosted/nested-virt runners), falling back to TCG software emulation
-# otherwise. GitHub-hosted runners do not expose KVM, so the timeout here is
+# otherwise. The software-emulation path needs a longer timeout, so the
 # deliberately generous - a full GNOME boot under TCG can take 10-15+
 # minutes even when the image is healthy; under KVM it is usually well
 # under a minute.

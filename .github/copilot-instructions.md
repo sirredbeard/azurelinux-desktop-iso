@@ -232,7 +232,9 @@ README for the full backstory.
   formats, split into independent jobs), `build-installer-iso.yml`
   (installer ISO), `release-live-iso.yml` (publishes a GitHub Release from
   the above), `build-container.yml` (publishes the hybrid proof-of-repo-
-  priority container to GHCR).
+  priority container to GHCR), and `nightly-release.yml` (removes prior
+  published artifacts then calls all publication paths). Guest boot testing
+  stays local; do not add a GitHub Actions KVM or TCG guest-test workflow.
 - `kickstart/` - the kickstart(s) driving the ISO builds, the disk-image
   build, and (indirectly, via `scripts/build-hybrid-container.sh` parsing
   its repo/package setup) the hybrid container.
