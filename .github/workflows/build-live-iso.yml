@@ -167,8 +167,8 @@ jobs:
                 grub2-efi-x64-cdboot policycoreutils
 
               # Default: boot straight into the real desktop, not the
-              # verify-media path, and do not sit on the menu for a full
-              # minute waiting for a keypress nobody is going to give it.
+              # verify-media path. Keep GRUB hidden with a one-second
+              # interrupt window so Escape still exposes recovery entries.
               # These are lorax'"'"'s own upstream live-ISO grub templates
               # (set default="1" picks the SECOND menu entry, "Test this
               # media & start ...", as the default - not what we want here),
@@ -186,7 +186,7 @@ jobs:
               # as "Azure Linux Desktop".
               for f in /usr/share/lorax/templates.d/99-generic/live/config_files/x86/grub2-bios.cfg \
                        /usr/share/lorax/templates.d/99-generic/live/config_files/x86/grub2-efi.cfg; do
-                  sed -i '"'"'s/^set default="1"/set default="0"/; s/^set timeout=60/set timeout=2/; s/@PRODUCT@ @VERSION@/@PRODUCT@/g'"'"' "$f"
+                  sed -i '"'"'s/^set default="1"/set default="0"/; s/^set timeout=60/set timeout_style=hidden\nset timeout=1/; s/@PRODUCT@ @VERSION@/@PRODUCT@/g'"'"' "$f"
               done
 
               livemedia-creator \
@@ -443,13 +443,18 @@ jobs:
               usermod --shell /usr/bin/pwsh liveuser
           fi
 
-          # livesys-gnome writes this list at live-media boot. A normal
-          # installed disk does not run that service, so provide the same
-          # defaults through the persistent system dconf database.
+          # livesys-gnome writes its session state at live-media boot. A
+          # normal installed disk does not run that service, so provide the
+          # same desktop defaults through the persistent system dconf database.
           cat > /etc/dconf/db/local.d/01-azl-desktop-favorites << 'DCONF'
           [org/gnome/shell]
           favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'powershell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']
           welcome-dialog-last-shown-version='4294967295'
+
+          [org/gnome/desktop/background]
+          picture-uri='file:///usr/share/backgrounds/gnome/symbolic-l.png'
+          picture-uri-dark='file:///usr/share/backgrounds/gnome/symbolic-d.png'
+          picture-options='zoom'
           DCONF
           dconf update
 
@@ -476,8 +481,15 @@ jobs:
           # --make-disk creates the initramfs before the shared kickstart
           # finishes installing the custom theme. Rebuild it after all
           # post-install configuration so the disk boots through Plymouth.
+          # plymouth-set-default-theme --rebuild-initrd runs `dracut -f`,
+          # which follows the build container's uname rather than the Azure
+          # kernel installed in this image.
           if [ -x /usr/sbin/plymouth-set-default-theme ]; then
-              plymouth-set-default-theme azurelinux --rebuild-initrd
+              plymouth-set-default-theme azurelinux
+              for kernel_dir in /usr/lib/modules/*; do
+                  [ -d "$kernel_dir" ] || continue
+                  dracut --force --kver "${kernel_dir##*/}"
+              done
           fi
 
           # The privileged build container exposes the GitHub runner's
@@ -487,13 +499,16 @@ jobs:
           cat >> /etc/default/grub << 'GRUBDEF'
           GRUB_DISABLE_OS_PROBER=true
           GRUB_DISTRIBUTOR="Azure Linux Desktop"
+          GRUB_TIMEOUT_STYLE=hidden
+          GRUB_TIMEOUT=1
+          GRUB_CMDLINE_LINUX="${GRUB_CMDLINE_LINUX:-} rhgb quiet"
           GRUBDEF
           grub2-mkconfig -o /boot/grub2/grub.cfg
 
           # BLS entries use PRETTY_NAME from Azure Linux's own os-release,
-          # which correctly remains Azure Linux. Apply desktop branding
-          # only to the menu title, both for the installed kernel and
-          # every kernel added later.
+          # which correctly remains Azure Linux. Keep their title and
+          # Plymouth arguments aligned for the installed kernel and every
+          # kernel added later.
           install -d /etc/kernel/install.d
           cat > /etc/kernel/install.d/99-azl-desktop-title.install << 'TITLEHOOK'
           #!/bin/sh
@@ -501,6 +516,10 @@ jobs:
               for entry in /boot/loader/entries/*-"$2".conf; do
                   [ -f "$entry" ] || continue
                   sed -i 's/^title .*/title Azure Linux Desktop/' "$entry"
+                  options=$(sed -n 's/^options //p' "$entry")
+                  case " $options " in *" rhgb "*) ;; *) options="$options rhgb" ;; esac
+                  case " $options " in *" quiet "*) ;; *) options="$options quiet" ;; esac
+                  sed -i "s|^options .*|options $options|" "$entry"
               done
           fi
           TITLEHOOK
@@ -508,6 +527,10 @@ jobs:
           for entry in /boot/loader/entries/*.conf; do
               [ -f "$entry" ] || continue
               sed -i 's/^title .*/title Azure Linux Desktop/' "$entry"
+              options=$(sed -n 's/^options //p' "$entry")
+              case " $options " in *" rhgb "*) ;; *) options="$options rhgb" ;; esac
+              case " $options " in *" quiet "*) ;; *) options="$options quiet" ;; esac
+              sed -i "s|^options .*|options $options|" "$entry"
           done
           %end
           KSPOST

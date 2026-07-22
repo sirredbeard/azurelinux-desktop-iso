@@ -160,9 +160,8 @@ jobs:
         if: always()
         run: ls -lah "$GITHUB_WORKSPACE/installer-result" || true
 
-      - name: Extract real resolved package list from the built ISO
+      - name: Verify built installer payload
         if: success()
-        continue-on-error: true
         run: |
           docker run --rm \
             --privileged \
@@ -171,7 +170,7 @@ jobs:
             -v "$GITHUB_WORKSPACE:/workspace" \
             fedora:43 \
             bash -exo pipefail -c '
-              dnf5 install -y xorriso squashfs-tools e2fsprogs
+              dnf5 install -y xorriso squashfs-tools e2fsprogs dracut
               ISO=/workspace/installer-result/azurelinux-desktop-install.iso
               mkdir -p /tmp/iso-extract
 
@@ -195,6 +194,30 @@ jobs:
                 /tmp/iso-extract/squashfs.img LiveOS/rootfs.img
               debugfs -R "dump /root/azl-install.ks /workspace/installer-result/final-kickstart.ks" \
                 /tmp/iso-extract/squash-out/LiveOS/rootfs.img
+
+              # The policy RPM and offline side-load archives must be
+              # present in the actual nested runtime image, not merely
+              # requested in source. This prevents Anaconda from
+              # completing an install with a missing Flatpak policy,
+              # Copilot CLI, or default editor.
+              debugfs -R "ls -p /opt/azl-offline-repo" \
+                /tmp/iso-extract/squash-out/LiveOS/rootfs.img \
+                | grep -Eq "flatpak-selinux-[^/]*\\.rpm"
+              debugfs -R "stat /opt/azl-offline-extras/copilot-linux-x64.tar.gz" \
+                /tmp/iso-extract/squash-out/LiveOS/rootfs.img
+              debugfs -R "stat /opt/azl-offline-extras/edit.tar.gz" \
+                /tmp/iso-extract/squash-out/LiveOS/rootfs.img
+              grep -Fx "tar" /workspace/installer-result/final-kickstart.ks
+              grep -Fq "copilot-linux-x64.tar.gz" /workspace/installer-result/final-kickstart.ks
+              grep -Fq "test -x /usr/local/bin/copilot" /workspace/installer-result/final-kickstart.ks
+              grep -Fq "test -x /usr/local/bin/edit" /workspace/installer-result/final-kickstart.ks
+
+              # This is the installer runtime boot initramfs, distinct
+              # from the installed target initramfs verified by QEMU QA.
+              xorriso -osirrox on -indev "$ISO" \
+                -extract /images/pxeboot/initrd.img /tmp/iso-extract/initrd.img
+              lsinitrd /tmp/iso-extract/initrd.img | grep -F "usr/lib64/plymouth/script.so"
+              lsinitrd /tmp/iso-extract/initrd.img | grep -F "usr/share/plymouth/themes/azurelinux/azurelinux.plymouth"
             '
 
       - name: Upload build log (always, even on failure)

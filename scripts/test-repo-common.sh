@@ -145,7 +145,6 @@ azl_installer_exclusions() {
 gnome-tour
 malcontent-control
 mdatp
-fedora-logos
 EOF2
 }
 

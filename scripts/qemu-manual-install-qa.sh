@@ -10,7 +10,6 @@ DISK_GB="${4:-30}"
 WORKDIR="${AZL_QEMU_WORKDIR:-$HOME/azl-work}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DISK="$WORKDIR/${NAME}.qcow2"
-MONITOR_SOCK="$WORKDIR/${NAME}-monitor.sock"
 SERIAL_LOG="$WORKDIR/${NAME}-serial.log"
 QEMU_LOG="$WORKDIR/${NAME}-qemu.log"
 
@@ -25,6 +24,7 @@ fi
 mkdir -p "$WORKDIR"
 azl_find_ovmf
 OVMF_VARS="$(azl_prepare_ovmf_vars "$WORKDIR" "$(azl_qemu_safe_name "$NAME")")"
+MONITOR_SOCK="$(azl_qemu_monitor_socket "$WORKDIR" "$NAME")"
 mapfile -t ACCEL_ARGS < <(azl_qemu_accel_args)
 
 if [ ! -f "$DISK" ]; then

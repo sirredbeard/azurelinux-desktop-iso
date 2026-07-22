@@ -62,6 +62,13 @@ README for the full backstory.
    its tests current as an early warning for dependency drift. Test package
    updates and installation from both intended package sources, plus a Flatpak
    install, on the actual image before release.
+11. **Keep the artifacts in reasonable parity.** The live ISO, disk images,
+    installer ISO, and installed target should share packages and behavior
+    wherever their different boot and install lifecycles allow it. The hybrid
+    container is intentionally much smaller: it is only a fast canary for
+    repository mixing and package-source priority, not a desktop test suite.
+    Broader runtime coverage is tracked in [issue #3](https://github.com/sirredbeard/azurelinux-desktop/issues/3)
+    and is not a reason to turn the canary into a second image build.
 
 ## Problem-solving approach
 
@@ -189,6 +196,10 @@ README for the full backstory.
   proof that the Azure-Linux-base + Fedora-GNOME-layer repo priority
   split still resolves packages from the intended repo, publishable so
   it can be pulled and inspected without a full ISO/disk-image build.
+  Keep its package and repository policy aligned with the image inputs,
+  but keep its scope narrow: repo-mixing and priority regression checks,
+  not the desktop's runtime suite. The separate guest runtime work is
+  tracked in [issue #3](https://github.com/sirredbeard/azurelinux-desktop/issues/3).
 - **Download script**: `scripts/Get-AzureLinuxDesktop.ps1` mirrors
   whatever image formats the release actually publishes - keep its
   `-Kvm`/`-Hyperv`/`-VirtualBox`/`-VMWare`-style options and README's

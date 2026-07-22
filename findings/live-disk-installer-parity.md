@@ -48,6 +48,62 @@ The qcow2 and installer target are ordinary installed systems, so anything
 that `livesys-gnome` does at boot must instead be persisted during image
 construction.
 
+## First installer-created qcow2 smoke test
+
+The first complete standard installation was run in QEMU from the successful
+installer workflow artifact built from `723e956`. This is important evidence,
+but it is not a test of every current source change: the artifact predates the
+working-tree installer-runtime Plymouth and GNOME background-default changes.
+
+Anaconda completed storage setup, copied the offline package transaction, ran
+its target configuration, created the bootloader and user, generated the
+target initramfs, and rebooted. Its progress display described the local
+transfer as "Downloading 1024 RPMs, 1.93 GiB"; the installer kickstart points
+DNF at `file:///opt/azl-offline-repo/`, so that wording means copying the
+embedded ISO payload into DNF's transaction cache, not a network download.
+
+The Flatpak SELinux step emitted brief installation output but did not stop
+the transaction. After restarting QEMU without the installer ISO attached,
+the installed qcow2 mounted its target filesystems, completed the expected
+first-boot SELinux relabel, and reached GDM. This is the first runtime proof
+that the artifact's embedded `flatpak-selinux-1.16.6-1.fc43.noarch.rpm`
+allows the standard offline installation path to continue past software
+selection.
+
+Read-only inspection after shutdown completed that verification. The target
+contains `flatpak-selinux-1.16.6-1.fc43`, and `semodule` reports its `flatpak`
+policy module active at priority 200. Its module header is version 23, which
+is within the Azure policy tooling's accepted range. The fast Flatpak output
+seen during installation was not a failed policy-module load.
+
+The installed target has 1,025 RPMs, compared with 1,173 in the published
+live qcow2. The 148-name gap is mostly deliberate live-media and installer
+tooling: Anaconda, `livesys`, live-dracut, block-device provisioning,
+Cockpit, and their dependencies. The installed target instead has its
+persistent LVM/EFI layout and a minimal language-pack baseline. It also
+uses a different autologin account by design. This is lifecycle separation,
+not a broad desktop package loss.
+
+Two real target-side side-load defects were found:
+
+- The staged `microsoft/edit` archive could not be extracted because the
+  target package set omitted `tar`, but the post-install script still set
+  `EDITOR` and `VISUAL` to the missing `/usr/local/bin/edit`.
+- The staged Copilot file was only an installer script. It attempted a second
+  network download while configuring the target, rejected that result as an
+  invalid archive, and the script discarded the failure.
+
+The current installer source adds `tar`, stages and checksums the actual
+Copilot archive during the build's networked phase, installs both executables
+locally, and fails the installation if either required artifact is missing or
+cannot be installed. The installed target's initramfs already contains the
+Azure Plymouth script renderer and theme assets, and its BLS entry includes
+`rhgb quiet`; the older artifact's text-heavy first boot was therefore not
+evidence that target Plymouth content was absent.
+
+The sanitized evidence retained for this checkpoint is in
+[`logs/installer-first-installed-target-2026-07-21.log`](logs/installer-first-installed-target-2026-07-21.log).
+
 ## What was already the same
 
 The earlier qcow2 had the shared static content expected from the live ISO:
@@ -66,60 +122,150 @@ boot path but never persisted into the disk image.
 
 ## Flatpak SELinux compatibility across image formats
 
-**Current installer fix:** a real standard installation attempt exposed that
-the offline repository was missing Flatpak's matching SELinux module. The
-installer package list now explicitly includes it, and the constrained
-offline transaction resolves with Azure's policy utility closure. The fix
-was verified in the next published ISO: Anaconda passed software selection and
-began package installation. That run then exposed a separate missing
-Anaconda-only bootloader support package, `grub2-tools-extra`, which is now in
-the offline support set. A complete QEMU installation remains required before
-either change can be called runtime-verified.
+The published installer ISO omitted Flatpak's matching SELinux module even
+though its Fedora Flatpak package requires it when `selinux-policy-targeted`
+is installed. The later installer artifact includes
+`flatpak-selinux-1.16.6-1.fc43`, and the first completed installation proves
+the dependency and policy configuration work with the selected Azure Linux
+policy base: its policy payload is module format 23 and the target's active
+module store contains `flatpak` at priority 200.
 
-The installer failure exposed a package-boundary problem that is broader than
-the installer. Azure Linux supplies the SELinux base and targeted policy,
-while the desktop layer currently obtains Flatpak from Fedora.
+That runtime result supersedes the earlier format-24 incompatibility theory.
+Do not describe the current Fedora 43 Flatpak policy package as incompatible
+with this Azure Linux target. Azure-native Flatpak packaging is still absent
+from the public repositories, but it is not required for the verified
+Fedora Flatpak path used here.
 
-Fedora's selected Flatpak build has an exact conditional dependency on its
-matching `flatpak-selinux` package whenever `selinux-policy-targeted` is
-installed. Its policy module is format 24. Azure Linux 4's policy tooling
-accepts module formats 4 through 23, so the Fedora policy package cannot
-be used safely with the Azure Linux policy base:
+Azure Linux is also removing Anaconda's Flatpak source integration upstream:
+[PR 16957](https://github.com/microsoft/azurelinux/pull/16957) drops its
+Flatpak package requirements and [PR 17060](https://github.com/microsoft/azurelinux/pull/17060)
+makes the module inert when its typelib is absent. The result is the same:
+there is no Azure-native Flatpak path to switch to today. Keep the Fedora
+Flatpak boundary called out as unresolved. Do not substitute a locally built
+policy package or call the compatibility problem fixed.
 
-```text
-libsepol.policydb_read: policydb module version 24 does not match my
-version range 4-23
-```
+## Fedora logo dependency and installer parity
 
-This is not limited to Anaconda. Direct inspection of the mounted live ISO
-found the same Fedora `flatpak`, `flatpak-session-helper`, and
-`flatpak-selinux` packages beside Azure Linux
-`selinux-policy-43.4-4.azl4` and `selinux-policy-targeted-43.4-4.azl4`.
-That makes the live image subject to the same incompatible package boundary,
-even though its boot path has not yet exposed it as an installer transaction
-failure. The installer runtime correctly contains the Azure policy packages
-and Fedora Flatpak packages in its offline repository; it fails when
-Anaconda attempts the target transaction.
+The released live root contains `fedora-logos`. That is expected. Fedora's
+live-media Anaconda package brings in its Web UI, and the current supported
+package baseline still gives that Web UI a literal `fedora-logos`
+requirement. The published installer ISO still renders `generic-logos`
+instead. It also predates the current source's explicit `flatpak-selinux`
+entry. Those are release-to-source differences, not evidence that the
+published installer target already has the current policy fixes.
 
-Fedora 43's published Flatpak family was evaluated as a no-custom-RPM
-alternative. Its `flatpak-selinux-1.16.1-1.fc43` module is format 22 and
-matches Azure Linux's SELinux policy format. A narrow solver test also
-resolved that Flatpak family with Azure's FUSE 3 packages.
+The next-build installer definition leaves the logo dependency to the same
+Fedora live-media chain the live ISO already uses and includes
+`flatpak-selinux` in its offline package input. This removes an
+installer-only package difference without pretending a post-install overwrite
+of RPM-owned logo files would survive an update. An upstream
+[Anaconda change](https://github.com/rhinstaller/anaconda-webui/commit/fe65289689fd49f1a73c4b06e1b8dff8998ed6eb)
+uses the `system-logos` virtual dependency for remixes, but that change is
+not in the Fedora package this build currently consumes. Azure Linux's
+source tree has the matching overlay, but its public package repository does
+not publish an `anaconda-webui` package. The current practical policy is to
+keep the next live and installer paths aligned on `fedora-logos`.
 
-The full rendered-installer solver rejected the combination. Fedora's
-GNOME Software, XDG Desktop Portal, GVFS, GNOME Connections, and GRUB tools
-all require the FUSE 4 ABI, while Fedora 43 Flatpak requires FUSE 3. Both
-ABIs use mutually exclusive versions of the `fuse3-libs` RPM. GNOME Software
-also requires the Fedora `flatpak-libs` package. The Fedora 43 fallback
-therefore cannot coexist with the current Fedora desktop stack and was
-reverted before release builds could consume it.
+The failed pre-fix full package resolve is retained in
+[`logs/release-canary-fedora-logos-2026-07-21.log`](logs/release-canary-fedora-logos-2026-07-21.log).
 
-Azure Linux has an upstream `flatpak.spec`, but the public Azure Linux 4.0
-repositories do not publish its RPMs. With custom RPMs ruled out, a safe
-Flatpak-enabled image requires a published Azure-native Flatpak stack or a
-supported upstream alignment of the Azure SELinux and FUSE bases. Until then,
-the existing Fedora Flatpak stack remains an unresolved cross-image
-compatibility issue and no release should claim it is fixed.
+## Desktop session follow-up
+
+The released live ISO was booted through the graphical QEMU path. Autologin,
+the expected default applications, and the tray all worked. The desktop had
+no wallpaper because the project set the dark-mode preference but never set
+GNOME's background URI. The live kickstart, disk-image workflow, and both
+installer templates now set light and dark background URIs to images shipped
+by `gnome-backgrounds`.
+
+The QEMU mouse problem is not a guest-agent problem. `qemu-guest-agent` is
+for host-to-guest control and status, not graphical pointer integration. No
+QEMU or SPICE guest package belongs in the image for this test-harness fix.
+
+The behavior predates the Fedora-base reversion. That rules out the current
+desktop package baseline as the cause and keeps the focus on the local host
+input path.
+
+## Direct live and VM boot
+
+The installer keeps its menu because it must offer install and live modes.
+The live ISO and prebuilt disk images do not need a normal visible GRUB menu.
+Their normal path now uses GRUB's hidden timeout mode with a one-second
+interrupt window. They boot directly into the kernel and Plymouth; pressing
+Escape during that short window still exposes GRUB recovery entries.
+
+### GTK cursor regression
+
+Local comparison on the released qcow2 showed the same failed pointer path
+with all of the following:
+
+* GTK on Wayland with virtio VGA, xHCI, and USB tablet.
+* GTK through XWayland with the same absolute device.
+* GTK on Wayland with no tablet and QEMU's normal relative mouse.
+* SDL on Wayland with the normal relative mouse.
+
+SDL grabbed input and keyboard controls worked, but guest pointer controls did
+not. This rules out the tablet setting, the GTK-only cursor surface theory,
+and guest image differences as sufficient explanations. The same GTK
+relative-mouse comparison is also being booted from the published live ISO.
+
+The strongest local change window is July 16 through 20: QEMU 11.0.0,
+Mutter, and a release-candidate host kernel changed on July 16; a July 20
+system upgrade changed Wayland from 1.25.0 to 1.26.0 and Mesa from 26.1.4 to
+26.1.5. The project QEMU helpers originally used plain GTK with no tablet or
+cursor options, so the later helper experiments did not introduce the
+regression. Upstream research is needed before treating this as a guest or
+image problem. QEMU has open upstream reports for related GTK and Wayland
+virtio-GPU cursor failures:
+[GTK cursor position](https://gitlab.com/qemu-project/qemu/-/work_items/761)
+and [virtio-GPU cursor buffers](https://gitlab.com/qemu-project/qemu/-/work_items/2315).
+
+The host had repeated Bluetooth headset profile failures in the same period.
+BlueZ 5.87-4 explicitly carries crash fixes, and a retained GNOME Shell abort
+was triggered by an audio card-profile assertion. Neither is a pointer stack
+trace, so neither establishes causation. The full local timeline and the
+reason for that restraint are in
+[`logs/qemu-pointer-host-timeline-2026-07-21.log`](logs/qemu-pointer-host-timeline-2026-07-21.log).
+
+Upstream source review explains the shared GTK and SDL behavior. Both QEMU
+frontends use relative pointer mode and pointer warping to establish and
+maintain a guest grab. GTK's native Wayland `gdk_wayland_device_warp()` is a
+no-op, while QEMU consumes the first click to begin a relative grab. SDL has
+the same class of Wayland warp/confinement limitation. That fits the local
+result: keyboard input works, while pointer input never reaches the guest
+through either frontend. `show-cursor` only changes visibility and
+`grab-on-hover` only changes keyboard grab, so neither belongs in the helper
+as an input fix. The original plain GTK helpers are retained.
+
+This points to QEMU/Wayland compositor interaction on the Rawhide host, not
+KVM, the guest kernel, or an Azure Linux package. Useful next diagnostics are
+an actual GNOME Xorg-session comparison. A short `WAYLAND_DEBUG=1` trace
+already confirmed that the compositor sent QEMU motion and button events
+while guest pointer input still failed, putting the remaining defect in
+QEMU's native-Wayland relative-grab forwarding path.
+
+The published ISO and qcow2 also have matching guest input-stack packages.
+QEMU reports a current relative PS/2 mouse and accepts QMP-injected motion
+and clicks, so the emulated input core is available independently of the GTK
+window. This does not prove guest rendering of an injected movement, but it
+further narrows the failed path to native GTK input forwarding.
+
+A second independent review found QEMU's internal relative-pointer ownership
+and GTK seat-grab handling consistent with this result. It is a known class
+of Wayland/X11 grab failure, not a verified QEMU 11-only regression; the
+closest open upstream report is
+[QEMU issue #3192](https://gitlab.com/qemu-project/qemu/-/issues/3192).
+The most useful next comparison is the unchanged command from a real GNOME
+Xorg session. The full assessment and QEMU tracepoint names for an upstream
+report are retained in
+[`logs/qemu-pointer-wayland-research-2026-07-21.log`](logs/qemu-pointer-wayland-research-2026-07-21.log).
+Relevant upstream sources are QEMU's
+[GTK frontend](https://github.com/qemu/qemu/blob/master/ui/gtk.c),
+[SDL frontend](https://github.com/qemu/qemu/blob/master/ui/sdl2.c), GTK's
+[Wayland device implementation](https://gitlab.gnome.org/GNOME/gtk/-/blob/3.24.52/gdk/wayland/gdkdevice-wayland.c),
+and SDL's [Wayland notes](https://wiki.libsdl.org/SDL3/README-wayland).
+The focused research record is retained in
+[`logs/qemu-pointer-wayland-research-2026-07-21.log`](logs/qemu-pointer-wayland-research-2026-07-21.log).
 
 ## Plymouth
 
@@ -127,21 +273,33 @@ compatibility issue and no release should claim it is fixed.
 though `/usr/share/plymouth/themes/azurelinux` existed in the installed root.
 
 **Root cause:** the qcow2 initramfs contained Plymouth binaries but not the
-Azure Linux theme assets or the Plymouth script renderer. The live ISO boot
-initrd contained the theme `.plymouth` and `.script` files, logo, dots,
-`script.so`, and virtio GPU support. ISO construction has a later
-Lorax/dracut phase after kickstart `%post`; `livemedia-creator --make-disk`
-did not.
+Azure Linux theme assets or the Plymouth script renderer. The live ISO's
+dedicated boot initrd contained the theme `.plymouth` and `.script` files,
+logo, dots, and `script.so`.
 
-**Fix:** the disk-image-only workflow now runs
-`plymouth-set-default-theme azurelinux --rebuild-initrd` after the shared
-post-install configuration. This puts the selected theme and renderer into
-the image that actually boots.
+The published live ISO's stored root initramfs and the published qcow2 boot
+initramfs both lack those files. The difference is that the ISO boots
+`images/pxeboot/initrd.img`, which Lorax generates after the live root; the
+qcow2 boots its root `/boot/initramfs-*`.
 
-**Verified in the released qcow2:** the boot initramfs contains
-`usr/lib64/plymouth/script.so`, the Azure Linux `.plymouth` and `.script`
-files, logo, and dots. The root has the same five Azure Linux Plymouth
-assets as the live ISO.
+The initial disk workflow fix used
+`plymouth-set-default-theme azurelinux --rebuild-initrd`. It was insufficient:
+the helper runs bare `dracut -f`, which selects the build container's
+`uname -r`, not the Azure kernel under `/usr/lib/modules` in the target
+image. The release workflow logged that command, but the released qcow2
+still lacked `script.so` and the Azure theme assets.
+
+**Next-build fix:** select the Azure theme, then explicitly run
+`dracut --force --kver` for every target kernel directory. This rebuilds the
+initramfs that the qcow2 actually boots. This is a disk-image build-path
+defect, not a qcow2 limitation. The concise release-artifact inventory and
+logged failed rebuild approach are retained in
+[`logs/plymouth-initramfs-release-2026-07-21.log`](logs/plymouth-initramfs-release-2026-07-21.log).
+
+The published disk BLS entry also had only `console=ttyS0`, with no `rhgb`
+or `quiet`. The disk workflow now writes those arguments into the existing
+BLS entries and its kernel-install hook. Plymouth therefore has both a
+complete target initramfs and the normal kernel request to start it.
 
 ## GDM autologin
 

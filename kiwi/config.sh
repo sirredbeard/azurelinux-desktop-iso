@@ -49,6 +49,7 @@ INSTALL_PKGS=(
     openssh-clients
     sudo
     vim-minimal
+    tar
     ncurses
     ca-certificates
     setup
@@ -194,13 +195,10 @@ INSTALL_PKGS=(
 
     libayatana-appindicator-gtk3
 
-    # fedora-logos rides in as a weak/transitive dep of gdm/gnome-shell,
-    # same as the live ISO (see kickstart/azurelinux-desktop-live.ks's
-    # own comment on this) - putting Fedora's own blue "f" branding on
-    # the installed system's GDM login screen otherwise. generic-logos
-    # is Fedora's trademark-free drop-in replacement; excluded below
-    # alongside gnome-tour/malcontent-control/mdatp.
-    generic-logos
+    # Fedora's live-media Anaconda stack requires fedora-logos on the
+    # supported package baseline. The live ISO already resolves that
+    # dependency, so the installer deliberately follows it rather than
+    # adding an installer-only generic-logos conflict.
 )
 
 # Extra packages needed in the offline repo for anaconda's own
@@ -394,11 +392,8 @@ dnf5 download \
     --repo=rpmfusion-free --repo=rpmfusion-nonfree \
     --resolve \
     --alldeps \
-    --skip-unavailable \
     --destdir="$OFFLINE_REPO" \
-    "${INSTALL_PKGS[@]}" "${EXTRA_REPO_PKGS[@]}" || {
-    echo "WARNING: dnf5 download had errors - some packages may be missing"
-}
+    "${INSTALL_PKGS[@]}" "${EXTRA_REPO_PKGS[@]}"
 
 RPM_COUNT=$(find "$OFFLINE_REPO" -maxdepth 1 -type f -name '*.rpm' | wc -l)
 echo "=== Downloaded $RPM_COUNT RPMs ==="
@@ -411,24 +406,32 @@ createrepo_c "$OFFLINE_REPO"
 # into a real anaconda install with no network to fall back on.
 #----------------------------------------------------------------------
 echo "=== Validating offline repo completeness ==="
-DRYRUN_ROOT=$(mktemp -d /tmp/azl-dryrun-XXXXXX)
-DRYRUN_ERRORS=$(dnf5 install \
+DRYRUN_ROOT=$(mktemp -d "$OFFLINE_REPO/.dryrun.XXXXXX")
+if ! DRYRUN_ERRORS=$(dnf5 install \
     --assumeno \
     --installroot="$DRYRUN_ROOT" \
     --releasever=4.0 \
     --setopt=reposdir=/dev/null \
     --repofrompath=offline,"file://$OFFLINE_REPO" \
     --repo=offline \
-    "${INSTALL_PKGS[@]}" "${EXTRA_REPO_PKGS[@]}" 2>&1) || true
-rm -rf "$DRYRUN_ROOT"
-
-if echo "$DRYRUN_ERRORS" | grep -qiE "Failed to resolve the transaction|No match for argument|nothing provides|cannot install|conflicting requests"; then
+    "${INSTALL_PKGS[@]}" "${EXTRA_REPO_PKGS[@]}" 2>&1); then
+    rm -rf "$DRYRUN_ROOT"
     echo "!!! FATAL: Offline repo cannot resolve the installer package set!"
-    echo "$DRYRUN_ERRORS" | grep -iE "Failed to resolve the transaction|No match for argument|nothing provides|cannot install|conflicting requests"
-    echo "Fix the package policy or add its complete dependency closure to the offline repo."
+    echo "$DRYRUN_ERRORS"
     exit 1
 fi
+rm -rf "$DRYRUN_ROOT"
+
 echo "=== Dry-run passed - all kickstart packages resolve from offline repo ==="
+
+# The KIWI runtime uses the same archived assets as the target installer.
+# Select the Azure theme before KIWI assembles its final boot initrd.
+if [ -x /usr/sbin/plymouth-set-default-theme ] \
+    && [ -f /opt/azl-desktop-assets/plymouth/azurelinux/azurelinux.plymouth ]; then
+    mkdir -p /etc/dracut.conf.d
+    printf '%s\n' 'add_dracutmodules+=" plymouth "' > /etc/dracut.conf.d/50-azurelinux-plymouth.conf
+    plymouth-set-default-theme azurelinux
+fi
 
 #----------------------------------------------------------------------
 # Side-load GitHub Copilot GUI/CLI, microsoft/edit, and Flathub's repo
@@ -445,19 +448,34 @@ mkdir -p "$EXTRAS"
 echo "=== Fetching GitHub Copilot GUI/CLI, microsoft/edit, Flathub repo ==="
 COPILOT_GUI_URL=$(curl -fsSL https://api.github.com/repos/github/app/releases/latest \
     | grep -o '"browser_download_url": *"[^"]*linux-x64\.rpm"' \
-    | head -1 | cut -d'"' -f4) || true
-if [ -n "${COPILOT_GUI_URL:-}" ]; then
-    curl -Lo "$EXTRAS/github-copilot.rpm" "$COPILOT_GUI_URL" || rm -f "$EXTRAS/github-copilot.rpm"
-fi
+    | head -1 | cut -d'"' -f4)
+[ -n "$COPILOT_GUI_URL" ] || {
+    echo "Unable to determine GitHub Copilot GUI RPM URL" >&2
+    exit 1
+}
+curl -fL --retry 3 -o "$EXTRAS/github-copilot.rpm" "$COPILOT_GUI_URL"
+test -s "$EXTRAS/github-copilot.rpm"
 
-curl -fsSL https://gh.io/copilot-install -o "$EXTRAS/copilot-install.sh" || rm -f "$EXTRAS/copilot-install.sh"
+COPILOT_ARCHIVE="copilot-linux-x64.tar.gz"
+curl -fL --retry 3 -o "$EXTRAS/$COPILOT_ARCHIVE" \
+    "https://github.com/github/copilot-cli/releases/latest/download/$COPILOT_ARCHIVE"
+curl -fL --retry 3 -o "$EXTRAS/copilot-SHA256SUMS.txt" \
+    "https://github.com/github/copilot-cli/releases/latest/download/SHA256SUMS.txt"
+(
+    cd "$EXTRAS"
+    grep -E " [*]?$COPILOT_ARCHIVE$" copilot-SHA256SUMS.txt | sha256sum -c -
+)
+tar -tzf "$EXTRAS/$COPILOT_ARCHIVE" copilot >/dev/null
 
 EDIT_URL=$(curl -fsSL https://api.github.com/repos/microsoft/edit/releases/latest \
     | grep -o '"browser_download_url": *"[^"]*x86_64-linux-gnu\.tar\.gz"' \
-    | head -1 | cut -d'"' -f4) || true
-if [ -n "${EDIT_URL:-}" ]; then
-    curl -Lo "$EXTRAS/edit.tar.gz" "$EDIT_URL" || rm -f "$EXTRAS/edit.tar.gz"
-fi
+    | head -1 | cut -d'"' -f4)
+[ -n "$EDIT_URL" ] || {
+    echo "Unable to determine microsoft/edit archive URL" >&2
+    exit 1
+}
+curl -fL --retry 3 -o "$EXTRAS/edit.tar.gz" "$EDIT_URL"
+tar -tzf "$EXTRAS/edit.tar.gz" edit >/dev/null
 
 curl -fsSL https://dl.flathub.org/repo/flathub.flatpakrepo -o "$EXTRAS/flathub.flatpakrepo" || rm -f "$EXTRAS/flathub.flatpakrepo"
 
@@ -572,9 +590,8 @@ generate_packages_section() {
     # parental-controls stack. mdatp is excluded at the repo
     # level already (ms-prod's --exclude in the dnf5 download call
     # above), listed here too for the same belt-and-suspenders reason
-    # the live ISO's %packages does it. fedora-logos is excluded so
-    # generic-logos (added to INSTALL_PKGS above) is the only logo
-    # package left standing, matching the live ISO's GDM branding fix.
+    # the live ISO's %packages does it. Do not exclude fedora-logos:
+    # anaconda-live requires it and the live ISO includes it too.
     for pkg in gnome-tour gnome-user-docs yelp yelp-libs malcontent-control mdatp; do
         echo "-$pkg"
     done

@@ -97,14 +97,11 @@ else
 fi
 
 EXTRAS=/opt/azl-offline-extras
-if [ -d "$EXTRAS" ]; then
-    cp -v "$EXTRAS"/github-copilot.rpm /mnt/sysroot/root/thirdparty/ 2>/dev/null || true
-    cp -v "$EXTRAS"/copilot-install.sh /mnt/sysroot/root/thirdparty/ 2>/dev/null || true
-    cp -v "$EXTRAS"/edit.tar.gz /mnt/sysroot/root/thirdparty/ 2>/dev/null || true
-    cp -v "$EXTRAS"/flathub.flatpakrepo /mnt/sysroot/root/thirdparty/ 2>/dev/null || true
-else
-    echo "WARNING: $EXTRAS not found in install environment - Copilot/edit/Flathub skipped" >&2
-fi
+test -d "$EXTRAS"
+install -m 0644 "$EXTRAS"/github-copilot.rpm /mnt/sysroot/root/thirdparty/github-copilot.rpm
+install -m 0644 "$EXTRAS"/copilot-linux-x64.tar.gz /mnt/sysroot/root/thirdparty/copilot-linux-x64.tar.gz
+install -m 0644 "$EXTRAS"/edit.tar.gz /mnt/sysroot/root/thirdparty/edit.tar.gz
+install -m 0644 "$EXTRAS"/flathub.flatpakrepo /mnt/sysroot/root/thirdparty/flathub.flatpakrepo
 %end
 
 %post --log=/var/log/azl-desktop-post.log
@@ -240,7 +237,7 @@ EOF
 # above is in place.
 dracut --regenerate-all --force
 
-# System-wide dark mode + dock favorites default - a persistent-install
+# System-wide dark mode, background, and dock favorites defaults - a persistent-install
 # system has no livesys-scripts (that's live-media-only tooling, see
 # kickstart/azurelinux-desktop-live.ks), so both defaults go through the
 # standard, still user-overridable /etc/dconf/db/local.d/ mechanism
@@ -250,6 +247,11 @@ cat > /etc/dconf/db/local.d/00-azl-desktop-defaults << 'EOF'
 [org/gnome/desktop/interface]
 color-scheme='prefer-dark'
 gtk-theme='Adwaita-dark'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/gnome/symbolic-l.png'
+picture-uri-dark='file:///usr/share/backgrounds/gnome/symbolic-d.png'
+picture-options='zoom'
 
 [org/gnome/shell]
 favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'powershell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']
@@ -280,17 +282,13 @@ install -d -o cinnamon -g cinnamon /home/cinnamon/.config
 touch /home/cinnamon/.config/gnome-initial-setup-done
 chown cinnamon:cinnamon /home/cinnamon/.config/gnome-initial-setup-done
 
-if [ -f /root/thirdparty/github-copilot.rpm ]; then
-    rpm -i /root/thirdparty/github-copilot.rpm || true
-fi
-if [ -f /root/thirdparty/copilot-install.sh ]; then
-    bash /root/thirdparty/copilot-install.sh --install-dir /usr/local/bin || true
-fi
-if [ -f /root/thirdparty/edit.tar.gz ]; then
-    tar -xzf /root/thirdparty/edit.tar.gz -C /tmp \
-        && install -m 0755 /tmp/edit /usr/local/bin/edit \
-        && rm -rf /tmp/edit
-fi
+rpm -i /root/thirdparty/github-copilot.rpm
+tar -xzf /root/thirdparty/copilot-linux-x64.tar.gz -C /usr/local/bin copilot
+chmod 0755 /usr/local/bin/copilot
+test -x /usr/local/bin/copilot
+tar -xOzf /root/thirdparty/edit.tar.gz edit > /usr/local/bin/edit
+chmod 0755 /usr/local/bin/edit
+test -x /usr/local/bin/edit
 if [ -s /root/thirdparty/flathub.flatpakrepo ]; then
     flatpak remote-add --if-not-exists flathub /root/thirdparty/flathub.flatpakrepo 2>&1 || true
 else

@@ -1,0 +1,65 @@
+QEMU/Wayland pointer research, 2026-07-21
+
+Confirmed upstream behavior:
+
+* QEMU GTK uses pointer warping while establishing and maintaining relative
+  pointer grabs. Its first relative-mode click starts the grab and is not
+  forwarded to the guest.
+  https://github.com/qemu/qemu/blob/master/ui/gtk.c
+
+* GTK 3.24.52's Wayland gdk_wayland_device_warp() is empty. QEMU cannot rely
+  on it to recenter the pointer under native Wayland.
+  https://gitlab.gnome.org/GNOME/gtk/-/blob/3.24.52/gdk/wayland/gdkdevice-wayland.c
+
+* QEMU SDL also enables relative mouse mode and relies on pointer warping.
+  SDL documents Wayland limits around global cursor coordinates and warping.
+  https://github.com/qemu/qemu/blob/master/ui/sdl2.c
+  https://wiki.libsdl.org/SDL3/README-wayland
+
+This matches local tests: GTK, GTK/XWayland, and SDL all accepted keyboard
+input but did not deliver usable pointer input to either published guest
+artifact. No evidence supports guest-agent, SPICE, guest packages, KVM, or
+the guest kernel as a fix.
+
+Next diagnostics:
+  * test from an actual GNOME Xorg session;
+  * capture short native-Wayland QEMU traces with WAYLAND_DEBUG=1;
+  * compare whether wl_pointer button/motion events arrive. If they do not,
+    report to Mutter/Wayland; if they do and QEMU does not forward them,
+    report to QEMU.
+
+Local trace result:
+  QEMU received wl_pointer enter, leave, motion, and button events from the
+  native Wayland compositor (874 motion events and 10 button events during
+  the short manual test). Guest pointer input still did not work. The next
+  report belongs with QEMU's native-Wayland relative-grab forwarding path,
+  not the image or host event delivery.
+
+Guest and QMP checks:
+  The published ISO and qcow2 have matching kernel, libinput, Mutter, GNOME
+  Shell, GTK, and Plymouth packages. Neither has qemu-guest-agent or
+  spice-vdagent installed.
+  QMP reports a current non-absolute `QEMU PS/2 Mouse`. A relative motion
+  and click submitted through QMP's input-send-event command were accepted.
+  This proves QEMU's emulated mouse input core accepts events independently
+  of the native GTK window. It does not by itself prove guest-side rendering
+  of the injected movement.
+
+Second independent assessment:
+  QEMU GTK uses an internal pointer-owner state and intentionally consumes the
+  first relative-mode click to start grabbing. It relies on pointer warping
+  to recenter and restore that grab. GTK's Wayland warp implementation is a
+  no-op, which can leave QEMU's internal grab state inconsistent with the
+  compositor. QEMU does not check the GTK seat-grab result before recording
+  its pointer as grabbed.
+
+  This is not verified as a QEMU 11-only regression. QEMU issue #3192
+  describes the same Wayland-versus-X11 grab failure against QEMU 10.1 and
+  remains open:
+  https://gitlab.com/qemu-project/qemu/-/issues/3192
+
+  Highest-value next test: run the unchanged QEMU command in a real GNOME
+  Xorg session. If it works there, the Wayland grab/warp path is confirmed.
+  An older QEMU build is a useful A/B test, but not proof without repeatable
+  results. For an upstream report, enable QEMU trace events `gd_grab`,
+  `gd_ungrab`, `gd_motion_event`, `input_event_rel`, and `input_event_btn`.

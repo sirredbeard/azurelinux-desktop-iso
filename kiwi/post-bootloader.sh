@@ -84,7 +84,7 @@ terminal_input console serial
 
 menuentry "Azure Linux" {
     search --no-floppy --fs-uuid --set=root ${BOOT_UUID}
-    linux /${KERNEL_NAME} root=UUID=${ROOT_UUID} ${LUKS_PARAMS} console=ttyS0,115200 console=tty0 ro
+    linux /${KERNEL_NAME} root=UUID=${ROOT_UUID} ${LUKS_PARAMS} console=ttyS0,115200 console=tty0 rhgb quiet ro
     initrd /${INITRD_NAME}
 }
 

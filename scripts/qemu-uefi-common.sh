@@ -61,6 +61,23 @@ azl_qemu_safe_name() {
     basename "$1" | tr -c 'A-Za-z0-9._-' '_'
 }
 
+azl_qemu_monitor_socket() {
+    local workdir="$1"
+    local name="$2"
+    local runtime_dir
+    local socket_id
+
+    runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+    if [ -d "$runtime_dir" ] && [ -w "$runtime_dir" ]; then
+        mkdir -p "$runtime_dir/azl-qemu"
+        socket_id="$(printf '%s' "$name" | sha256sum | cut -c1-16)"
+        printf '%s\n' "$runtime_dir/azl-qemu/${socket_id}.mon"
+        return 0
+    fi
+
+    printf '%s\n' "$workdir/$(azl_qemu_safe_name "$name").mon"
+}
+
 azl_qemu_is_iso() {
     case "$1" in
         *.iso|*.ISO) return 0 ;;

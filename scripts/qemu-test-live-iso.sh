@@ -48,10 +48,14 @@ NAME="${2:-azl-live-test}"
 RAM_MB="${3:-8192}"
 WORKDIR="${AZL_QEMU_WORKDIR:-$HOME/azl-work}"
 DISK="$WORKDIR/${NAME}.qcow2"
-MONITOR_SOCK="$WORKDIR/${NAME}-monitor.sock"
 LOG="$WORKDIR/${NAME}-qemu-stdout.log"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=scripts/qemu-uefi-common.sh
+source "$SCRIPT_DIR/qemu-uefi-common.sh"
 
 mkdir -p "$WORKDIR"
+MONITOR_SOCK="$(azl_qemu_monitor_socket "$WORKDIR" "$NAME")"
 
 if [ ! -f "$DISK" ]; then
     qemu-img create -f qcow2 "$DISK" 20G

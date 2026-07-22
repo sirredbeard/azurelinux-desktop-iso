@@ -71,10 +71,10 @@ services --disabled=sshd --enabled=gdm,NetworkManager,livesys,livesys-late
 # Live-build-only disk layout - livemedia-creator installs into a single
 # ext4 filesystem that gets squashed, no real bootloader/EFI/swap/LVM
 # needed since none of that persists past the squashfs capture.
-bootloader --location=none
+bootloader
 clearpart --all --initlabel
 reqpart
-part / --size=16384
+part / --fstype=xfs --size=16384 --grow
 
 # livemedia-creator captures the image once %post finishes and the system
 # shuts down cleanly - "shutdown" here, not "reboot" (that's for the real
@@ -668,11 +668,10 @@ cat > /etc/dracut.conf.d/early-kms.conf << 'EOF'
 add_drivers+=" virtio_gpu "
 EOF
 
-# System-wide dark mode and background defaults. /etc/dconf/db/local.d is the
-# standard "default value, but still user-overridable" mechanism - liveuser
-# (or anyone else) can still change these from Settings. Pin the background
-# to images gnome-backgrounds ships so a fresh live session never depends on
-# an unset upstream default. Needs a matching
+# System-wide always-on dark mode. /etc/dconf/db/local.d is the standard
+# "default value, but still user-overridable" mechanism - liveuser (or
+# anyone else) can still flip back to light mode from Settings, this just
+# changes what a fresh session starts with. Needs a matching
 # /etc/dconf/profile/user pointing at the local db, and
 # `dconf update` to compile db/local.d/* into db/local once, at build time.
 mkdir -p /etc/dconf/db/local.d /etc/dconf/profile
@@ -680,11 +679,6 @@ cat > /etc/dconf/db/local.d/00-dark-mode << 'EOF'
 [org/gnome/desktop/interface]
 color-scheme='prefer-dark'
 gtk-theme='Adwaita-dark'
-
-[org/gnome/desktop/background]
-picture-uri='file:///usr/share/backgrounds/gnome/symbolic-l.png'
-picture-uri-dark='file:///usr/share/backgrounds/gnome/symbolic-d.png'
-picture-options='zoom'
 EOF
 cat > /etc/dconf/profile/user << 'EOF'
 user-db:user
@@ -1112,7 +1106,7 @@ EOF
 # anaconda/dbus.log from the CI run that first tried it. Anchoring the
 # sed substitution to this marker's own line, here, right after the
 # service file is actually created, fixes that ordering problem.
-# AZL_GROWROOT_ENABLE_MARKER
+systemctl enable azl-growroot.service
 
 # Snapshot the real, final resolved package list (name-version-release.arch,
 # one per line, sorted) from this exact build's actual rpmdb - not a podman
@@ -1123,4 +1117,86 @@ EOF
 # stale every time %packages changes.
 rpm -qa --qf '%{name}-%{version}-%{release}.%{arch}\n' | sort > /var/log/azl-desktop-package-list.txt
 
+%end
+
+# --make-disk produces a normal installed system, not a live-media
+# environment. livesys-scripts therefore never creates the live ISO's
+# liveuser account at boot, even though the shared kickstart's GDM
+# configuration still autologins that account. Create it in the
+# disk-image variant after the shared kickstart's %post sections run.
+%post --log=/var/log/azl-disk-image-user-post.log
+if ! id liveuser >/dev/null 2>&1; then
+    useradd --create-home --groups wheel liveuser
+    passwd -d liveuser
+fi
+if [ -x /usr/bin/pwsh ]; then
+    usermod --shell /usr/bin/pwsh liveuser
+fi
+
+# livesys-gnome writes this list at live-media boot. A normal
+# installed disk does not run that service, so provide the same
+# defaults through the persistent system dconf database.
+cat > /etc/dconf/db/local.d/01-azl-desktop-favorites << 'DCONF'
+[org/gnome/shell]
+favorite-apps=['microsoft-edge-canary.desktop', 'code-insiders.desktop', 'powershell.desktop', 'GitHub Copilot.desktop', 'org.gnome.Nautilus.desktop']
+welcome-dialog-last-shown-version='4294967295'
+DCONF
+dconf update
+
+# Apply the live session's GNOME Software behavior persistently.
+# Software remains available on demand, but it does not launch or
+# download updates in the background for the passwordless account.
+cat >> /usr/share/glib-2.0/schemas/org.gnome.software.gschema.override << 'GSETTINGS'
+[org.gnome.software]
+allow-updates=false
+download-updates=false
+GSETTINGS
+rm -f /etc/xdg/autostart/org.gnome.Software.desktop
+cat >> /usr/share/gnome-shell/search-providers/org.gnome.Software-search-provider.ini << 'SEARCH'
+DefaultDisabled=true
+SEARCH
+glib-compile-schemas /usr/share/glib-2.0/schemas
+
+# livesys-gnome marks its ephemeral live account as initialized.
+# The disk account is persistent, so create the same marker once.
+install -d -o liveuser -g liveuser /home/liveuser/.config
+touch /home/liveuser/.config/gnome-initial-setup-done
+chown liveuser:liveuser /home/liveuser/.config/gnome-initial-setup-done
+
+# --make-disk creates the initramfs before the shared kickstart
+# finishes installing the custom theme. Rebuild it after all
+# post-install configuration so the disk boots through Plymouth.
+if [ -x /usr/sbin/plymouth-set-default-theme ]; then
+    plymouth-set-default-theme azurelinux --rebuild-initrd
+fi
+
+# The privileged build container exposes the GitHub runner's
+# block devices to Anaconda. Disable GRUB's OS probe before
+# regenerating its config so the runner's Ubuntu installation
+# cannot become boot-menu entries in this image.
+cat >> /etc/default/grub << 'GRUBDEF'
+GRUB_DISABLE_OS_PROBER=true
+GRUB_DISTRIBUTOR="Azure Linux Desktop"
+GRUBDEF
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+# BLS entries use PRETTY_NAME from Azure Linux's own os-release,
+# which correctly remains Azure Linux. Apply desktop branding
+# only to the menu title, both for the installed kernel and
+# every kernel added later.
+install -d /etc/kernel/install.d
+cat > /etc/kernel/install.d/99-azl-desktop-title.install << 'TITLEHOOK'
+#!/bin/sh
+if [ "$1" = add ]; then
+    for entry in /boot/loader/entries/*-"$2".conf; do
+        [ -f "$entry" ] || continue
+        sed -i 's/^title .*/title Azure Linux Desktop/' "$entry"
+    done
+fi
+TITLEHOOK
+chmod 0755 /etc/kernel/install.d/99-azl-desktop-title.install
+for entry in /boot/loader/entries/*.conf; do
+    [ -f "$entry" ] || continue
+    sed -i 's/^title .*/title Azure Linux Desktop/' "$entry"
+done
 %end

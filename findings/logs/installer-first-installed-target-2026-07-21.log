@@ -1,0 +1,40 @@
+First installer-created target smoke test, 2026-07-21
+
+Artifact under test:
+  successful installer workflow artifact
+  source revision: 723e956
+
+Scope:
+  This artifact includes flatpak-selinux in its embedded offline repository.
+  It predates the current working-tree installer-runtime Plymouth and GNOME
+  background-default changes, so it cannot validate those visual fixes.
+
+Observed standard-install path:
+  - Anaconda partitioned the virtual disk and created the target filesystems.
+  - The software phase reported "Downloading 1024 RPMs, 1.93 GiB".
+  - The installer uses file:///opt/azl-offline-repo/; this is a local payload
+    copy into DNF's transaction cache, not a network transfer.
+  - Flatpak SELinux installation output was visible briefly, but no dependency
+    failure or transaction abort followed.
+  - Installation continued through bootloader, user, and initramfs setup.
+  - The completed disk booted with no installer ISO attached.
+  - First boot performed the expected SELinux relabel and reached GDM.
+
+Interpretation:
+  Read-only post-shutdown inspection verified flatpak-selinux-1.16.6-1.fc43
+  and an active Flatpak SELinux module at priority 200. Its policy payload is
+  module format 23, compatible with the target's Azure Linux policy tooling.
+
+  The target has 1,025 RPMs versus 1,173 in the live qcow2. The difference is
+  primarily expected live-media and installer tooling, rather than missing
+  desktop packages. The target reached GDM with its intended persistent
+  autologin account.
+
+  Two target side-load defects were confirmed by the post-install log:
+  - Copilot staged only an installer script, which tried and failed to fetch
+    the actual archive during target configuration; its failure was ignored.
+  - microsoft/edit was staged correctly, but the target omitted tar and the
+    extraction failed; the profile still pointed EDITOR and VISUAL at it.
+
+  The source now stages a checksum-verified Copilot archive, adds tar, and
+  fails closed if either required executable cannot be installed.

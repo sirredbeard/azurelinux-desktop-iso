@@ -1,0 +1,35 @@
+Host-side QEMU pointer regression timeline, 2026-07-21
+
+All graphical QEMU tests delivered keyboard input but not usable guest pointer
+input. The released live ISO and qcow2 behaved the same, so this is not an
+Azure Linux image-format or package-base difference.
+
+Nearby Rawhide changes:
+  2026-07-16
+    kernel: 7.2.0-0.rc2 -> 7.2.0-0.rc3
+    mutter: 51~alpha-1 -> 51~alpha-2
+    PipeWire: updated to 1.6.8-2
+  2026-07-17
+    QEMU 11.0.0-11 installed
+  2026-07-20
+    bluez: 5.87-2 -> 5.87-4
+    Wayland: 1.25.0 -> 1.26.0
+    Mesa: 26.1.4 -> 26.1.5
+    GLib and IBus also updated
+
+BlueZ:
+  The 5.87-4 changelog says it was updated to upstream HEAD "to fix a number
+  of possible crashes." The journal has repeated Bluetooth headset profile
+  connect/disconnect failures. There is no retained BlueZ coredump.
+
+GNOME Shell:
+  A July 18 SIGABRT is retained in the journal. Its stack is an assertion in
+  libgvc while changing a PulseAudio card profile:
+    _pa_context_set_card_profile_by_index_cb
+    pa_context_simple_ack_callback
+    g_assertion_message_expr
+    abort
+  It is related to audio-profile handling, not a pointer/input stack trace.
+
+Do not identify any one of these packages as the QEMU cause without a
+controlled host rollback or an upstream match.
