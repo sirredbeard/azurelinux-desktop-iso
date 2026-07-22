@@ -58,11 +58,16 @@
          system installs from - that's a much bigger set, downloaded
          separately by config.sh from this same URL plus Fedora/
          Microsoft/RPM Fusion, into /opt/azl-offline-repo. -->
-    <repository type="rpm-md" alias="azurelinux-base">
+    <repository type="rpm-md" alias="azurelinux-base" priority="10">
         <source path="https://packages.microsoft.com/azurelinux/4.0/beta/base/x86_64" />
     </repository>
-    <repository type="rpm-md" alias="azurelinux-microsoft">
+    <repository type="rpm-md" alias="azurelinux-microsoft" priority="10">
         <source path="https://packages.microsoft.com/azurelinux/4.0/beta/microsoft/x86_64" />
+    </repository>
+    <!-- Plymouth's script renderer and theme support are Fedora desktop
+         packages; Azure remains preferred for every package it publishes. -->
+    <repository type="rpm-md" alias="fedora43" priority="50">
+        <source path="https://dl.fedoraproject.org/pub/fedora/linux/releases/43/Everything/x86_64/os/" />
     </repository>
 
     <packages type="image">

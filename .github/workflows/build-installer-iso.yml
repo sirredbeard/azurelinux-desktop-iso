@@ -110,6 +110,7 @@ jobs:
                 dracut-live squashfs-tools xorriso dosfstools mtools \
                 grub2-tools grub2-tools-extra shim-x64 grub2-efi-x64-cdboot \
                 createrepo_c curl isomd5sum qemu-img e2fsprogs
+              /workspace/scripts/patch-kiwi-dnf5.sh
               # qemu-img: kiwi-ng shells out to it to build the FAT-
               # formatted EFI boot image bundled onto this hybrid-UEFI
               # ISO (KiwiCommandNotFound: "qemu-img" not found in the

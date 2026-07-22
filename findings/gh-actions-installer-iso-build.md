@@ -99,6 +99,42 @@ instead of burning CI runs):
 
 ## More CI failures after the package graph was clean
 
+## Installer runtime Plymouth repository and KIWI DNF compatibility
+
+Release run `29887530184` failed before producing an installer artifact after
+installer-runtime Plymouth packages were added. KIWI's image transaction had
+only Azure Linux repositories configured, while `plymouth`,
+`plymouth-plugin-script`, and `plymouth-plugin-label` are supplied by the
+Fedora desktop boundary. The actual failure was `No match for argument` for
+all three packages.
+
+The runtime definition now keeps Azure Linux repositories at priority 10 and
+adds the Fedora release repository at priority 50. This preserves Azure as
+the preferred source for packages it supplies while allowing the narrow
+Fedora Plymouth family to resolve. The reusable
+`scripts/test-installer-runtime-resolve.sh` builds an empty installroot and
+downloads the complete KIWI runtime transaction with those same priorities.
+It resolved 425 packages locally, including Azure base packages and Fedora
+Plymouth packages, without a solver conflict.
+
+The same failed run also exposed a KIWI DNF5 compatibility issue. KIWI
+hard-codes `--disable-plugin=priorities,versionlock`; current libdnf5 no
+longer ships either legacy plugin and treats those unknown names as a failed
+transaction. The warning was present in an earlier successful build but is
+not safe to ignore once a transaction has another failure. The reusable
+`scripts/patch-kiwi-dnf5.sh` removes only that obsolete argument from the
+installed KIWI Python backend. Both the GitHub Actions workflow and the
+privileged local KIWI smoke-build launcher invoke it after installing
+`python3-kiwi`.
+
+The full local KIWI build launcher was exercised. Its package setup and
+description parsing passed, but it stopped before package installation when
+Podman could not bind-mount `/dev` into the privileged container. That is a
+local runtime boundary, not a resolver failure; the separate empty-installroot
+test exists specifically to validate the package transaction without that
+host limitation. The follow-up GitHub release build is the authoritative
+artifact check.
+
 ## Flatpak SELinux offline-repository closure
 
 The first real headless standard installation reached Anaconda's software
