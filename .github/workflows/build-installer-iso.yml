@@ -73,7 +73,10 @@ jobs:
           ls -lah "$GITHUB_WORKSPACE/kiwi/assets.tar.gz"
 
       - name: Build installer ISO (KIWI-NG)
+        id: kiwi-build
+        continue-on-error: true
         run: |
+          set -o pipefail
           docker run --rm \
             --privileged \
             -v /dev:/dev \
@@ -157,6 +160,18 @@ jobs:
               mv -v "$ISO" /workspace/installer-result/azurelinux-desktop-install.iso
             '
 
+      - name: Capture KIWI and DNF failure diagnostics
+        if: always()
+        run: |
+          {
+            echo "=== KIWI build log tail ==="
+            tail -500 "$GITHUB_WORKSPACE/kiwi-build.log" || true
+            echo "=== Remaining installer build diagnostics ==="
+            find "$GITHUB_WORKSPACE/installer-result" -type f \
+              \( -name '*.log' -o -name '*.debug' -o -name '*.error' \) \
+              -print -exec tail -200 {} \; || true
+          } | tee "$GITHUB_WORKSPACE/installer-failure-diagnostics.log"
+
       - name: Show result directory
         if: always()
         run: ls -lah "$GITHUB_WORKSPACE/installer-result" || true
@@ -228,11 +243,18 @@ jobs:
           name: azurelinux-desktop-install-build-log
           path: |
             kiwi-build.log
+            installer-failure-diagnostics.log
             installer-result/*.log
+            installer-result/*.debug
+            installer-result/*.error
             installer-result/*.changes
             installer-result/*.packages
           if-no-files-found: warn
           retention-days: 7
+
+      - name: Fail after diagnostics are uploaded
+        if: ${{ steps.kiwi-build.outcome == 'failure' }}
+        run: exit 1
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4

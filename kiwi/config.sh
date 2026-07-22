@@ -355,6 +355,7 @@ FEDORA_EXCLUDES="audit,audit-libs,audit-rules,bash,bluez,bluez-libs,bluez-obexd,
 # repo's complete, self-consistent set instead of that repo's partial
 # candidate list hard-failing the transaction.
 echo "=== Downloading target-install packages + dependencies ==="
+download_offline_rpms() {
 dnf5 download \
     --setopt=reposdir=/dev/null \
     --setopt=multilib_policy=best \
@@ -394,6 +395,25 @@ dnf5 download \
     --alldeps \
     --destdir="$OFFLINE_REPO" \
     "${INSTALL_PKGS[@]}" "${EXTRA_REPO_PKGS[@]}"
+}
+
+# The offline repository pulls from several independently hosted package
+# sources. A transient transfer failure must not discard an otherwise valid
+# installer build, but a permanent failure needs its own diagnostic instead
+# of only KIWI's generic "config.sh failed" wrapper.
+DOWNLOAD_LOG="/var/log/azl-offline-repo-download.log"
+for attempt in 1 2 3; do
+    if download_offline_rpms 2>&1 | tee "$DOWNLOAD_LOG"; then
+        break
+    fi
+
+    echo "Offline repository download attempt $attempt failed." >&2
+    tail -200 "$DOWNLOAD_LOG" >&2
+    if [ "$attempt" -eq 3 ]; then
+        exit 1
+    fi
+    sleep $((attempt * 10))
+done
 
 RPM_COUNT=$(find "$OFFLINE_REPO" -maxdepth 1 -type f -name '*.rpm' | wc -l)
 echo "=== Downloaded $RPM_COUNT RPMs ==="
@@ -407,7 +427,7 @@ createrepo_c "$OFFLINE_REPO"
 #----------------------------------------------------------------------
 echo "=== Validating offline repo completeness ==="
 DRYRUN_ROOT=$(mktemp -d "$OFFLINE_REPO/.dryrun.XXXXXX")
-if ! DRYRUN_ERRORS=$(dnf5 install \
+if ! DRYRUN_OUTPUT=$(dnf5 install \
     --assumeno \
     --installroot="$DRYRUN_ROOT" \
     --releasever=4.0 \
@@ -415,10 +435,16 @@ if ! DRYRUN_ERRORS=$(dnf5 install \
     --repofrompath=offline,"file://$OFFLINE_REPO" \
     --repo=offline \
     "${INSTALL_PKGS[@]}" "${EXTRA_REPO_PKGS[@]}" 2>&1); then
-    rm -rf "$DRYRUN_ROOT"
-    echo "!!! FATAL: Offline repo cannot resolve the installer package set!"
-    echo "$DRYRUN_ERRORS"
-    exit 1
+    # DNF returns nonzero after an --assumeno transaction even when it
+    # resolved cleanly: it deliberately reports "Operation aborted by the
+    # user." after printing the complete transaction. Only that specific
+    # post-solver result is success for this dry-run check.
+    if ! grep -Fq "Operation aborted by the user." <<<"$DRYRUN_OUTPUT"; then
+        rm -rf "$DRYRUN_ROOT"
+        echo "!!! FATAL: Offline repo cannot resolve the installer package set!"
+        echo "$DRYRUN_OUTPUT"
+        exit 1
+    fi
 fi
 rm -rf "$DRYRUN_ROOT"
 
@@ -428,6 +454,16 @@ echo "=== Dry-run passed - all kickstart packages resolve from offline repo ==="
 # Select the Azure theme before KIWI assembles its final boot initrd.
 if [ -x /usr/sbin/plymouth-set-default-theme ] \
     && [ -f /opt/azl-desktop-assets/plymouth/azurelinux/azurelinux.plymouth ]; then
+    install -d -m 0755 /usr/share/plymouth/themes/azurelinux
+    install -m 0644 \
+        /opt/azl-desktop-assets/plymouth/azurelinux/azurelinux.plymouth \
+        /opt/azl-desktop-assets/plymouth/azurelinux/azurelinux.script \
+        /opt/azl-desktop-assets/plymouth/azurelinux/dot.png \
+        /opt/azl-desktop-assets/plymouth/azurelinux/dot-glow.png \
+        /usr/share/plymouth/themes/azurelinux/
+    install -m 0644 \
+        /opt/azl-desktop-assets/branding/AzureLinuxLogo.png \
+        /usr/share/plymouth/themes/azurelinux/azurelinuxlogo.png
     mkdir -p /etc/dracut.conf.d
     printf '%s\n' 'add_dracutmodules+=" plymouth "' > /etc/dracut.conf.d/50-azurelinux-plymouth.conf
     plymouth-set-default-theme azurelinux

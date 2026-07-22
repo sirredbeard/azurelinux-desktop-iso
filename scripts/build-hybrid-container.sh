@@ -71,21 +71,35 @@ eval "$REPO_SETUP"
 
 echo "=== ${#REPO_NAMES[@]} repos parsed: ${REPO_NAMES[*]} ==="
 
-# The proof-of-priority package set: azurelinux-release plus a couple
-# of base packages from azl-base (cost=1, wins ties), and a handful of
-# small Fedora GNOME-stack libraries that only exist in the Fedora repo
-# (cost=50) - enough to force real cross-repo dependency resolution
-# without pulling in the whole desktop (no X server, no compositor, no
-# systemd - none of that runs meaningfully in a plain OCI container
-# anyway, same reasoning Azure Linux's own container-base uses to ship
-# systemd=false). If any of these ever resolve from the wrong repo, the
-# same priority setup backing the real desktop build has broken.
+# The canary contains the complete project-specific tooling boundary:
+# mixed-source packages, the boot-splash package family, and the two
+# side-loaded command-line tools. Their dependency closure may include
+# some GTK libraries, which is useful coverage, but it deliberately
+# excludes the session/compositor/desktop groups (GNOME, GDM, Mutter,
+# systemd) that cannot run meaningfully in an OCI image. If any of these
+# packages stop resolving with the intended repo policy, this fast build
+# should fail before an ISO build finds it the hard way.
 PKGS=(
     filesystem
     bash
     azurelinux-release
+    azurelinux-repos
     glib2
     gtk4
+    curl
+    tar
+    flatpak
+    plymouth
+    plymouth-plugin-script
+    plymouth-plugin-label
+    microsoft-edge-canary
+    powershell
+    code-insiders
+    gh
+    github-desktop
+    dotnet-sdk-11.0
+    dotnet-runtime-11.0
+    libayatana-appindicator-gtk3
 )
 
 WORKDIR="${AZL_CONTAINER_WORKDIR:-$HOME/azl-work/build-hybrid-container}"
@@ -119,8 +133,11 @@ for i in "${!REPO_NAMES[@]}"; do
 done
 
 ROOTFS="$WORKDIR/rootfs"
+REPO_DIR="$WORKDIR/repos"
 mkdir -p "$ROOTFS/etc/yum.repos.d"
 cp "$REPO_FILE" "$ROOTFS/etc/yum.repos.d/azl-hybrid.repo"
+mkdir -p "$REPO_DIR"
+cp "$REPO_FILE" "$REPO_DIR/azl-hybrid.repo"
 
 echo "=== Resolving hybrid package set into $ROOTFS ==="
 # /mnt/azl has to be a bind mount of the host's $ROOTFS, not a path
@@ -136,10 +153,44 @@ podman run --rm \
         # it is the same bind-mounted $ROOTFS the host wrote it into
         # above, nothing to copy in.
         dnf5 install -y \
-            --setopt=reposdir=/mnt/azl/etc/yum.repos.d \
+            --setopt=reposdir=/work/repos \
             --installroot=/mnt/azl --releasever=43 \
             --setopt=install_weak_deps=False \
             $(cat /work/pkglist.txt) 2>&1 | tail -60
+        echo "=== Fetching and installing side-loaded project tools ==="
+        COPILOT_GUI_URL=$(curl -fsSL https://api.github.com/repos/github/app/releases/latest \
+            | grep -o "\"browser_download_url\": *\"[^\"]*linux-x64\\.rpm\"" \
+            | head -1 | cut -d\" -f4)
+        test -n "$COPILOT_GUI_URL"
+        curl -fL --retry 3 -o /work/github-copilot.rpm "$COPILOT_GUI_URL"
+        dnf5 install -y \
+            --setopt=reposdir=/work/repos \
+            --installroot=/mnt/azl --releasever=43 \
+            /work/github-copilot.rpm
+
+        curl -fL --retry 3 -o /work/copilot-linux-x64.tar.gz \
+            https://github.com/github/copilot-cli/releases/latest/download/copilot-linux-x64.tar.gz
+        curl -fL --retry 3 -o /work/copilot-SHA256SUMS.txt \
+            https://github.com/github/copilot-cli/releases/latest/download/SHA256SUMS.txt
+        (
+            cd /work
+            grep -E " [*]?copilot-linux-x64.tar.gz$" copilot-SHA256SUMS.txt | sha256sum -c -
+        )
+        tar -xzf /work/copilot-linux-x64.tar.gz -C /mnt/azl/usr/local/bin copilot
+        chmod 0755 /mnt/azl/usr/local/bin/copilot
+
+        EDIT_URL=$(curl -fsSL https://api.github.com/repos/microsoft/edit/releases/latest \
+            | grep -o "\"browser_download_url\": *\"[^\"]*x86_64-linux-gnu\\.tar\\.gz\"" \
+            | head -1 | cut -d\" -f4)
+        test -n "$EDIT_URL"
+        curl -fL --retry 3 -o /work/edit.tar.gz "$EDIT_URL"
+        tar -xzf /work/edit.tar.gz -C /mnt/azl/usr/local/bin edit
+        chmod 0755 /mnt/azl/usr/local/bin/edit
+
+        test -x /mnt/azl/usr/local/bin/copilot
+        test -x /mnt/azl/usr/local/bin/edit
+        rpm --root=/mnt/azl -q github
+
         # Confirm the priority split held: azl-base (cost=1) should win
         # for azurelinux-release, fedora43 (cost=50) for gtk4/glib2.
         # Query with the host rpm --root=, not chroot - the installroot
@@ -150,7 +201,8 @@ podman run --rm \
         # Strip dnf/rpm caches and docs the same way container-base
         # style images do - this is a proof-of-repo-priority image, not
         # a working package-management environment.
-        rm -rf /mnt/azl/var/cache/* /mnt/azl/var/log/* \
+        rm -rf /mnt/azl/var/cache/* /mnt/azl/var/log/* /work/github-copilot.rpm \
+               /work/copilot-linux-x64.tar.gz /work/copilot-SHA256SUMS.txt /work/edit.tar.gz \
                /mnt/azl/usr/share/doc/* /mnt/azl/usr/share/man/*
     '
 

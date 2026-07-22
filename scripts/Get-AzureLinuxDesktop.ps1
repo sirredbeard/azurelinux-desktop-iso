@@ -267,7 +267,7 @@ function Find-SevenZipExecutable {
         }
     }
     catch {
-        # No 7-Zip registry key - not installed via the official installer.
+        Write-Verbose "7-Zip registry discovery skipped: $($_.Exception.Message)"
     }
     if ($env:ProgramFiles) {
         $candidates += (Join-Path $env:ProgramFiles "7-Zip\7z.exe")

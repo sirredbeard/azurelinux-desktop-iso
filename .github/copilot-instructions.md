@@ -65,8 +65,12 @@ README for the full backstory.
 11. **Keep the artifacts in reasonable parity.** The live ISO, disk images,
     installer ISO, and installed target should share packages and behavior
     wherever their different boot and install lifecycles allow it. The hybrid
-    container is intentionally much smaller: it is only a fast canary for
-    repository mixing and package-source priority, not a desktop test suite.
+    container is intentionally much smaller: it is a fast canary for the same
+    repository mixing, source priority, project-specific RPMs, side-loaded
+    tools, and Plymouth package policy, not a desktop test suite. Keep every
+    custom package/repository/tool in that canary, but do not add GNOME, GDM,
+    Mutter, or a desktop package group merely to make it look like an image.
+    GUI library dependencies pulled by the selected tools are expected.
     Broader runtime coverage is tracked in [issue #3](https://github.com/sirredbeard/azurelinux-desktop/issues/3)
     and is not a reason to turn the canary into a second image build.
 
@@ -137,6 +141,13 @@ README for the full backstory.
   `Get-AzureLinuxDesktop.ps1` is tested against the actual published assets.
   Same-day release runs intentionally overwrite the dated release assets;
   use that behavior for iteration instead of creating extra releases.
+- **Parity, linting, and reusable scripts**: carry a package, repository,
+  side-load, or priority change through every applicable live, installer, and
+  hybrid path. Add build/test/download helpers under `/scripts/`, run them
+  before committing, and retain them when they are generally useful. Before
+  pushing workflow or script changes, lint all Bash with ShellCheck, all
+  workflow files with actionlint (after confirming ShellCheck is on PATH), and
+  all PowerShell with PSScriptAnalyzer.
 
 ## Build architecture (as of this writing)
 

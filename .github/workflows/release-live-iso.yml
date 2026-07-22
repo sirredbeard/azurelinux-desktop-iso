@@ -103,33 +103,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    uses: ./.github/workflows/build-live-iso.yml
-    with:
-      build_iso: ${{ inputs.build_iso }}
-      # Any of VHDX/VDI/VMDK needing a fresh conversion means the qcow2
-      # intermediate has to be (re)built too, even on a run that doesn't
-      # want the qcow2 asset itself re-released.
-      build_disk_image: ${{ inputs.build_qcow2 || inputs.build_vhdx || inputs.build_vdi || inputs.build_vmdk }}
-      build_vhdx: ${{ inputs.build_vhdx }}
-      build_vdi: ${{ inputs.build_vdi }}
-      build_vmdk: ${{ inputs.build_vmdk }}
-
   create-release:
-    needs: build
-    # Default implicit success() on `needs: build` meant one disk-image
-    # conversion job timing out inside the reusable build workflow (even
-    # with continue-on-error: true on that job) still counted as `build`
-    # not succeeding from here, which skipped this job and cascaded into
-    # skipping every release-* job below it - so a run where two of
-    # three conversions finished fine still uploaded nothing at all.
-    # !cancelled() runs this regardless of any individual build job's
-    # outcome, only stopping if the whole workflow run itself was
-    # cancelled - whatever did get built downstream still gets a release
-    # entry to upload into; each release-* job's own continue-on-error
-    # plus its download-artifact step failing for a format that never
-    # got built is what actually reflects a missing format now, not a
-    # skipped job.
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     outputs:
@@ -147,31 +121,31 @@ jobs:
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
           name: Azure Linux Desktop ${{ steps.tag.outputs.tag }}
-          # No auto-generated notes - a bare "Full Changelog: ..." link
-          # isn't worth having, and generate_release_notes plus
-          # append_body: false was still overwriting any manually-
-          # written body on every re-dispatch, which defeats the point
-          # of hand-editing a release's notes after the fact.
-          #
-          # body_path instead points at a static file checked into this
-          # repo - the same file every run, every day, so re-dispatching
-          # this workflow (even repeatedly, even on a day that already
-          # has a release) always writes byte-identical content, which
-          # makes duplication structurally impossible rather than
-          # something to detect and strip after the fact. This is also
-          # why release-installer-iso.yml's own release step deliberately
-          # sets no body/body_path/generate_release_notes at all: per
-          # action-gh-release's own update logic (`body = workflowBody ||
-          # existingReleaseBody`, softprops/action-gh-release src/
-          # github.ts), omitting body entirely on an update preserves
-          # whatever body is already on the release instead of clearing
-          # it - so the installer workflow can run before or after this
-          # one, any number of times, and never touch the notes this job
-          # writes.
           body_path: .github/release-notes-template.md
 
+  build-iso:
+    uses: ./.github/workflows/build-live-iso.yml
+    with:
+      build_iso: ${{ inputs.build_iso }}
+      build_disk_image: false
+      build_vhdx: false
+      build_vdi: false
+      build_vmdk: false
+
+  build-disk-images:
+    uses: ./.github/workflows/build-live-iso.yml
+    with:
+      build_iso: false
+      # Any of VHDX/VDI/VMDK needing a fresh conversion means the qcow2
+      # intermediate has to be rebuilt too, even when its own asset is
+      # not requested.
+      build_disk_image: ${{ inputs.build_qcow2 || inputs.build_vhdx || inputs.build_vdi || inputs.build_vmdk }}
+      build_vhdx: ${{ inputs.build_vhdx }}
+      build_vdi: ${{ inputs.build_vdi }}
+      build_vmdk: ${{ inputs.build_vmdk }}
+
   release-iso:
-    needs: create-release
+    needs: [create-release, build-iso]
     if: ${{ inputs.build_iso }}
     runs-on: ubuntu-24.04
     # Same resilience reasoning as qcow2/vhdx/vdi/vmdk below - the ISO
@@ -204,7 +178,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   release-qcow2:
-    needs: create-release
+    needs: [create-release, build-disk-images]
     if: ${{ inputs.build_qcow2 }}
     runs-on: ubuntu-24.04
     continue-on-error: true
@@ -229,7 +203,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   release-vhdx:
-    needs: create-release
+    needs: [create-release, build-disk-images]
     if: ${{ inputs.build_vhdx }}
     runs-on: ubuntu-24.04
     continue-on-error: true
@@ -256,7 +230,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   release-vdi:
-    needs: create-release
+    needs: [create-release, build-disk-images]
     if: ${{ inputs.build_vdi }}
     runs-on: ubuntu-24.04
     continue-on-error: true
@@ -282,7 +256,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   release-vmdk:
-    needs: create-release
+    needs: [create-release, build-disk-images]
     if: ${{ inputs.build_vmdk }}
     runs-on: ubuntu-24.04
     continue-on-error: true

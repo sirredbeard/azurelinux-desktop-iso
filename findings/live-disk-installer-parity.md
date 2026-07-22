@@ -250,6 +250,55 @@ and clicks, so the emulated input core is available independently of the GTK
 window. This does not prove guest rendering of an injected movement, but it
 further narrows the failed path to native GTK input forwarding.
 
+### Fedora VNC control: host input path works
+
+An unmodified Fedora workstation live image was downloaded from the official
+release, checksum-verified, and booted with the same UEFI, KVM, q35, xHCI USB
+tablet, localhost VNC, and GNOME Connections client path used for the Azure
+live qcow2. Fedora accepted normal guest mouse input. The Azure guest on the
+same VNC path accepted keyboard input but not mouse input.
+
+This rules out the host's QEMU GTK/SDL frontend and its VNC server as
+sufficient explanations. The remaining failure is in the Azure guest's input
+or desktop-session path. The reusable `scripts/qemu-vnc-disk-image.sh` and
+`scripts/qemu-vnc-live-iso.sh` launchers preserve this comparison without
+altering either test disk.
+
+### Commit-history audit: no pointer-stack regression in source
+
+A focused audit compared the known-working early proof-of-concept baseline
+with every later source change through the first documented mouse report.
+There is no commit that changed `libinput`, a pointer device, the kernel input
+configuration, Mutter, GNOME Shell, or an input-related service after that
+baseline.
+
+The broadest package change was the desktop layer's move from a newer Fedora
+baseline back to the supported Fedora package boundary. It is an imperfect
+control, but the mouse report predates that move, so it cannot be the original
+regression. The later GDM, dconf, Plymouth, GRUB, Flatpak, EFI, and QEMU
+monitor changes either affect boot/session presentation or were added after
+the report. They have no pointer-specific evidence.
+
+That leaves the Azure guest's GNOME/session package mix as the strongest
+remaining source-side hypothesis, with the host's native-Wayland QEMU grab
+behavior explaining the GTK/SDL symptom but not the Fedora VNC control
+difference. The next useful control is a current Fedora Rawhide live image
+through the same UEFI/QEMU/VNC/USB-tablet path.
+
+### Rawhide VNC control: current graphics stack also works
+
+The official current Fedora Rawhide Workstation live image was downloaded,
+checksum-verified, and booted through the same UEFI, q35, KVM, xHCI USB
+tablet, localhost VNC, and GNOME Connections path. Its guest mouse worked
+normally, just as the Fedora 43 control did.
+
+Current Fedora graphics and input packages are therefore not sufficient to
+explain the Azure failure. The remaining regression surface is the Azure
+guest's mixed base/session configuration or project-specific guest setup.
+Rawhide did not autologin and showed an authentication prompt similar to the
+one previously handled in Azure Desktop. That is a useful session-auth clue,
+but there is no evidence yet that it controls mouse delivery.
+
 A second independent review found QEMU's internal relative-pointer ownership
 and GTK seat-grab handling consistent with this result. It is a known class
 of Wayland/X11 grab failure, not a verified QEMU 11-only regression; the

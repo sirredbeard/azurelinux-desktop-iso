@@ -135,6 +135,72 @@ test exists specifically to validate the package transaction without that
 host limitation. The follow-up GitHub release build is the authoritative
 artifact check.
 
+### Offline repository download retry and diagnostics
+
+The replacement installer release was retried twice in run `29888245615`.
+Both attempts passed KIWI's bootstrap and installer-runtime transactions,
+including the new Fedora-sourced Plymouth packages, then stopped while
+`config.sh` downloaded the much larger offline target repository. The
+captured KIWI log ended with completed RPM transfer progress but no DNF
+completion record, solver error, failed scriptlet, storage error, or
+package-specific diagnostic. That is a transport-stage failure, not evidence
+that the runtime repository priority fix regressed.
+
+`config.sh` now writes the complete DNF output to an internal log, prints the
+last 200 lines on failure, and retries the download up to three times with a
+short backoff. It does not retry later image assembly, kickstart rendering, or
+payload validation. A permanent failure will therefore retain the actual DNF
+diagnostic in the Actions log instead of surfacing only KIWI's generic
+`config.sh failed` exception.
+
+The workflow also keeps the KIWI build step running long enough to print the
+last 500 lines of its persisted log and any remaining build diagnostics before
+marking the job failed. The downloader streams each attempt to that log. This
+captures the multi-source offline-repository stage without a separate solver
+dump.
+
+The first diagnostic run exposed a DNF5 compatibility mistake in that
+instrumentation: Azure Linux's DNF5 does not accept the familiar `-v` flag.
+The artifact captured the exact `Unknown argument "-v"` message for every
+retry, which confirmed the retry and artifact path work as intended. The
+download command temporarily used DNF5's supported `--debugsolver` and
+`debuglevel=10` configuration. The relevant excerpt is retained in
+[`logs/installer-release-dnf-debug-29889193251.log`](logs/installer-release-dnf-debug-29889193251.log).
+
+After that instrumentation isolated the actual failures, the extra solver
+debugging was removed. Normal DNF progress and errors still stream through
+`kiwi-build.log`, the failure-tail file, and the always-uploaded diagnostic
+artifact without adding a full solver dump to every release build.
+
+The following run, `29889501773`, proved the offline download and solver
+closure were sound. The validation command printed the full transaction from
+the local repository, then exited nonzero with DNF's expected
+`Operation aborted by the user.` message because it used `--assumeno`.
+The check had treated every nonzero status as a resolver failure. It now
+accepts only that specific post-solver abort and still fails on a real DNF
+resolution error. This is limited to the installer ISO's KIWI offline-repo
+validation; Lorax/Anaconda live ISO and qcow2 builds do not run this command
+and are unaffected.
+
+### Runtime Plymouth asset ordering and failure-artifact permissions
+
+Run `29890385508` reached the next real installer-runtime step: the complete
+offline repository resolved and validated, then
+`plymouth-set-default-theme azurelinux` failed because the project theme still
+existed only in the unpacked asset archive. The runtime must copy its
+`.plymouth`, script, image, and logo assets into
+`/usr/share/plymouth/themes/azurelinux/` before selecting the theme and
+building the boot initramfs.
+
+The same run proved the diagnostic workflow order was right but its artifact
+glob was too broad. Recursive `installer-result/**` patterns made
+`upload-artifact` traverse KIWI's root-owned EFI directory and fail with
+`EACCES` before publishing the logs. The uploader now carries the always
+available `kiwi-build.log` and diagnostics file plus only top-level
+installer-result logs, so a failed build retains its evidence without
+walking protected image-root directories. The decisive excerpt is retained in
+[`logs/installer-release-runtime-plymouth-29890385508.log`](logs/installer-release-runtime-plymouth-29890385508.log).
+
 ## Flatpak SELinux offline-repository closure
 
 The first real headless standard installation reached Anaconda's software

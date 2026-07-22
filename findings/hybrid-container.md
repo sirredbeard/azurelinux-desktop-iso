@@ -9,9 +9,20 @@ build.
 
 ## What it deliberately is not
 
-Not a containerized desktop. Ships a tiny proof-of-priority package set:
-`filesystem`, `bash`, `azurelinux-release` (from `azl-base`, cost=1)
-plus `glib2`, `gtk4` (from `Fedora`, cost=50).
+Not a containerized desktop. It installs the project-specific package and
+side-load boundary: Azure identity/repository packages, the Fedora GTK and
+Plymouth families, Edge Canary, PowerShell, VS Code Insiders, GitHub CLI and
+Desktop, .NET, Flatpak, Copilot GUI/CLI, and `microsoft/edit`. This gives the
+canary a useful dependency closure for every custom repository and executable
+without installing a GNOME session, GDM, Mutter, or a desktop package group.
+Some GUI libraries are expected as dependencies; a working GUI is not.
+
+The container derives the repository definitions and costs from the live
+kickstart, so it carries the same Azure-preferred/Fedora-fallback policy as
+the live image. It downloads the two side-loaded archives and Copilot GUI RPM
+from the same upstream endpoints as the installer, verifies the Copilot CLI
+checksum, installs the RPM through the derived repositories, and asserts that
+the resulting `copilot` and `edit` executables exist.
 
 ## Precedent
 
