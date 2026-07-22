@@ -28,21 +28,20 @@ dnf5 repolist --enabled | tee "$LOG_DIR/enabled-repositories.log"
 run_dnf dnf-update update --refresh -y
 run_dnf dnf-upgrade upgrade -y
 run_dnf dnf-install-samples install -y \
-    jq ripgrep \
-    gnome-tweaks dconf-editor gnome-sudoku idle3
+    ovfenv telegraf \
+    dconf-editor gnome-sudoku idle3
 
 : > "$LOG_DIR/package-origins.log"
-assert_rpm_source jq '.azl4'
-assert_rpm_source ripgrep '.azl4'
-assert_rpm_source gnome-tweaks '.fc43'
+assert_rpm_source ovfenv '.azl4'
+assert_rpm_source telegraf '.azl4'
 assert_rpm_source dconf-editor '.fc43'
 assert_rpm_source gnome-sudoku '.fc43'
-assert_rpm_source idle3 '.fc43'
+assert_rpm_source python3-idle '.fc43'
 
 {
     echo '=== RPM versions ==='
     rpm -q \
-        jq ripgrep gnome-tweaks dconf-editor gnome-sudoku idle3 \
+        ovfenv telegraf dconf-editor gnome-sudoku python3-idle \
         microsoft-edge-canary code-insiders gh github-desktop github \
         powershell dotnet-sdk-11.0 dotnet-runtime-11.0 dnf5 flatpak
     echo

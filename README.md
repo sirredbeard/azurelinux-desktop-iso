@@ -4,17 +4,13 @@
 
 This puts a real GNOME desktop on top of Microsoft's [Azure Linux 4.0](https://github.com/microsoft/azurelinux).
 
-This is the bare-metal follow-up to [Azure Linux Desktop: a Build 2026 mashup of wslc, WinUI Reactor, and Azure Linux 4.0](https://www.boxofcables.dev/azure-linux-desktop-a-build-2026-mashup-of-wslc-winui-reactor-and-azure-linux-4-0/), the original concept, which ran the same idea as a themed session inside wslc, inside a .NET app.
+This is the bare metal follow-up to [Azure Linux Desktop: a Build 2026 mashup of wslc, WinUI Reactor, and Azure Linux 4.0](https://www.boxofcables.dev/azure-linux-desktop-a-build-2026-mashup-of-wslc-winui-reactor-and-azure-linux-4-0/), the original concept, which ran the same idea as a themed session inside wslc, inside a .NET app.
 
 This is a personal side project, explored for fun. **It is not affiliated with, sponsored by, or endorsed by Microsoft, the Fedora Project, Red Hat, the GNOME Foundation, or GitHub.** The package mixing required to accomplish this *will inevitably result in broken dependencies*. Be prepared to handle that. 
 
-Some basic testing is done on the outgoing images. A hybrid Azure Linux and
-Fedora container is built to test our weird package mizing. Nonetheless, **I do not recommend
-running this in production.** That's why live ISOs and VM images are available
-for you to explore this. An installer ISO is available if you dare to install
-on bare metal. I haven't tested it yet.
+**I do not recommend running this in production.** That's why live ISOs and VM images are available for you to explore this. An installer ISO is available if you dare to install on bare metal, but only on a machine you can sacrifice, do not install this as your daily driver. Some basic testing is done on the outgoing images. A minimal 'canary' container is built to test the repo mixing and do a handful of tasks, that's it.
 
-Third-party RPM packages are likely to get confused by the repo mixing here. When an application has a Fedora-compatible repository or binary, that is the most likely RPM path to work. I strongly encourage using [Flatpak](https://flatpak.org/) for applications where it is available instead. Flatpak is configured with Flathub and tested as working on the images.
+Third-party scripts/RPM packages are very likely to get confused by the repo mixing here. I strongly encourage using [Flatpak](https://flatpak.org/) for applications. Flatpak is configured here with Flathub and tested in the minimal 'canary' container.
 
 ## What's included
 

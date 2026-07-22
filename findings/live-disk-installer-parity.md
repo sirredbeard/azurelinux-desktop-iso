@@ -355,8 +355,13 @@ workaround, but it is not a product fix.
 
 The Fedora kernel is now a disposable diagnostic control only. It will test
 whether the existing Azure base and Fedora GUI boundary works when the missing
-drivers are present, but it must not become an image dependency. The product
-fix belongs upstream in Azure Linux's x86_64 kernel configuration:
+drivers are present, but it must not become an image dependency. Its complete
+local installroot transaction passed with 1,169 packages: the Fedora kernel
+family resolved to `6.17.1-300.fc43`, while `systemd` remained the Azure
+build. The disposable control branch then built and uploaded its qcow2
+successfully in GitHub Actions. The next evidence needed is its USB-tablet
+and PS/2-mouse boot test, not another dependency experiment. The product fix
+belongs upstream in Azure Linux's x86_64 kernel configuration:
 [`base/comps/kernel/6.18-x86_64-azl.config`](https://github.com/microsoft/azurelinux/blob/4.0/base/comps/kernel/6.18-x86_64-azl.config).
 That source explicitly disables `CONFIG_INPUT_MOUSE` and `CONFIG_USB_HID`.
 The minimal Azure Linux change is `CONFIG_INPUT_MOUSE=y`,
