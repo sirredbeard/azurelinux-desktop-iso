@@ -44,7 +44,7 @@ fi
 REPO_SETUP=$(awk '
 function quote(s) { gsub(/'"'"'/, "'"'"'\\'"'"''"'"'", s); return "'"'"'" s "'"'"'" }
 /^repo --name=/ {
-    name=""; url=""; cost=""; excl="";
+    name=""; url=""; cost=""; excl=""; incl="";
     n=split($0, parts, " --");
     for (i=1;i<=n;i++) {
         p=parts[i];
@@ -53,17 +53,19 @@ function quote(s) { gsub(/'"'"'/, "'"'"'\\'"'"''"'"'", s); return "'"'"'" s "'"'
         else if (p ~ /^mirrorlist=/) { url=substr(p,12); ismirror=1 }
         else if (p ~ /^cost=/) { cost=substr(p,6) }
         else if (p ~ /^excludepkgs=/) { excl=substr(p,13) }
+        else if (p ~ /^includepkgs=/) { incl=substr(p,13) }
     }
     printf "REPO_NAMES+=(%s)\n", quote(name);
     printf "REPO_URLS+=(%s)\n", quote(url);
     printf "REPO_COSTS+=(%s)\n", quote(cost);
     printf "REPO_EXCLUDES+=(%s)\n", quote(excl == "" ? "-" : excl);
+    printf "REPO_INCLUDES+=(%s)\n", quote(incl == "" ? "-" : incl);
     printf "REPO_MIRROR+=(%s)\n", quote(ismirror == 1 ? "1" : "0");
     ismirror=0;
 }
 ' "$KS")
 
-declare -a REPO_NAMES REPO_URLS REPO_COSTS REPO_EXCLUDES REPO_MIRROR
+declare -a REPO_NAMES REPO_URLS REPO_COSTS REPO_EXCLUDES REPO_INCLUDES REPO_MIRROR
 eval "$REPO_SETUP"
 
 # Pull the real %packages --nocore --excludedocs ... %end block, minus
@@ -98,6 +100,9 @@ for i in "${!REPO_NAMES[@]}"; do
         echo "cost=${REPO_COSTS[$i]}"
         if [ "${REPO_EXCLUDES[$i]}" != "-" ]; then
             echo "excludepkgs=${REPO_EXCLUDES[$i]}"
+        fi
+        if [ "${REPO_INCLUDES[$i]}" != "-" ]; then
+            echo "includepkgs=${REPO_INCLUDES[$i]}"
         fi
         echo
     } >> "$REPO_FILE"

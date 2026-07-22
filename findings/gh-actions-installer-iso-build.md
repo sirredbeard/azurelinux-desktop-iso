@@ -201,6 +201,27 @@ installer-result logs, so a failed build retains its evidence without
 walking protected image-root directories. The decisive excerpt is retained in
 [`logs/installer-release-runtime-plymouth-29890385508.log`](logs/installer-release-runtime-plymouth-29890385508.log).
 
+### KIWI boot-initramfs verification path
+
+Run `29891158562` successfully completed KIWI image assembly and produced
+`azl-desktop-installer.x86_64-0.1.iso`. The workflow then failed in its
+post-build payload check because it attempted to extract
+`/images/pxeboot/initrd.img`, a Lorax live-ISO path that does not exist in
+the KIWI layout.
+
+The current installer ISO stores that boot initramfs at
+`/boot/x86_64/loader/initrd`. The verification now extracts that path before
+checking the Plymouth renderer and theme content. This is a verification-only
+failure: the image build, offline repository, and runtime `config.sh`
+completed. The decisive log excerpt is retained in
+[`logs/installer-release-kiwi-initramfs-path-29891158562.log`](logs/installer-release-kiwi-initramfs-path-29891158562.log).
+
+The same run showed that broad diagnostic `find` traversal still walked
+KIWI-owned image-root directories and printed permission errors. Diagnostics
+now inspect top-level result files only. The persisted `kiwi-build.log` and
+top-level metadata are sufficient for a failed build and do not depend on
+traversing the assembled root filesystem.
+
 ## Flatpak SELinux offline-repository closure
 
 The first real headless standard installation reached Anaconda's software

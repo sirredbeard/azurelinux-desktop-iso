@@ -91,7 +91,14 @@ I recorded all my findings, lessons learned, and the gotchas's I hit building th
 
 ## How do I use this
 
-Every release is built straight from this repo's kickstart/kiwi files through the GitHub Actions workflows linked above, so it can always be reproduced from source. Grab the latest one from [Releases](https://github.com/sirredbeard/azurelinux-desktop/releases), tagged by build date - live and installer releases share the same date tag when they publish the same day, so both ISOs (and the live disk images, see below) usually land in one release.
+Every release is built straight from this repo's kickstart/kiwi files through
+the GitHub Actions workflows linked above, so it can always be reproduced from
+source. The nightly publication builds the live ISO, all live VM image
+formats, the installer ISO, and the hybrid container from the current default
+branch. It removes the preceding release, tags, and hybrid container versions
+first. There is intentionally only one current release, not an archive of
+old builds. Grab it from
+[Releases](https://github.com/sirredbeard/azurelinux-desktop/releases).
 
 **PowerShell:**
 

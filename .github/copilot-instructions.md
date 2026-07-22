@@ -133,14 +133,15 @@ README for the full backstory.
   needs iterating on. Cancel a premature run immediately. Once a failure or
   cancellation is diagnosed and its relevant excerpt is retained in
   `findings/logs/`, delete the run so the Actions list stays useful.
-- **Selective release testing**: during active ISO/qcow2 debugging, build
-  only the requested live ISO, installer ISO, and qcow2. VHDX, VDI, and VMDK
-  are derivative conversions of qcow2 and stay disabled unless explicitly
-  needed. When validation needs released artifacts, dispatch the matching
-  release workflows rather than build-only workflows so
-  `Get-AzureLinuxDesktop.ps1` is tested against the actual published assets.
-  Same-day release runs intentionally overwrite the dated release assets;
-  use that behavior for iteration instead of creating extra releases.
+- **Nightly publication and focused debugging**: `nightly-release.yml` builds
+  the live ISO, qcow2, VHDX, VDI, VMDK, installer ISO, and hybrid container
+  from the current default branch. It deletes all preceding GitHub releases,
+  tags, and hybrid GHCR versions first, so the project has one current set of
+  artifacts rather than a release archive. For debugging outside the nightly
+  run, build only the requested format. When validation needs released
+  artifacts, dispatch the matching release workflow rather than a build-only
+  workflow so `Get-AzureLinuxDesktop.ps1` is tested against the actual
+  published assets.
 - **Parity, linting, and reusable scripts**: carry a package, repository,
   side-load, or priority change through every applicable live, installer, and
   hybrid path. Add build/test/download helpers under `/scripts/`, run them

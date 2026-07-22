@@ -167,7 +167,7 @@ jobs:
             echo "=== KIWI build log tail ==="
             tail -500 "$GITHUB_WORKSPACE/kiwi-build.log" || true
             echo "=== Remaining installer build diagnostics ==="
-            find "$GITHUB_WORKSPACE/installer-result" -type f \
+            find "$GITHUB_WORKSPACE/installer-result" -maxdepth 1 -type f \
               \( -name '*.log' -o -name '*.debug' -o -name '*.error' \) \
               -print -exec tail -200 {} \; || true
           } | tee "$GITHUB_WORKSPACE/installer-failure-diagnostics.log"
@@ -230,8 +230,10 @@ jobs:
 
               # This is the installer runtime boot initramfs, distinct
               # from the installed target initramfs verified by QEMU QA.
+              # KIWI stores it under the architecture-specific boot loader
+              # path, unlike the images/pxeboot layout used by Lorax.
               xorriso -osirrox on -indev "$ISO" \
-                -extract /images/pxeboot/initrd.img /tmp/iso-extract/initrd.img
+                -extract /boot/x86_64/loader/initrd /tmp/iso-extract/initrd.img
               lsinitrd /tmp/iso-extract/initrd.img | grep -F "usr/lib64/plymouth/script.so"
               lsinitrd /tmp/iso-extract/initrd.img | grep -F "usr/share/plymouth/themes/azurelinux/azurelinux.plymouth"
             '

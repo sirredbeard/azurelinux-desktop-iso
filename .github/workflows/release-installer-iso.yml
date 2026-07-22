@@ -1,6 +1,7 @@
 name: Release Azure Linux Desktop installer ISO/Images
 
-# Manual-only. Same pattern as release-live-iso.yml: calls
+# Called by nightly-release.yml and available for manual runs. Same pattern as
+# release-live-iso.yml: calls
 # build-installer-iso.yml as a reusable workflow, then publishes the
 # result as a GitHub Release tagged with the UTC date the release job
 # runs, YYYY.MM.DD. If the live and installer release workflows both run
@@ -14,6 +15,7 @@ name: Release Azure Linux Desktop installer ISO/Images
 
 on:
   workflow_dispatch: {}
+  workflow_call: {}
 
 permissions:
   contents: write

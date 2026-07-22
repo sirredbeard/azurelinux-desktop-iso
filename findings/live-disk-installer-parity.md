@@ -205,8 +205,8 @@ with all of the following:
 * SDL on Wayland with the normal relative mouse.
 
 SDL grabbed input and keyboard controls worked, but guest pointer controls did
-not. This rules out the tablet setting, the GTK-only cursor surface theory,
-and guest image differences as sufficient explanations. The same GTK
+not. That ruled out a GTK-only cursor-surface problem, but did not prove the
+guest had a working driver for either QEMU mouse transport. The same GTK
 relative-mouse comparison is also being booted from the published live ISO.
 
 The strongest local change window is July 16 through 20: QEMU 11.0.0,
@@ -237,18 +237,12 @@ through either frontend. `show-cursor` only changes visibility and
 `grab-on-hover` only changes keyboard grab, so neither belongs in the helper
 as an input fix. The original plain GTK helpers are retained.
 
-This points to QEMU/Wayland compositor interaction on the Rawhide host, not
-KVM, the guest kernel, or an Azure Linux package. Useful next diagnostics are
-an actual GNOME Xorg-session comparison. A short `WAYLAND_DEBUG=1` trace
-already confirmed that the compositor sent QEMU motion and button events
-while guest pointer input still failed, putting the remaining defect in
-QEMU's native-Wayland relative-grab forwarding path.
-
-The published ISO and qcow2 also have matching guest input-stack packages.
-QEMU reports a current relative PS/2 mouse and accepts QMP-injected motion
-and clicks, so the emulated input core is available independently of the GTK
-window. This does not prove guest rendering of an injected movement, but it
-further narrows the failed path to native GTK input forwarding.
+That frontend investigation remains useful for QEMU/Wayland behavior, but
+the later VNC controls and direct kernel comparison below supersede it as an
+explanation for the Azure image's missing mouse. A short `WAYLAND_DEBUG=1`
+trace confirmed that the compositor sent QEMU motion and button events; it
+did not establish that the guest kernel had a driver capable of receiving
+them.
 
 ### Fedora VNC control: host input path works
 
@@ -259,8 +253,8 @@ live qcow2. Fedora accepted normal guest mouse input. The Azure guest on the
 same VNC path accepted keyboard input but not mouse input.
 
 This rules out the host's QEMU GTK/SDL frontend and its VNC server as
-sufficient explanations. The remaining failure is in the Azure guest's input
-or desktop-session path. The reusable `scripts/qemu-vnc-disk-image.sh` and
+sufficient explanations. The remaining failure is in the Azure guest. The
+reusable `scripts/qemu-vnc-disk-image.sh` and
 `scripts/qemu-vnc-live-iso.sh` launchers preserve this comparison without
 altering either test disk.
 
@@ -279,11 +273,13 @@ regression. The later GDM, dconf, Plymouth, GRUB, Flatpak, EFI, and QEMU
 monitor changes either affect boot/session presentation or were added after
 the report. They have no pointer-specific evidence.
 
-That leaves the Azure guest's GNOME/session package mix as the strongest
-remaining source-side hypothesis, with the host's native-Wayland QEMU grab
-behavior explaining the GTK/SDL symptom but not the Fedora VNC control
-difference. The next useful control is a current Fedora Rawhide live image
-through the same UEFI/QEMU/VNC/USB-tablet path.
+The source policy has excluded the Fedora kernel family since the first
+tracked proof-of-concept baseline. There is no source commit that introduced
+the exclusion during this history window. The actual Azure kernel package
+changed underneath that stable policy, so source history alone could not
+identify its missing desktop input drivers. The next useful control was a
+current Fedora Rawhide live image through the same UEFI/QEMU/VNC/USB-tablet
+path.
 
 ### Rawhide VNC control: current graphics stack also works
 
@@ -293,11 +289,10 @@ tablet, localhost VNC, and GNOME Connections path. Its guest mouse worked
 normally, just as the Fedora 43 control did.
 
 Current Fedora graphics and input packages are therefore not sufficient to
-explain the Azure failure. The remaining regression surface is the Azure
-guest's mixed base/session configuration or project-specific guest setup.
-Rawhide did not autologin and showed an authentication prompt similar to the
-one previously handled in Azure Desktop. That is a useful session-auth clue,
-but there is no evidence yet that it controls mouse delivery.
+explain the Azure failure. Rawhide did not autologin and showed an
+authentication prompt similar to the one previously handled in Azure Desktop.
+That is a useful session-auth clue, but there is no evidence that it controls
+mouse delivery.
 
 A second independent review found QEMU's internal relative-pointer ownership
 and GTK seat-grab handling consistent with this result. It is a known class
@@ -315,6 +310,64 @@ Relevant upstream sources are QEMU's
 and SDL's [Wayland notes](https://wiki.libsdl.org/SDL3/README-wayland).
 The focused research record is retained in
 [`logs/qemu-pointer-wayland-research-2026-07-21.log`](logs/qemu-pointer-wayland-research-2026-07-21.log).
+
+### Direct kernel comparison: missing desktop input drivers
+
+The released Azure live root and current Rawhide live root were extracted and
+compared directly. The Azure image contains 1,173 RPMs and uses
+`kernel-6.18.31-1.6.azl4`, while Rawhide contains 1,967 RPMs and uses its
+Fedora kernel. Both have the expected Fedora libinput desktop boundary, but
+Azure supplies the kernel, systemd-udev, libevdev, and libwacom.
+
+This is the relevant kernel difference:
+
+```
+Azure:   CONFIG_HID=m
+Azure:   CONFIG_HID_GENERIC=m
+Azure:   # CONFIG_USB_HID is not set
+Azure:   # CONFIG_MOUSE_PS2 is not set
+Azure:   CONFIG_VIRTIO_INPUT=m
+
+Rawhide: CONFIG_HID=y
+Rawhide: CONFIG_HID_GENERIC=y
+Rawhide: CONFIG_USB_HID=y
+Rawhide: CONFIG_MOUSE_PS2=y
+Rawhide: CONFIG_VIRTIO_INPUT=m
+```
+
+Azure's module inventory has `virtio_input.ko`, `hid.ko`, and
+`hid-generic.ko`, but no `usbhid.ko` or `psmouse.ko`. Rawhide includes both
+USB HID and PS/2 mouse support. The QEMU VNC control used an xHCI USB tablet,
+which requires the missing USB-HID driver. The GTK and SDL relative-mouse
+tests depend on the likewise absent PS/2 mouse driver.
+
+This was tested against the published Azure qcow2, not inferred from the
+configuration file alone. The existing USB-tablet instance on VNC port 5901
+still had no mouse. A second snapshot-backed instance was launched with
+`virtio-tablet-pci` on VNC port 5904, and its pointer worked immediately.
+The Azure `virtio_input` path is therefore intact. The failure is the Azure
+kernel's missing USB HID and PS/2 mouse support.
+
+This is more than a QEMU test-harness issue. A normal USB mouse uses the same
+USB-HID path, so the current Azure kernel is not an appropriate desktop
+kernel for physical input either. Using virtio input is a useful VM test
+workaround, but it is not a product fix.
+
+The Fedora kernel is now a disposable diagnostic control only. It will test
+whether the existing Azure base and Fedora GUI boundary works when the missing
+drivers are present, but it must not become an image dependency. The product
+fix belongs upstream in Azure Linux's x86_64 kernel configuration:
+[`base/comps/kernel/6.18-x86_64-azl.config`](https://github.com/microsoft/azurelinux/blob/4.0/base/comps/kernel/6.18-x86_64-azl.config).
+That source explicitly disables `CONFIG_INPUT_MOUSE` and `CONFIG_USB_HID`.
+The minimal Azure Linux change is `CONFIG_INPUT_MOUSE=y`,
+`CONFIG_MOUSE_PS2=m`, and `CONFIG_USB_HID=m`, using Azure's existing kernel
+and module packaging.
+
+There is no kernel command-line setting that can enable this in the current
+release. Kernel command-line options configure code that was compiled in or
+built as a module; they cannot create `psmouse.ko` or `usbhid.ko` when the
+Azure build omitted both. Do not describe the cursor problem as a GNOME,
+libinput, VNC, or host Wayland failure going forward.
 
 ## Plymouth
 

@@ -1,6 +1,7 @@
 name: Publish hybrid AZL+Fedora container
 
-# Manual-only (workflow_dispatch). Publishes a small OCI container image
+# Called by nightly-release.yml and available for manual runs. Publishes a
+# small OCI container image
 # to GHCR straight from this project's own repo/priority setup - the same
 # idea as Azure Linux's own upstream container-base image
 # (microsoft/azurelinux base/images/container-base/container-base.kiwi,
@@ -22,6 +23,7 @@ name: Publish hybrid AZL+Fedora container
 # anaconda, nothing this project's ISO/disk-image builds need.
 on:
   workflow_dispatch: {}
+  workflow_call: {}
 
 permissions:
   contents: read

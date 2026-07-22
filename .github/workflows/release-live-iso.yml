@@ -1,6 +1,7 @@
 name: Release Azure Linux Desktop live ISO/Images
 
-# Manual-only. Calls build-live-iso.yml as a reusable workflow (so the
+# Called by nightly-release.yml and available for manual runs. Calls
+# build-live-iso.yml as a reusable workflow (so the
 # actual lorax/livemedia-creator build logic lives in exactly one place,
 # and the full, unsplit ISO still gets uploaded there as a normal Actions
 # artifact for anyone testing off a given run), then publishes the ISO as
@@ -96,6 +97,23 @@ on:
         default: true
       build_vmdk:
         description: "Build and release the VMDK disk image (VMware)"
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      build_iso:
+        type: boolean
+        default: true
+      build_qcow2:
+        type: boolean
+        default: true
+      build_vhdx:
+        type: boolean
+        default: true
+      build_vdi:
+        type: boolean
+        default: true
+      build_vmdk:
         type: boolean
         default: true
 

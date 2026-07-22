@@ -1,0 +1,90 @@
+name: Publish fresh Azure Linux Desktop artifacts
+
+# The project intentionally keeps no release/archive history. Each nightly
+# build replaces the preceding live ISO, disk-image formats, installer ISO,
+# and hybrid container with artifacts built from the current default branch.
+on:
+  schedule:
+    - cron: "30 05 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: azurelinux-desktop-publication
+  cancel-in-progress: false
+
+jobs:
+  remove-previous-publication:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out all tags
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Delete previous GitHub releases and tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          gh release list --repo "${{ github.repository }}" --limit 1000 \
+            --json tagName --jq '.[].tagName' |
+            while IFS= read -r tag; do
+              [ -n "$tag" ] || continue
+              gh release delete "$tag" --repo "${{ github.repository }}" --yes
+            done
+
+          git ls-remote --tags --refs origin |
+            awk '{sub("refs/tags/", "", $2); print $2}' |
+            while IFS= read -r tag; do
+              [ -n "$tag" ] || continue
+              git push origin --delete "refs/tags/$tag"
+            done
+
+      - name: Delete previous hybrid container versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_NAME: ${{ github.event.repository.name }}/hybrid
+        run: |
+          set -euo pipefail
+
+          package_path="${PACKAGE_NAME//\//%2F}"
+          error_log="$RUNNER_TEMP/ghcr-versions-error.log"
+          if ! version_ids=$(gh api --paginate \
+            "/user/packages/container/$package_path/versions?per_page=100" \
+            --jq '.[].id' 2>"$error_log"); then
+            if grep -q "HTTP 404" "$error_log"; then
+              echo "No hybrid package exists yet."
+              exit 0
+            fi
+            cat "$error_log" >&2
+            exit 1
+          fi
+
+          while IFS= read -r version_id; do
+            [ -n "$version_id" ] || continue
+            gh api --method DELETE \
+              "/user/packages/container/$package_path/versions/$version_id"
+          done <<<"$version_ids"
+
+  publish-live-images:
+    needs: remove-previous-publication
+    uses: ./.github/workflows/release-live-iso.yml
+    with:
+      build_iso: true
+      build_qcow2: true
+      build_vhdx: true
+      build_vdi: true
+      build_vmdk: true
+
+  publish-installer:
+    needs: remove-previous-publication
+    uses: ./.github/workflows/release-installer-iso.yml
+
+  publish-hybrid-container:
+    needs: remove-previous-publication
+    uses: ./.github/workflows/build-container.yml
