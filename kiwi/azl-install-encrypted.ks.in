@@ -89,6 +89,9 @@ if [ -d "$ASSETS" ]; then
     cp -v "$ASSETS/plymouth/azurelinux/dot.png" /mnt/sysroot/usr/share/plymouth/themes/azurelinux/dot.png
     cp -v "$ASSETS/plymouth/azurelinux/dot-glow.png" /mnt/sysroot/usr/share/plymouth/themes/azurelinux/dot-glow.png
     cp -v "$ASSETS/branding/AzureLinuxLogo.png" /mnt/sysroot/usr/share/plymouth/themes/azurelinux/azurelinuxlogo.png
+    mkdir -p /mnt/sysroot/usr/share/backgrounds/azurelinux
+    cp -v "$ASSETS/wallpapers/adwaita-l.jpg" /mnt/sysroot/usr/share/backgrounds/azurelinux/adwaita-l.jpg
+    cp -v "$ASSETS/wallpapers/adwaita-d.jpg" /mnt/sysroot/usr/share/backgrounds/azurelinux/adwaita-d.jpg
 else
     echo "WARNING: $ASSETS not found in install environment - branding/launcher assets skipped" >&2
 fi
@@ -246,8 +249,8 @@ color-scheme='prefer-dark'
 gtk-theme='Adwaita-dark'
 
 [org/gnome/desktop/background]
-picture-uri='file:///usr/share/backgrounds/gnome/adwaita-l.jxl'
-picture-uri-dark='file:///usr/share/backgrounds/gnome/adwaita-d.jxl'
+picture-uri='file:///usr/share/backgrounds/azurelinux/adwaita-l.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/azurelinux/adwaita-d.jpg'
 picture-options='zoom'
 
 [org/gnome/shell]

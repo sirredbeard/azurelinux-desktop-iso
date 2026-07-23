@@ -473,6 +473,16 @@ if [ -x /usr/sbin/plymouth-set-default-theme ] \
     plymouth-set-default-theme azurelinux
 fi
 
+# Install Azure Linux Desktop wallpapers (Adwaita light/dark, CC-BY-SA-3.0,
+# Jakub Steiner). Stored as JPEG because AZL's glycin build disables JXL.
+if [ -f /opt/azl-desktop-assets/wallpapers/adwaita-l.jpg ]; then
+    install -d -m 0755 /usr/share/backgrounds/azurelinux
+    install -m 0644 \
+        /opt/azl-desktop-assets/wallpapers/adwaita-l.jpg \
+        /opt/azl-desktop-assets/wallpapers/adwaita-d.jpg \
+        /usr/share/backgrounds/azurelinux/
+fi
+
 #----------------------------------------------------------------------
 # Side-load GitHub Copilot GUI/CLI, microsoft/edit, and Flathub's repo
 # file the same way the live ISO does (see kickstart/azurelinux-desktop-

@@ -185,6 +185,10 @@ podman run --rm \
             /mnt/azl/usr/share/applications/org.azurelinux.PowerShell.desktop
         install -Dm0644 /assets/icons/powershell.png \
             /mnt/azl/usr/share/pixmaps/powershell.png
+        install -Dm0644 /assets/wallpapers/adwaita-l.jpg \
+            /mnt/azl/usr/share/backgrounds/azurelinux/adwaita-l.jpg
+        install -Dm0644 /assets/wallpapers/adwaita-d.jpg \
+            /mnt/azl/usr/share/backgrounds/azurelinux/adwaita-d.jpg
 
         mkdir -p /mnt/azl/etc/dconf/db/local.d /mnt/azl/etc/dconf/profile
         cat > /mnt/azl/etc/dconf/db/local.d/00-azl-desktop-defaults << "EOF"
@@ -193,8 +197,8 @@ color-scheme="prefer-dark"
 gtk-theme="Adwaita-dark"
 
 [org/gnome/desktop/background]
-picture-uri="file:///usr/share/backgrounds/gnome/adwaita-l.jxl"
-picture-uri-dark="file:///usr/share/backgrounds/gnome/adwaita-d.jxl"
+picture-uri="file:///usr/share/backgrounds/azurelinux/adwaita-l.jpg"
+picture-uri-dark="file:///usr/share/backgrounds/azurelinux/adwaita-d.jpg"
 picture-options="zoom"
 EOF
         cat > /mnt/azl/etc/dconf/profile/user << "EOF"

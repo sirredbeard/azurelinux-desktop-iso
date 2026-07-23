@@ -471,8 +471,8 @@ jobs:
           welcome-dialog-last-shown-version='4294967295'
 
           [org/gnome/desktop/background]
-          picture-uri='file:///usr/share/backgrounds/gnome/adwaita-l.jxl'
-          picture-uri-dark='file:///usr/share/backgrounds/gnome/adwaita-d.jxl'
+          picture-uri='file:///usr/share/backgrounds/azurelinux/adwaita-l.jpg'
+          picture-uri-dark='file:///usr/share/backgrounds/azurelinux/adwaita-d.jpg'
           picture-options='zoom'
           DCONF
           dconf update

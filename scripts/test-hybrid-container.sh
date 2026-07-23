@@ -50,7 +50,7 @@ assert_rpm_source gnome-backgrounds '.fc43'
 assert_rpm_source gnome-terminal '.fc43'
 test -s /etc/dconf/db/local
 DCONF_PROFILE=user dconf read /org/gnome/desktop/background/picture-uri-dark \
-    | grep -Fq "file:///usr/share/backgrounds/gnome/adwaita-d.jxl"
+    | grep -Fq "file:///usr/share/backgrounds/azurelinux/adwaita-d.jpg"
 test -x /usr/local/bin/azl-powershell-terminal
 test -f /usr/share/applications/org.azurelinux.PowerShell.desktop
 grep -Fxq 'StartupWMClass=org.azurelinux.PowerShell' /usr/share/applications/org.azurelinux.PowerShell.desktop
