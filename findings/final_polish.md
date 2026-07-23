@@ -2748,3 +2748,18 @@ Removed `user --name=cinnamon` from both installer kickstart templates and the `
 
 **Status:** ✅ Plymouth graphical confirmed in QEMU | ✅ EFI boot fix applied | ✅ asset permissions fix in code | ⏳ requires fresh build to verify all 5 dock icons
 
+
+### live-disk early-kms parity fix
+
+`early-kms.conf` in `kickstart/azurelinux-desktop-live-disk.ks` was only loading `virtio_gpu`; live ISO and installer already had `virtio_gpu hyperv_drm bochs_drm`. Fixed to match — covers Hyper-V Gen2 guests and QEMU standard VGA in addition to virtio-gpu. The rebuilt initramfs (via `plymouth-set-default-theme azurelinux --rebuild-initrd` at the end of the disk-image `%post`) will pick up the additional drivers.
+
+**Builds queued:** live ISO + qcow2 (29984033898), installer ISO (29984008922) on `deliverable-polish-batch` HEAD `626611c` — picks up all fixes from this batch: asset permissions, Plymouth serial console removal, EFI path, bootloader directive, cinnamon cleanup, and early-kms parity.
+
+**Verification checklist (pending build completion):**
+- All 5 dock icons present on fresh installed desktop (Edge CAN, VS Code, PowerShell, GitHub Copilot, Nautilus)
+- Azure Linux Plymouth boot splash (not text) on installed system first boot
+- Correct dark theme and Azure Linux wallpaper
+- All 5 dock icons on live ISO/disk image boot
+- `pwsh --version` → 7.6.x from terminal
+- `gh --version`, `gh copilot --version`, `dotnet --version`, `edit` all launch correctly
+- VS Code Insiders and Edge Canary launch from dock
