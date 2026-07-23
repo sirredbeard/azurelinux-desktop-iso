@@ -2763,3 +2763,42 @@ Removed `user --name=cinnamon` from both installer kickstart templates and the `
 - `pwsh --version` → 7.6.x from terminal
 - `gh --version`, `gh copilot --version`, `dotnet --version`, `edit` all launch correctly
 - VS Code Insiders and Edge Canary launch from dock
+
+---
+
+## Static filesystem verification — installer ISO (2026-07-24, run 29984008922)
+
+**Installer ISO built from:** `8b02468` (deliverable-polish-batch)
+**ISO label:** `CDROM`, `UUID=2026-07-23-06-20-06-00`
+
+Mounted the squashfs rootfs from the installer ISO directly (ISO → squashfs.img → LiveOS/rootfs.img) and confirmed all fixes from the 2026-07-23 commit batch are present.
+
+| Check | Result |
+|---|---|
+| `install -m 0644/0755` for all asset staging in azl-install.ks | ✅ verified (lines 196–222) |
+| No `clearpart` or `autopart` in azl-install.ks | ✅ confirmed absent |
+| Bare `bootloader` directive | ✅ line 40: `bootloader` only |
+| No `console=ttyS0` on kernel cmdline in post-bootloader.sh | ✅ confirmed absent |
+| No cinnamon references in kickstart or scripts | ✅ confirmed absent |
+| Plymouth default theme = azurelinux | ✅ `/etc/plymouth/plymouthd.conf`: `Theme=azurelinux` |
+| `anaconda-launcher.sh` executable (755) | ✅ `/usr/local/bin/anaconda-launcher.sh` mode 755 |
+
+**GRUB config (grub.cfg in boot/grub2):**
+
+Confirmed `timeout=5` and `terminal_output gfxterm` (graphical mode), `terminal_input serial console`. Kernel cmdline: `console=tty0 rhgb quiet enforcing=0 audit=0 inst.lang=en_US.UTF-8 inst.nokill root=live:CDLABEL=CDROM rd.live.image azl.autoinstall inst.nosave=all_ks`. No `console=ttyS0`.
+
+**Parity gap identified and fixed:**
+
+The **installed system's GRUB config** written by `post-bootloader.sh` was still using text-mode `terminal_output console serial` (cloud/datacenter default). The installer ISO's own GRUB uses `gfxterm`. Inconsistency caught during this verification pass.
+
+Fix: replaced `serial` + `terminal_output console serial` with `insmod efi_gop/efi_uga/all_video`, `set gfxmode=auto`, `set gfxpayload=keep`, `terminal_output gfxterm`, `terminal_input console` in `post-bootloader.sh`. Committed as `b49ee12`, pushed to `deliverable-polish-batch`. New installer ISO build triggered: run `29987725267`.
+
+**Interactive QEMU testing note:**
+
+Full interactive boot testing of the installer ISO requires a display (GTK window or similar). The headless VNC + screendump approach used for live ISO testing is not effective for the installer because:
+- Anaconda TUI renders on the Linux text console (curses), not a graphical framebuffer
+- Plymouth covers the console during boot, making screendump-based progress detection unreliable
+- The interaction sequence (username/password prompts at the terminal) requires knowing exact timing
+
+Static filesystem verification is the preferred approach for installer ISOs until a GUI environment is available. See `findings/qemu-gnome-interactive-testing.md` for context.
+
