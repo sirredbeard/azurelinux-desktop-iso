@@ -376,3 +376,52 @@ and GNOME phases.
 | VNC "Address already in use" | Previous QEMU released port slowly | Wait 2s after kill before relaunching |
 | Terminal prompt missing after launch | App launched in foreground | Always use `appname &` for GUI apps from terminal |
 | `Main.overview.toggle()` fails in Looking Glass (`ReferenceError`) | `sendkey period`/`sendkey dot` drops `.` in Clutter evaluator widget | Close LG (`esc`), return focus to terminal, use `sendkey key_leftmeta` instead |
+
+---
+
+## Installer ISO interactive testing limitations (headless VNC + screendump)
+
+Unlike the live ISO and live qcow2 where GNOME Shell renders rich graphical
+content easily captured by screendump, the installer ISO presents unique
+challenges in a headless VNC + screendump environment:
+
+- **Plymouth covers tty0 during boot**: the boot splash (dark background +
+  animated dots) fills the VGA framebuffer. The screendump captures an almost
+  entirely black image (~98% dark pixels). The 1–2% bright pixels are Plymouth
+  animation dots — too small and low-contrast for reliable progress detection.
+
+- **Anaconda TUI is console-mode, not graphical**: Anaconda in `--text` mode
+  renders a curses UI on the Linux console (tty1). This is NOT a graphical
+  framebuffer scene — screendump captures the VGA text-mode canvas, which
+  maps inconsistently to pixel colors in the VNC framebuffer.
+
+- **Interaction timing is opaque**: the boot sequence goes
+  GRUB → kernel → Plymouth → squashfs mount (slow, ~2–5 min for 2.9 GB) →
+  autologin → `bash_profile` → `anaconda-launcher.sh` → username prompt.
+  Without serial console output (installer uses `console=tty0 rhgb quiet`)
+  or a GUI window, knowing when to send username/password input is not
+  reliable.
+
+**Recommended approach for installer ISO verification:**
+
+1. **Static filesystem verification** (mount the squashfs): mount the installer
+   ISO's `LiveOS/squashfs.img`, then its `LiveOS/rootfs.img`, and inspect the
+   installer rootfs directly. Verify kickstart content, file permissions, and
+   scripts without booting. This is reliable and reproducible headlessly.
+
+2. **Full interactive test** requires a display: use `scripts/qemu-test-install-iso.sh`
+   (uses `-display gtk`) from a machine with a GUI. Alternatively, use `-vnc :N`
+   with a real VNC viewer (e.g. `vncviewer`) that provides live video.
+
+3. **Serial console workaround (advanced)**: boot the installer ISO in QEMU with
+   `-nographic -serial mon:stdio` after temporarily patching the GRUB entry to
+   remove `terminal_output gfxterm` and add `console=ttyS0,115200`. Not worth
+   modifying a production ISO; use this only for debugging specific early-boot
+   issues on a development build.
+
+**GRUB config note**: the installer ISO's GRUB uses `timeout=5`. If the screen
+appears frozen with GRUB rendered (1280×800, ~2% bright pixels), it's likely NOT
+stuck — Plymouth has started and the installation is proceeding. The GRUB menu
+auto-selects after 5 seconds; screendump won't show clear transition because
+Plymouth immediately fills the VGA framebuffer with the dark splash.
+
