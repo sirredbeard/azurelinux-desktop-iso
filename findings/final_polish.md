@@ -114,6 +114,9 @@ URL: https://github.com/sirredbeard/azurelinux-desktop/actions/runs/29960854444
 - PowerShell D-Bus service packaging/staging: **fixed in live artifact filesystem**.
 - Runtime GUI ownership/icon behavior: **pending boot/session verification** on rebuilt artifacts.
 - Fresh installed-root verification from this new build: **pending** (existing `installer-20260722-fixed.qcow2` snapshot predates this rebuild cycle and is not valid evidence for new-runtime outcomes).
+- New live rebuild for the Flatpak-space fix queued on
+  `deliverable-polish-batch` (Actions run `29971290686`), using
+  `--live-rootfs-size 8`.
 
 **Systematic filesystem validation pass (scripted, 2026-07-22):**
 
