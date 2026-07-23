@@ -797,3 +797,19 @@ Fresh builds triggered from `deliverable-polish-batch` HEAD `8b02468`:
 - Installer ISO: run 29984008922 — ⏳ in progress
 
 Verification pending these builds completing.
+
+### Build status update (2026-07-24)
+
+Run 29984033898 (live ISO + qcow2) and run 29984008922 (installer ISO) both
+completed successfully.
+
+Static filesystem verification performed on installer ISO from run 29984008922:
+all 2026-07-23 fixes confirmed present in the rootfs (permissions, Plymouth
+theme, no clearpart/autopart, no ttyS0, no cinnamon).
+
+Additional parity gap identified: `post-bootloader.sh` was writing
+`terminal_output console serial` (Azure upstream text-mode GRUB) for the
+installed system's `grub.cfg`. The installer ISO's own GRUB already used
+`gfxterm`. Fixed in commit `b49ee12` — installed system now gets graphical
+GRUB + `gfxpayload=keep`, matching the installer ISO's own menu. New installer
+build: run `29987725267`.
