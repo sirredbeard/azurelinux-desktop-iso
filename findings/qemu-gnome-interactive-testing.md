@@ -220,6 +220,32 @@ session — QEMU `key_leftmeta` only works when an app window has focus, and onc
 Activities is opened, `key_leftmeta` stops toggling it back reliably from QEMU
 monitor.
 
+### Running-app dot indicator — not verifiable via QEMU screendump
+
+GNOME Shell renders a small dot (or short line depending on GNOME Shell theme)
+below each running app's icon in the dash/dock to indicate it has an open
+window. This "running dot" or "running indicator" is:
+
+- A subtle pixel-level rendering detail positioned just under each dock icon
+- **Not verifiable through QEMU `screendump` + pixel analysis** because the
+  screendump captures at display resolution, the dot is very small, and
+  screendump quality in the QEMU software renderer (without proper DRM output)
+  is too lossy to reliably detect it
+- Also not verifiable via Activities search, keyboard navigation, or SSH — it's
+  a visual indicator only
+
+**Practical implication:** whether the PowerShell dock icon shows a running dot
+when PowerShell is active can only be confirmed via direct visual inspection of
+a real boot session (physical or VM with VGA passthrough / proper display
+output). This is not a blocker for any functional check — the app identity
+(title bar, D-Bus app-id) is verifiable via SSH and has been confirmed correct.
+The dot is cosmetic confirmation that the dock grouping is correct.
+
+**What IS verifiable in QEMU:** that the title bar reads "PowerShell" (not
+"Terminal") confirms correct app-id wiring, which is what the dock uses for
+grouping and the running-indicator logic. If the app-id is correct, GNOME will
+render the running dot against the right dock slot.
+
 The GNOME dock (dash-to-dock) is configured with `intellihide` — it hides when
 a window overlaps it. On the bare desktop it **only appears inside the Activities
 overview**, not on the plain desktop. The dock does not reveal itself by moving
