@@ -39,14 +39,23 @@ run against the same deliverable set as `main`.
 
 **Next iteration targets (ordered):**
 
-1. Live ISO rebuild (run `29972763708` cancelled; new dispatch pending on
-   `deliverable-polish-batch` HEAD `cb0e972`) — picks up Flatpak space fix,
-   dotnet/edit launcher corrections, Plymouth logo scale, and all prior fixes.
-2. Installer ISO rebuild — picks up Option B Plymouth cmdline, serial console
-   removal from BLS entry, GRUB graphical console, and early-kms expansion.
-3. After live rebuild: verify Flatpak writable space in live session, PowerShell
-   dock identity, .NET launcher behavior, and Plymouth logo appearance.
-4. After installer rebuild: verify graphical Plymouth on installer boot, first
+1. Live ISO rebuild dispatched: run `29973195111` on `deliverable-polish-batch`
+   HEAD `083b62b` — picks up Flatpak space fix, dotnet/edit launcher
+   corrections, Plymouth logo scale, D-Bus PowerShell service, and all prior
+   fixes.
+2. Installer ISO rebuild dispatched: run `29973179297` on same HEAD — picks up
+   Option B Plymouth cmdline, serial console removal from BLS entry, GRUB
+   graphical console, and early-kms expansion.
+3. Stale live ISO run `29972763708` (HEAD `b4a9452`) cancellation in progress;
+   delete when completed.
+4. **Preflight (run `29972894041`, HEAD `cb0e972`):** all four jobs pass —
+   repo-origin-policy, live-package-resolve, installer-runtime-resolve,
+   hybrid-canary-local all `success`. Kickstart and GRUB changes cause no
+   package resolution regressions.
+5. After live rebuild: verify Flatpak writable space in live session, PowerShell
+   dock identity, .NET launcher behavior (drops to shell), and Plymouth logo
+   appearance.
+6. After installer rebuild: verify graphical Plymouth on installer boot, first
    installed-target boot Plymouth behavior, and admin shell default.
 
 ### (a) Local container/overlay-verifiable fixes (completed locally)
