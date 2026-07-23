@@ -1,16 +1,16 @@
 # Azure Linux Desktop - Anaconda Kickstart (Offline installer, Encrypted)
 #
-# LUKS-encrypted variant of azl-install.ks.in, rendered/selected by
-# anaconda-launcher.sh's "Encrypted disk (LUKS)" menu option (matching
-# upstream's own azl-install-encrypted.ks.in - see reference/azl-installer/
-# README.md) - identical to azl-install.ks.in in every way except the
-# disk-layout section below, no --passphrase given so anaconda prompts
-# the user for it interactively during install.
+# LUKS-encrypted variant of azl-install.ks.in. Storage directives are
+# omitted; Anaconda's interactive TUI handles disk selection and the
+# LUKS passphrase prompt. Anaconda enforces the minimum layout (/, /boot,
+# /boot/efi, swap). Only kept as a separate file for inst.ks= custom
+# kickstart use; the standard launcher uses azl-install.ks for both
+# plain and encrypted installs (user enables encryption in the TUI).
 #
 # Structure is a direct adaptation of Microsoft's own azl-install.ks.in
 # (microsoft/azurelinux, base/images/vm-iso-installer/azl-install.ks.in,
 # pinned commit noted in reference/azl-installer/README.md): same
-# offline-repo install source, same LVM partitioning, same
+# offline-repo install source, same
 # post-install.sh/post-bootloader.sh %post --nochroot blocks, generated
 # the same way (kiwi/config.sh expands the packages placeholder below at
 # ISO-build time - deliberately not spelled out literally in this
@@ -21,6 +21,7 @@
 # findings/gh-actions-installer-iso-build.md for the real incident this
 # comment is guarding against).
 # Differences from upstream, all deliberate:
+#   - storage directives removed; Anaconda TUI handles disk/LUKS setup
 #   - a third %post --nochroot block staging this project's own
 #     branding/tooling extras (Copilot, microsoft/edit, Flathub,
 #     Plymouth theme, dock favorites, dark mode) into the installed
@@ -45,11 +46,7 @@ user --name=cinnamon --groups=wheel --plaintext --password=cinnamon --gecos="Cin
 
 rootpw --lock
 
-bootloader --location=mbr
 reboot --eject
-
-clearpart --all --initlabel
-autopart --type=lvm --encrypted
 
 @@PACKAGES@@
 

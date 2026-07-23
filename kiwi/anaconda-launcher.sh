@@ -39,13 +39,14 @@ fi
 
 echo ""
 echo "========================================"
-echo "  Azure Linux 4.0 Offline Installer"
+echo "  Azure Linux Desktop - Offline Installer"
 echo "========================================"
 echo ""
-echo "  1) Standard installation"
-echo "  2) Encrypted disk (LUKS)"
+echo "  You will be asked to:"
+echo "    1. Set an administrator username and password"
+echo "    2. Configure storage (disk selection, partitioning,"
+echo "       and optional LUKS encryption) in the installer"
 echo ""
-read -rp "Select installation type [1]: " CHOICE
 
 collect_admin_account() {
     while :; do
@@ -92,22 +93,8 @@ write_kickstart_with_admin_user() {
 
 collect_admin_account
 
-case "$CHOICE" in
-    2)
-        echo "*** Disk encryption ENABLED ***"
-        echo "  Anaconda will prompt you for the LUKS passphrase during install."
-        echo ""
-        write_kickstart_with_admin_user /root/azl-install-encrypted.ks
-        ;;
-    *)
-        echo "*** Standard installation (offline) ***"
-        write_kickstart_with_admin_user /root/azl-install.ks
-        ;;
-esac
+write_kickstart_with_admin_user /root/azl-install.ks
 
-echo "=== Kickstart storage config ==="
-grep -E 'autopart|clearpart|part |volgroup|logvol|--encrypted' /run/install/ks.cfg
-echo "==============================="
 echo ""
 /usr/sbin/anaconda --text --kickstart=/run/install/ks.cfg
 RC=$?

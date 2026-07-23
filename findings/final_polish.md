@@ -338,13 +338,16 @@ qemu-system-x86_64 -enable-kvm -m 8192 -smp 4 \
 | Plymouth installed serial console (Issue 3a) | Both kickstarts ✓ | `29973179297` | pending | pending | 🔄 awaiting artifact |
 | early-kms.conf VM coverage (Issue 3b) | Both kickstarts ✓ | `29973179297` | pending | pending | 🔄 awaiting artifact |
 | Plymouth logo scale (Issue 4) | `azurelinux.script` ✓ | `29973195111` | pending | pending | 🔄 awaiting artifact |
-| Flatpak live space | `--live-rootfs-size 8` ✓ | `29973195111` | pending | pending | 🔄 awaiting artifact |
-| dotnet launcher closes immediately | `azl-dotnet-terminal` drops to `$SHELL` ✓ | `29973195111` | pending | pending | 🔄 awaiting artifact |
-| edit.desktop icon/comment | Restored project SVG + comment ✓ | `29973195111` | pending | pending | 🔄 awaiting artifact |
-| edit visible in GNOME overview | File present, valid; GNOME GIO should scan | `29973195111` | pending | pending | ⚠ root cause unclear; monitor |
-| PowerShell dock identity | D-Bus service file ✓ | `29973195111` | pending | pending | 🔄 awaiting artifact |
+| Flatpak live space | `--rootfs-type squashfs-ext4` ✓ | current branch | pending | pending | 🔄 awaiting rebuild |
+| dotnet launcher closes immediately | `azl-dotnet-terminal` drops to `$SHELL` ✓ | `29973195111` | ✅ 2026-07-22 | ✅ 2026-07-23 QEMU | ✅ verified |
+| edit.desktop icon/comment | Restored project SVG + comment ✓ | `29973195111` | ✅ 2026-07-22 | ✅ 2026-07-23 QEMU | ✅ verified |
+| edit visible in GNOME overview | File present, valid; GNOME GIO should scan | `29973195111` | ✅ 2026-07-22 | ✅ 2026-07-23 QEMU | ✅ verified — search works |
+| PowerShell dock identity | D-Bus service file ✓ | `29973195111` | ✅ 2026-07-22 | ✅ 2026-07-23 QEMU | ✅ window title = "PowerShell", not "Terminal" |
 | Admin shell = pwsh | `anaconda-launcher.sh` ✓ | `29973179297` | pending | pending | 🔄 awaiting artifact |
 | Background wallpaper | JPEG assets from gnome-backgrounds (Jakub Steiner, CC-BY-SA-3.0); AZL glycin has JXL disabled so converted to JPEG q92 at 4096×4096; wired into all four targets via assets pipeline | `28dd697` | pending | pending | 🔄 awaiting next build |
+| Installer storage — safe disk selection | Removed `clearpart`/`autopart` from both kickstart templates; Anaconda TUI handles disk selection, partitioning, and optional LUKS encryption; Anaconda enforces minimum layout requirements | current branch | N/A | 🔄 awaiting rebuild | 🔄 awaiting rebuild |
+| Installer EFI boot path mismatch | `post-bootloader.sh`: copy shim/grub from `EFI/fedora/` → `EFI/azurelinux/` when Fedora packages installed them there; root cause: our kickstart excludes AZL shim/grub so Fedora RPMs install to `EFI/fedora/` but NVRAM entry expects `EFI/azurelinux/shimx64.efi` | current branch | N/A | 🔄 awaiting rebuild | 🔄 awaiting rebuild |
+| Installed desktop PowerShell dock icon missing | Dock shows 4 icons instead of 5 on installed first login (no `>_` PowerShell icon); live ISO shows 5; investigate dconf favorites staging in `%post --nochroot` | open | pending | 🔄 seen 2026-07-23 QEMU | ❌ open |
 
 
 
@@ -1576,44 +1579,51 @@ GNOME Terminal or add a separate terminal emulator.
 
 **Confirmed live (2026-07-22, QEMU -m 4G):** See `findings/logs/flatpak-live-space-debug.log`.
 
-The live ISO boots in **OverlayFS mode** (`rd.live.overlay.overlayfs=1` in
-`/proc/cmdline`). The squashfs contains no nested `rootfs.img` - dracut falls
-back to OverlayFS automatically. The writable upper layer is a tmpfs mounted
-at `/run/overlayfs`, reported by `df` as `LiveOS_rootfs  783M  345M  438M`.
-That 783 MB is roughly 19% of the QEMU guest's 4 GB RAM - notably less than
-the 50% dracut docs suggest; exact sizing behaviour under KVM needs further
-study.
+### Root cause (fully confirmed 2026-07-22)
 
-`/var/lib/flatpak` is on that same 783 MB device. The OSTree repo carries
-`min-free-space-size=500MB` (flatpak default). With 438 MB free, even 4.1 kB
-writes are blocked. The GNOME Platform runtime is 409.7 MB - it would consume
-essentially all available space even if the guard were lowered, so lowering
-the guard is not the right fix. `--live-rootfs-size 8` in the livemedia-creator
-call does not affect OverlayFS upper-layer size at all; it targets the legacy
-DM-snapshot `rootfs.img` path which is not in use here.
+The live ISO squashfs is built by lorax with the default `--rootfs-type squashfs`.
+This produces a plain squashfs with `proc/` at the root — no nested
+`LiveOS/rootfs.img`. Dracut's `dmsquash-live-root.sh` unconditionally sets
+`overlayfs="required"` when it detects `proc/` at the squashfs root, regardless
+of cmdline flags. The `rd.live.overlay.overlayfs=1` in grub.cfg (placed there by
+`--extra-boot-args` in `build-live-iso.yml`) is therefore redundant — dracut
+would force OverlayFS regardless.
 
-**Prior DM-snapshot analysis below is preserved for reference** but does not
-reflect how this ISO actually boots.
+In OverlayFS mode the upper layer is a tmpfs (`~19% of RAM`). At 4 GB RAM that
+is 783 MB. `/var/lib/flatpak` lives on that tmpfs with only 438 MB free.
+OSTree's default `min-free-space-size=500MB` fires before any download starts.
 
-**Open question:** What does Fedora Workstation live do? Their GNOME spin ships
-Flatpak configured with Flathub and users expect to install apps from the live
-session. They almost certainly either pre-bundle `org.gnome.Platform` in the
-squashfs, configure a larger `/run` tmpfs via a livesys script, or use a
-different kernel cmdline for the overlay. Comparing against a downloaded Fedora
-Workstation live ISO is the next step before choosing a fix.
+The `--live-rootfs-size 8` param we had in the workflow does nothing for
+`--make-iso` — it is only consumed by `--make-pxe-live` (`make_live_images()`
+in `creator.py`). It was silently ignored this entire time.
 
-**Fix candidates (pending Fedora comparison):**
-1. Pre-install `org.gnome.Platform` in the squashfs at build time - Flatpak
-   reads it from the read-only base, writes nothing, install of any GNOME app
-   then only needs space for the app itself (~1 MB). Adds ~400 MB to the ISO.
-2. Enlarge the OverlayFS upper tmpfs - add a livesys script that runs
-   `mount -o remount,size=3G /run` before GDM starts. No ISO size increase,
-   but requires confirming the guest will always have enough RAM.
-3. Set `rd.live.overlay.size=<MiB>` - check whether this controls the
-   OverlayFS tmpfs size under this dracut version (it may only apply to the
-   DM-snapshot path).
+### What Fedora does
 
-**Status:** 🔄 awaiting Fedora comparison before deciding fix.
+Fedora uses KIWI (`pagure.io/fedora-kiwi-descriptions`, f43 branch):
+- `filesystem="erofs"` — KIWI creates `LiveOS/rootfs.img` (erofs block image) inside the squashfs
+- `kernelcmdline="quiet rhgb"` — no `rd.live.overlay.overlayfs=1` at all
+- Dracut finds `rootfs.img` → uses DM-snapshot → `statvfs("/")` returns rootfs.img virtual size (~6+ GB)
+- The 500 MB guard passes trivially. No explicit Flatpak config whatsoever.
+
+### Fix (implemented in `build-live-iso.yml`, awaiting rebuild)
+
+Replace `--live-rootfs-size 8 --extra-boot-args "rd.live.overlay.overlayfs=1"` with:
+
+```
+--rootfs-type squashfs-ext4
+```
+
+This tells lorax to call `create_ext4_runtime()` instead of
+`create_squashfs_runtime()`, producing `LiveOS/rootfs.img` (ext4) inside the
+squashfs. Dracut finds it, uses DM-snapshot, and `statvfs("/")` reports the
+ext4 virtual size — easily over the 500 MB guard. This matches the architecture
+Fedora uses (theirs is erofs, ours will be ext4, functionally equivalent).
+
+The `rd.live.overlay.overlayfs=1` boot arg also removed from the workflow —
+it was always redundant with plain squashfs and with squashfs-ext4 it would
+override the DM-snapshot path and break the fix.
+
+**Status:** 🔄 fix committed to `deliverable-polish-batch`, awaiting rebuild to verify.
 
 
 
