@@ -38,6 +38,13 @@ publishes this exact installer's source in `microsoft/azurelinux`, under
   `@@PACKAGES@@` placeholder gets filled in at ISO build time with the
   real `%packages --nocore` block you see in the copy here.
 
+**Upstream status as of 2026-07-23:** All 5 files unchanged since `0e77e25`.
+Commit `3c2a74a` (2026-05-27) updated `post-bootloader.sh` to prefer
+`EFI/azurelinux/` over `EFI/fedora/` for EFI vendor path detection — that
+fix is already present in `0e77e25`. Our own `kiwi/post-bootloader.sh` has
+been aligned with that same EFI priority order (plus our additional
+cross-copy step for the Fedora-on-AZL hybrid shim situation).
+
 Upstream links, pinned to that commit so they don't drift out from under
 this note:
 
