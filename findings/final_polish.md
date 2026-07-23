@@ -39,25 +39,28 @@ run against the same deliverable set as `main`.
 
 **Next iteration targets (ordered):**
 
-1. Rebuild installer ISO with Issue 2 Option B kernel cmdline change and
-   verify graphical Plymouth behavior at boot.
-2. Validate installed-target first boot for Plymouth visibility and admin
-   shell default after the new installer artifact is used for a fresh install.
-3. Continue live-session runtime checks for PowerShell dock identity and `.NET`
-   app visibility from an interactive GNOME session.
-4. Measure live Flatpak writable-space behavior from running session
-   (`findmnt`, `df`, `/proc/cmdline`) and map to dracut overlay configuration.
-5. Rebuild the live ISO with `--live-rootfs-size 8` and recheck the live
-   Flatpak install path against the published artifact.
+1. Live ISO rebuild (run `29972763708` cancelled; new dispatch pending on
+   `deliverable-polish-batch` HEAD `cb0e972`) — picks up Flatpak space fix,
+   dotnet/edit launcher corrections, Plymouth logo scale, and all prior fixes.
+2. Installer ISO rebuild — picks up Option B Plymouth cmdline, serial console
+   removal from BLS entry, GRUB graphical console, and early-kms expansion.
+3. After live rebuild: verify Flatpak writable space in live session, PowerShell
+   dock identity, .NET launcher behavior, and Plymouth logo appearance.
+4. After installer rebuild: verify graphical Plymouth on installer boot, first
+   installed-target boot Plymouth behavior, and admin shell default.
 
 ### (a) Local container/overlay-verifiable fixes (completed locally)
 
 | Fix | Change applied | Local verification run | Result |
 | --- | --- | --- | --- |
-| `.NET` launcher desktop entry validity | `assets/desktop/dotnet.desktop` now calls `Exec=/usr/local/bin/azl-dotnet-terminal`; new helper `assets/bin/azl-dotnet-terminal`; staged by both live and installer `%post --nochroot` asset copy blocks | `desktop-file-validate assets/desktop/dotnet.desktop`; `shellcheck assets/bin/azl-dotnet-terminal` | **Pass** (entry validates; helper lints cleanly) |
+| `.NET` launcher desktop entry validity | `assets/desktop/dotnet.desktop` now calls `Exec=/usr/local/bin/azl-dotnet-terminal`; new helper `assets/bin/azl-dotnet-terminal` runs `dotnet --info` then drops to `$SHELL`; staged by both live and installer `%post --nochroot` asset copy blocks | `desktop-file-validate assets/desktop/dotnet.desktop`; `shellcheck assets/bin/azl-dotnet-terminal` | **Pass** (entry validates; helper lints cleanly) |
 | Installer-created admin default shell | `kiwi/anaconda-launcher.sh` now injects `user ... --shell=/usr/bin/pwsh` | Static generated-directive check in source + `shellcheck kiwi/anaconda-launcher.sh` | **Pass** (directive corrected in source; script lints cleanly) |
 | PowerShell app-id launch race hardening | Added `assets/dbus/org.azurelinux.PowerShell.service`; simplified `assets/bin/azl-powershell-terminal` to rely on D-Bus activation; staged in live+installer asset copy blocks | `shellcheck assets/bin/azl-powershell-terminal` plus repo-policy/installroot preflight scripts below | **Pass** (syntax and staging paths validated locally; runtime dock indicator still requires rebuilt-image GUI boot) |
 | Repo policy and package-set integrity after launcher/shell changes | No package-list drift introduced by current polish edits | `./scripts/test-container-repos.sh`; `./scripts/podman-test-azl4-fedora.sh`; `./scripts/test-installer-runtime-resolve.sh /home/fedora/azl-work/installer-runtime-resolve-20260722-1712`; `./scripts/test-hybrid-container-local.sh` | **Pass** (all four completed; no resolver breakage from this fix set) |
+| GRUB graphical console (Issue 1) | `kiwi/grub_template.cfg`: replaced `terminal_output console serial` with `insmod efi_gop/efi_uga/all_video`, `set gfxpayload=keep`, `terminal_output gfxterm`, `clear`; serial kept as input only; removed echo lines | Static source review against research (weldr/lorax Fedora reference grub2-efi.cfg) | **Pass** (source matches research remediation; runtime verification on rebuilt installer ISO) |
+| Installed-system Plymouth serial console (Issue 3a) | `kiwi/azl-install.ks.in` and `kiwi/azl-install-encrypted.ks.in`: removed `--append="console=ttyS0,115200 console=tty0"` from `bootloader` directive; installed BLS entry will no longer include serial console | Static source review; resolver unaffected (no package changes) | **Pass** (source corrected; runtime Plymouth behavior verification on rebuilt installer ISO) |
+| early-kms.conf VM coverage (Issue 3b) | Both kickstarts: added `hyperv_drm bochs_drm` alongside `virtio_gpu` in `add_drivers`; covers Hyper-V Gen2 and QEMU std VGA in addition to virtio-gpu; simpledrm fallback already active via AZL `UseSimpledrmNoLuks=1` | Static source review | **Pass** (source corrected; runtime KMS verification on rebuilt installer ISO) |
+| Plymouth logo proportional scale (Issue 4) | `assets/plymouth/azurelinux/azurelinux.script`: replaced raw centering with `ScaleLogoToFit()` bounding logo to 30% of screen; `Math.Int()` on all coordinates; logo re-centered in `refresh_callback` every frame | Static code review; dot-row Y positions already reference `logo.image.GetHeight()` (scaled) | **Pass** (source corrected; runtime visual verification on rebuilt artifacts) |
 
 ### (b) Full rebuild/runtime-verification fixes (shipped to GitHub Actions)
 
