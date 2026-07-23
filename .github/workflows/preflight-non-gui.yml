@@ -1,0 +1,134 @@
+name: Preflight non-GUI package policy checks
+
+on:
+  workflow_dispatch: {}
+  workflow_call: {}
+  push:
+    branches-ignore:
+      - main
+    paths:
+      - ".github/workflows/preflight-non-gui.yml"
+      - "scripts/test-container-repos.sh"
+      - "scripts/podman-test-azl4-fedora.sh"
+      - "scripts/test-installer-runtime-resolve.sh"
+      - "scripts/test-hybrid-container-local.sh"
+      - "scripts/test-hybrid-container.sh"
+      - "scripts/build-hybrid-container.sh"
+      - "scripts/test-repo-common.sh"
+      - "kickstart/**"
+      - "kiwi/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/preflight-non-gui.yml"
+      - "scripts/test-container-repos.sh"
+      - "scripts/podman-test-azl4-fedora.sh"
+      - "scripts/test-installer-runtime-resolve.sh"
+      - "scripts/test-hybrid-container-local.sh"
+      - "scripts/test-hybrid-container.sh"
+      - "scripts/build-hybrid-container.sh"
+      - "scripts/test-repo-common.sh"
+      - "kickstart/**"
+      - "kiwi/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preflight-non-gui-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repo-origin-policy:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Run repository-origin policy assertions
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/preflight-logs"
+          ./scripts/test-container-repos.sh \
+            > "$GITHUB_WORKSPACE/preflight-logs/test-container-repos.log" 2>&1
+          tail -n 80 "$GITHUB_WORKSPACE/preflight-logs/test-container-repos.log" | cat
+
+      - name: Upload repo-origin logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflight-repo-origin-logs
+          path: preflight-logs/test-container-repos.log
+          retention-days: 7
+          if-no-files-found: warn
+
+  live-package-resolve:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Run full live package resolve/installroot preflight
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/preflight-logs"
+          ./scripts/podman-test-azl4-fedora.sh \
+            > "$GITHUB_WORKSPACE/preflight-logs/podman-test-azl4-fedora.log" 2>&1
+          tail -n 80 "$GITHUB_WORKSPACE/preflight-logs/podman-test-azl4-fedora.log" | cat
+
+      - name: Upload live resolve logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflight-live-resolve-logs
+          path: preflight-logs/podman-test-azl4-fedora.log
+          retention-days: 7
+          if-no-files-found: warn
+
+  installer-runtime-resolve:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Run installer runtime resolve preflight
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/preflight-logs"
+          workdir="$HOME/azl-work/installer-runtime-resolve-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          ./scripts/test-installer-runtime-resolve.sh "$workdir" \
+            > "$GITHUB_WORKSPACE/preflight-logs/test-installer-runtime-resolve.log" 2>&1
+          tail -n 80 "$GITHUB_WORKSPACE/preflight-logs/test-installer-runtime-resolve.log" | cat
+
+      - name: Upload installer resolve logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflight-installer-resolve-logs
+          path: preflight-logs/test-installer-runtime-resolve.log
+          retention-days: 7
+          if-no-files-found: warn
+
+  hybrid-canary-local:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Run local hybrid canary build + test
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/preflight-logs"
+          ./scripts/test-hybrid-container-local.sh \
+            > "$GITHUB_WORKSPACE/preflight-logs/test-hybrid-container-local.log" 2>&1
+          tail -n 80 "$GITHUB_WORKSPACE/preflight-logs/test-hybrid-container-local.log" | cat
+
+      - name: Upload hybrid canary logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflight-hybrid-canary-logs
+          path: preflight-logs/test-hybrid-container-local.log
+          retention-days: 7
+          if-no-files-found: warn

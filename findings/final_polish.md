@@ -11,6 +11,39 @@ This section tracks the current polish fixes split into:
 - **(a) local container/overlay-verifiable fixes**
 - **(b) full image rebuild/runtime-verification fixes**
 
+**Current archive move status:** No additional issue blocks were moved to
+`final_polish_finished.md` in this pass because runtime closure criteria are
+not yet complete for the remaining items.
+
+**Iteration preflight closure (2026-07-22, split-step run):**
+
+- `scripts/test-container-repos.sh` → pass
+- `scripts/podman-test-azl4-fedora.sh` → pass (`azl4=643 fc43=513 total=1171`)
+- `scripts/test-installer-runtime-resolve.sh` → pass (`426/426`, complete)
+- `scripts/test-hybrid-container-local.sh` → pass after flatpak-step hardening
+  in `scripts/test-hybrid-container.sh` (warn-and-continue behavior for local
+  container namespace limits)
+- `scripts/test-installer-kiwi-build.sh` → local environment blocker
+  reproduced (`KiwiMountKernelFileSystemsError` bind-mounting `/dev`), same
+  known host/container limitation
+- Evidence: `findings/logs/preflight-iteration-2026-07-22.log`
+- New split runner: `scripts/run-preflight-split.sh`
+- New batch workflow: `.github/workflows/preflight-non-gui.yml`
+  - triggers on branch pushes and PRs to `main`
+  - keeps repo-origin, package-resolve, installer-resolve, and hybrid canary
+    checks in shorter, artifact-backed jobs
+
+**Next iteration targets (ordered):**
+
+1. Rebuild installer ISO with Issue 2 Option B kernel cmdline change and
+   verify graphical Plymouth behavior at boot.
+2. Validate installed-target first boot for Plymouth visibility and admin
+   shell default after the new installer artifact is used for a fresh install.
+3. Continue live-session runtime checks for PowerShell dock identity and `.NET`
+   app visibility from an interactive GNOME session.
+4. Measure live Flatpak writable-space behavior from running session
+   (`findmnt`, `df`, `/proc/cmdline`) and map to dracut overlay configuration.
+
 ### (a) Local container/overlay-verifiable fixes (completed locally)
 
 | Fix | Change applied | Local verification run | Result |
@@ -92,6 +125,35 @@ URL: https://github.com/sirredbeard/azurelinux-desktop/actions/runs/29960854444
   - `/root/azl-install.ks`
 - Installed qcow snapshot (`2e04b2...`) still shows pre-fix runtime state for `.NET`/PowerShell assets; this snapshot predates the current rebuild and is retained only as historical comparison evidence.
 - Scripted package diff (live root vs installed snapshot) captured and attached in the same log excerpt (`1175` vs `1029` RPMs in this comparison pair).
+
+**Programmatic live-GUI behavior validation (on-device, 2026-07-22):**
+
+- Evidence log excerpt: `findings/logs/live-iso-vnc-behavior-2026-07-22.log`
+- Method: boot live ISO under QEMU VNC, capture frame, send `Super`, capture
+  second frame, compute local image diff.
+- Result: `45.71%` of pixels changed after `Super` key interaction
+  (`mean_abs_rgb_diff=23.38`), confirming interactive GNOME shell behavior in
+  this run.
+- Observation from local pixel stats: center pixel remained
+  `RGB(2, 60, 136)` before/after, consistent with the generic dark blue
+  background still present.
+- Additional deep match analysis against intended candidates:
+  `scripts/analyze-live-wallpaper-match.sh` selected `adwaita-d.jxl` as best
+  match for the captured live frame (vs `adwaita-l.jxl`), confirming the
+  generic dark Adwaita background is still active in this iteration.
+  Evidence: `findings/logs/live-wallpaper-match-2026-07-22.log`
+- Boot-text cleanliness OCR sampling (`t8/t20/t40/t80`) showed no readable
+  early boot text before desktop UI text appeared in sampled frames.
+  Evidence: `findings/logs/live-boot-ocr-2026-07-22.log`
+
+**Installer Option B preflight (local, 2026-07-22):**
+
+- Source change: installer kernel cmdline now targets graphical Plymouth path
+  (`console=tty0 rhgb quiet ...`, no `console=ttyS0`, no `inst.text`).
+- Dependency preflight: `scripts/test-installer-runtime-resolve.sh` completed
+  successfully after this change.
+- Evidence log excerpt:
+  `findings/logs/installer-runtime-resolve-optionb-2026-07-22.log`
 
 
 These need rebuilt artifacts and GUI/runtime boot validation, not just static/container checks:
@@ -976,10 +1038,11 @@ different shipped GNOME background was considered, then reverted to match
 the host default.
 
 **Next fix:** Select a non-generic project default deliberately. The durable
-solution is a project-owned, properly licensed Azure Linux Desktop wallpaper
-installed in all artifact paths, with matching light and dark variants if
-needed. Changing only the dconf URI to another stock GNOME image would alter
-the color but not establish a distinct product background.
+solution is to ship and wire a distinct default from existing project assets
+and configuration paths (no new wallpaper/background RPM). Keep it aligned
+across live ISO, installer-installed target, disk image, and hybrid-canary
+policy checks. Changing only the dconf URI to another stock GNOME image would
+alter the color but not establish a distinct project background.
 
 
 

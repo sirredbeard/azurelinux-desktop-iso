@@ -58,7 +58,10 @@ README for the full backstory.
    and inspect artifacts). Use GitHub Actions for rebuild-heavy, time-
    expensive, or environment-authoritative checks after local proof is
    complete. Do not spend open-ended time making Podman behave exactly like an
-   Actions runner when the product fix is already demonstrated locally.
+   Actions runner when the product fix is already demonstrated locally. If a
+   local preflight run is stretching past ~15 minutes or repeatedly diverges
+   from Actions behavior, stop extending that local loop and move the check
+   into a workflow with artifact logs.
 9. **Release artifacts are the final evidence.** Download every published ISO
    and disk image with the project downloader, verify its checksum, run the
    matching scripts in `/scripts/`, and compare mounted package/configuration
@@ -100,7 +103,9 @@ README for the full backstory.
    valuable preflight coverage. GitHub Actions is authoritative for its
    published artifacts. When a host-only difference remains after local
    product proof, build in Actions and test the resulting artifact locally
-   instead of trying to reproduce every runner detail.
+   instead of trying to reproduce every runner detail. Keep non-GUI package
+   and repo-priority checks batchable in CI with per-check logs/artifacts so
+   iteration can move forward when local parity hits diminishing returns.
 6. **Preserve the decision.** Record the failure, evidence, scope of any
    workaround, and the remaining validation in `findings/`. Keep referenced
    excerpts in `findings/logs/`. Update these instructions when the lesson is
@@ -136,11 +141,21 @@ README for the full backstory.
   repeated blocker, not only build containers or CI. Apply the research before
   adding emulation workarounds. The priority is a working, well-tested
   personal project, not a perfect local clone of GitHub Actions.
+- **AIC usage discipline for verification**: do as much screen-capture
+  computation and behavioral analysis on-device as possible (image diffs,
+  scripted interaction checks, local parsing) before sending visual data into
+  model interpretation. Use model-side image analysis only when local evidence
+  cannot resolve an unknown.
 - **CI hygiene**: only re-run the specific build (ISO vs disk images, and
   going forward the more granular qcow2/VHDX/VDI/VMDK split) that actually
   needs iterating on. Cancel a premature run immediately. Once a failure or
   cancellation is diagnosed and its relevant excerpt is retained in
   `findings/logs/`, delete the run so the Actions list stays useful.
+- **Preflight cadence**: keep preflight checks broken into small, reportable
+  units with visible progress and per-step logs. If a grouped local preflight
+  run stalls or exceeds the practical local budget, offload the non-GUI
+  checks (package resolution, repo priority, hybrid canary policy checks) to
+  a dedicated Actions workflow rather than extending a long opaque local run.
 - **Nightly publication and focused debugging**: `nightly-release.yml` builds
   the live ISO, qcow2, VHDX, VDI, VMDK, installer ISO, and hybrid container
   from the current default branch. VHDX/VDI/VMDK are derivative qcow2 formats,
@@ -242,8 +257,10 @@ README for the full backstory.
   (installer ISO), `release-live-iso.yml` (publishes a GitHub Release from
   the above), `build-container.yml` (publishes the hybrid proof-of-repo-
   priority container to GHCR), and `nightly-release.yml` (removes prior
-  published artifacts then calls all publication paths). Guest boot testing
-  stays local; do not add a GitHub Actions KVM or TCG guest-test workflow.
+  published artifacts then calls all publication paths), plus
+  `preflight-non-gui.yml` for batched package/repo-priority canary checks
+  with artifact logs. Guest boot testing stays local; do not add a GitHub
+  Actions KVM or TCG guest-test workflow.
 - `kickstart/` - the kickstart(s) driving the ISO builds, the disk-image
   build, and (indirectly, via `scripts/build-hybrid-container.sh` parsing
   its repo/package setup) the hybrid container.
