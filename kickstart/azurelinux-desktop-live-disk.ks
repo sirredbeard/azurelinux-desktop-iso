@@ -668,7 +668,7 @@ EOF
 # root's plymouthd) come back up. Forcing virtio_gpu into the initrd's
 # module list up front (instead of loading it late) shrinks that window.
 cat > /etc/dracut.conf.d/early-kms.conf << 'EOF'
-add_drivers+=" virtio_gpu "
+add_drivers+=" virtio_gpu hyperv_drm bochs_drm "
 EOF
 
 # System-wide always-on dark mode. /etc/dconf/db/local.d is the standard
