@@ -690,7 +690,7 @@ EOF
 # root's plymouthd) come back up. Forcing virtio_gpu into the initrd's
 # module list up front (instead of loading it late) shrinks that window.
 cat > /etc/dracut.conf.d/early-kms.conf << 'EOF'
-add_drivers+=" virtio_gpu "
+add_drivers+=" virtio_gpu hyperv_drm bochs_drm "
 EOF
 
 # System-wide dark mode and background defaults. /etc/dconf/db/local.d is the
@@ -707,8 +707,8 @@ color-scheme='prefer-dark'
 gtk-theme='Adwaita-dark'
 
 [org/gnome/desktop/background]
-picture-uri='file:///usr/share/backgrounds/gnome/adwaita-l.jxl'
-picture-uri-dark='file:///usr/share/backgrounds/gnome/adwaita-d.jxl'
+picture-uri='file:///usr/share/backgrounds/azurelinux/adwaita-l.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/azurelinux/adwaita-d.jpg'
 picture-options='zoom'
 EOF
 cat > /etc/dconf/profile/user << 'EOF'
