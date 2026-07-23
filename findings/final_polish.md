@@ -2840,3 +2840,23 @@ Fix: commit `8eb3e17` adds wallpaper staging to both `kickstart/azurelinux-deskt
 New live build: run `29990996437`.
 
 This explains why the live desktop showed the default Fedora/GNOME background instead of the Azure Linux Adwaita wallpaper in all previous QEMU tests this session.
+
+---
+
+## Live ISO static verification — wallpaper fix confirmed (2026-07-24, run 29990996437)
+
+**Built from:** `3a0d876` (deliverable-polish-batch), includes wallpaper staging fix `8eb3e17`.
+
+| Check | Result |
+|---|---|
+| `/usr/share/backgrounds/azurelinux/adwaita-d.jpg` | ✅ present |
+| `/usr/share/backgrounds/azurelinux/adwaita-l.jpg` | ✅ present |
+| `00-dark-mode` dconf: `picture-uri` points to JPEG | ✅ confirmed |
+| `early-kms.conf`: `virtio_gpu hyperv_drm bochs_drm` | ✅ confirmed |
+| `org.azurelinux.PowerShell.desktop`: mode 644 | ✅ confirmed |
+| `edit.desktop`: mode 644, `Icon=/usr/share/pixmaps/edit.svg` | ✅ confirmed |
+| Plymouth `ScaleLogoToFit` in azurelinux.script | ✅ 2 occurrences |
+
+Preflight (run `29990996890`) also passed clean against this commit. Branch is verified ready.
+
+**Status: `deliverable-polish-batch` is ready to merge to `main`.**
