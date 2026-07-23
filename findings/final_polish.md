@@ -344,7 +344,7 @@ qemu-system-x86_64 -enable-kvm -m 8192 -smp 4 \
 | edit visible in GNOME overview | File present, valid; GNOME GIO should scan | `29973195111` | pending | pending | ⚠ root cause unclear; monitor |
 | PowerShell dock identity | D-Bus service file ✓ | `29973195111` | pending | pending | 🔄 awaiting artifact |
 | Admin shell = pwsh | `anaconda-launcher.sh` ✓ | `29973179297` | pending | pending | 🔄 awaiting artifact |
-| Background wallpaper | Not started — needs artwork | — | — | — | ⏸ blocked on artwork |
+| Background wallpaper | JPEG assets from gnome-backgrounds (Jakub Steiner, CC-BY-SA-3.0); AZL glycin has JXL disabled so converted to JPEG q92 at 4096×4096; wired into all four targets via assets pipeline | `28dd697` | pending | pending | 🔄 awaiting next build |
 
 
 
