@@ -90,9 +90,13 @@ mkdir -p "$SYSROOT/boot/grub2"
 cat > "$SYSROOT/boot/grub2/grub.cfg" << GRUBCFG
 set default=0
 set timeout=2
-serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1
-terminal_output console serial
-terminal_input console serial
+insmod efi_gop
+insmod efi_uga
+insmod all_video
+set gfxmode=auto
+set gfxpayload=keep
+terminal_output gfxterm
+terminal_input console
 
 menuentry "Azure Linux" {
     search --no-floppy --fs-uuid --set=root ${BOOT_UUID}
