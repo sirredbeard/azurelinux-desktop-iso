@@ -207,8 +207,16 @@ README for the full backstory.
   contains `ttyS0`, Plymouth detects a serial console, and the graphical
   splash is suppressed. `kiwi/post-bootloader.sh` must not inject serial
   console params into the normal boot BLS entry (rescue entry is fine to
-  omit them too). `serial`/`terminal_output` in GRUB itself is acceptable
-  for GRUB debug — it does not affect the kernel or Plymouth.
+  omit them too).
+- **Installed system GRUB must use gfxterm**: `kiwi/post-bootloader.sh`
+  writes the installed system's `/boot/grub2/grub.cfg`. Use
+  `insmod efi_gop`, `insmod efi_uga`, `insmod all_video`,
+  `set gfxmode=auto`, `set gfxpayload=keep`, `terminal_output gfxterm`,
+  `terminal_input console`. Do NOT use `terminal_output console serial`;
+  that forces text-mode GRUB (breaks `gfxpayload=keep`) and adds serial
+  overhead on hardware that doesn't have a serial port. The installer ISO's
+  own GRUB (`kiwi/grub_template.cfg`) already uses gfxterm; the installed
+  system GRUB should match for a consistent desktop boot experience.
 - **EFI vendor path**: our kickstart excludes AZL's `shim-x64` and
   `grub2-efi-x64`; Fedora's Secure Boot-signed shim/grub RPMs install
   their binaries to `EFI/fedora/`, but Anaconda's NVRAM entry points to
