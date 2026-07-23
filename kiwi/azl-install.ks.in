@@ -38,7 +38,7 @@ user --name=cinnamon --groups=wheel --plaintext --password=cinnamon --gecos="Cin
 
 rootpw --lock
 
-bootloader --location=mbr --append="console=ttyS0,115200 console=tty0"
+bootloader --location=mbr
 reboot --eject
 
 clearpart --all --initlabel
@@ -214,7 +214,7 @@ cat > /etc/dracut.conf.d/no-multipath.conf << 'EOF'
 omit_dracutmodules+=" multipath "
 EOF
 cat > /etc/dracut.conf.d/early-kms.conf << 'EOF'
-add_drivers+=" virtio_gpu "
+add_drivers+=" virtio_gpu hyperv_drm bochs_drm "
 EOF
 
 # Regenerate the initrd for every installed kernel now that the theme
