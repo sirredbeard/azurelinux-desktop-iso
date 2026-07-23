@@ -347,7 +347,7 @@ qemu-system-x86_64 -enable-kvm -m 8192 -smp 4 \
 | Background wallpaper | JPEG assets from gnome-backgrounds (Jakub Steiner, CC-BY-SA-3.0); AZL glycin has JXL disabled so converted to JPEG q92 at 4096×4096; wired into all four targets via assets pipeline | `28dd697` | pending | pending | 🔄 awaiting next build |
 | Installer storage — safe disk selection | Removed `clearpart`/`autopart` from both kickstart templates; Anaconda TUI handles disk selection, partitioning, and optional LUKS encryption; Anaconda enforces minimum layout requirements | current branch | N/A | 🔄 awaiting rebuild | 🔄 awaiting rebuild |
 | Installer EFI boot path mismatch | `post-bootloader.sh`: copy shim/grub from `EFI/fedora/` → `EFI/azurelinux/` when Fedora packages installed them there; root cause: our kickstart excludes AZL shim/grub so Fedora RPMs install to `EFI/fedora/` but NVRAM entry expects `EFI/azurelinux/shimx64.efi` | current branch | N/A | 🔄 awaiting rebuild | 🔄 awaiting rebuild |
-| Installed desktop PowerShell dock icon missing | Dock shows 4 icons instead of 5 on installed first login (no `>_` PowerShell icon); live ISO shows 5; investigate dconf favorites staging in `%post --nochroot` | open | pending | 🔄 seen 2026-07-23 QEMU | ❌ open |
+| Installed desktop PowerShell dock icon missing | Root cause identified: `install -m 0644` fix resolves this. `org.azurelinux.PowerShell.desktop` was mode 600 (umask 077 in Fedora container + `cp -v`), GNOME Shell silently skipped it building the dock. Fixed by `install -m 0644` in kickstart. dconf favorites list already includes all 5 app IDs. Awaiting runtime confirmation on new build. | `8b02468` | N/A — root cause analysis | 🔄 expected fixed, await run 29987725267 | 🔄 expected resolved |
 
 
 
