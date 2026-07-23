@@ -1434,8 +1434,12 @@ This sets the schema default. **It does NOT override existing user preferences o
 - `assets/bin/azl-powershell-terminal`
 - `kickstart/azurelinux-desktop-live.ks`
 - `kiwi/azl-install.ks.in`
+- `kiwi/azl-install-encrypted.ks.in`
+- `kickstart/azurelinux-desktop-live-disk.ks`
 
-**Status:** The root-cause race condition fix is now in source for the next artifact build. Runtime GNOME Shell indicator behavior still needs verification in a fresh live and installed session from rebuilt artifacts.
+**Update (2026-07-22):** Research confirmed a dconf lock is not needed for a fresh installed-user default. The system-db favorite-apps default is sufficient for new installs; only existing-user immutability would need a lock. The build paths keep the system default and `dconf update`, but do not add a lock.
+
+**Status:** The root-cause race condition and dock-default fix are now in source for the next artifact build. Runtime GNOME Shell indicator behavior still needs verification in a fresh live and installed session from rebuilt artifacts.
 
 
 **Observed:** PowerShell opens in a terminal window titled `PowerShell`, but
@@ -2059,6 +2063,14 @@ login from a fresh installed account.
 
 **Observed:** `edit` is installed, but no Edit icon appears in GNOME's
 application overview or dock.
+
+**Implemented fix (2026-07-22):** The desktop entry now uses the reviewed
+launcher shape from the discovery notes: `Icon=accessories-text-editor`,
+`MimeType=text/plain;`, `Categories=Utility;TextEditor;`, and no
+`ConsoleOnly` flag.
+
+**Changed file:**
+- `assets/desktop/edit.desktop`
 
 **On-disk evidence:** `/usr/share/applications/edit.desktop` is present,
 root-owned, mode 0644, and passes `desktop-file-validate`. Its
