@@ -473,6 +473,16 @@ if [ -x /usr/sbin/plymouth-set-default-theme ] \
     plymouth-set-default-theme azurelinux
 fi
 
+# Install Azure Linux Desktop wallpapers (Adwaita light/dark, CC-BY-SA-3.0,
+# Jakub Steiner). Stored as JPEG because AZL's glycin build disables JXL.
+if [ -f /opt/azl-desktop-assets/wallpapers/adwaita-l.jpg ]; then
+    install -d -m 0755 /usr/share/backgrounds/azurelinux
+    install -m 0644 \
+        /opt/azl-desktop-assets/wallpapers/adwaita-l.jpg \
+        /opt/azl-desktop-assets/wallpapers/adwaita-d.jpg \
+        /usr/share/backgrounds/azurelinux/
+fi
+
 #----------------------------------------------------------------------
 # Side-load GitHub Copilot GUI/CLI, microsoft/edit, and Flathub's repo
 # file the same way the live ISO does (see kickstart/azurelinux-desktop-
@@ -653,11 +663,5 @@ render_kickstart() {
 render_kickstart /root/azl-install.ks.in /root/azl-install.ks
 render_kickstart /root/azl-install-encrypted.ks.in /root/azl-install-encrypted.ks
 
-# Azure Linux's installer does not embed a default account. Keep the desktop
-# templates account-free; anaconda-launcher.sh collects the administrator
-# credentials and inserts a hashed account directive into its temporary copy.
-sed -i \
-    -e '/^user --name=cinnamon /d' \
-    /root/azl-install.ks /root/azl-install-encrypted.ks
 
 echo "=== kiwi/config.sh complete ==="

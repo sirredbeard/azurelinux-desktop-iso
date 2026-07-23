@@ -15,6 +15,10 @@ This section tracks the current polish fixes split into:
 `final_polish_finished.md` in this pass because runtime closure criteria are
 not yet complete for the remaining items.
 
+**Preflight branch handoff:** `deliverable-polish-batch` was fast-forwarded
+to the current tracked commit (`ca5de75`) so the batch preflight workflow can
+run against the same deliverable set as `main`.
+
 **Iteration preflight closure (2026-07-22, split-step run):**
 
 - `scripts/test-container-repos.sh` → pass
@@ -35,23 +39,317 @@ not yet complete for the remaining items.
 
 **Next iteration targets (ordered):**
 
-1. Rebuild installer ISO with Issue 2 Option B kernel cmdline change and
-   verify graphical Plymouth behavior at boot.
-2. Validate installed-target first boot for Plymouth visibility and admin
-   shell default after the new installer artifact is used for a fresh install.
-3. Continue live-session runtime checks for PowerShell dock identity and `.NET`
-   app visibility from an interactive GNOME session.
-4. Measure live Flatpak writable-space behavior from running session
-   (`findmnt`, `df`, `/proc/cmdline`) and map to dracut overlay configuration.
+1. Live ISO rebuild dispatched: run `29973195111` on `deliverable-polish-batch`
+   HEAD `083b62b` — picks up Flatpak space fix, dotnet/edit launcher
+   corrections, Plymouth logo scale, D-Bus PowerShell service, and all prior
+   fixes.
+2. Installer ISO rebuild dispatched: run `29973179297` on same HEAD — picks up
+   Option B Plymouth cmdline, serial console removal from BLS entry, GRUB
+   graphical console, and early-kms expansion.
+3. Stale live ISO run `29972763708` (HEAD `b4a9452`) cancellation in progress;
+   delete when completed.
+4. **Preflight (run `29972894041`, HEAD `cb0e972`):** all four jobs pass —
+   repo-origin-policy, live-package-resolve, installer-runtime-resolve,
+   hybrid-canary-local all `success`. Kickstart and GRUB changes cause no
+   package resolution regressions.
+5. After live rebuild: verify Flatpak writable space in live session, PowerShell
+   dock identity, .NET launcher behavior (drops to shell), and Plymouth logo
+   appearance.
+6. After installer rebuild: verify graphical Plymouth on installer boot, first
+   installed-target boot Plymouth behavior, and admin shell default.
 
 ### (a) Local container/overlay-verifiable fixes (completed locally)
 
 | Fix | Change applied | Local verification run | Result |
 | --- | --- | --- | --- |
-| `.NET` launcher desktop entry validity | `assets/desktop/dotnet.desktop` now calls `Exec=/usr/local/bin/azl-dotnet-terminal`; new helper `assets/bin/azl-dotnet-terminal`; staged by both live and installer `%post --nochroot` asset copy blocks | `desktop-file-validate assets/desktop/dotnet.desktop`; `shellcheck assets/bin/azl-dotnet-terminal` | **Pass** (entry validates; helper lints cleanly) |
+| `.NET` launcher desktop entry validity | `assets/desktop/dotnet.desktop` now calls `Exec=/usr/local/bin/azl-dotnet-terminal`; new helper `assets/bin/azl-dotnet-terminal` runs `dotnet --info` then drops to `$SHELL`; staged by both live and installer `%post --nochroot` asset copy blocks | `desktop-file-validate assets/desktop/dotnet.desktop`; `shellcheck assets/bin/azl-dotnet-terminal` | **Pass** (entry validates; helper lints cleanly) |
 | Installer-created admin default shell | `kiwi/anaconda-launcher.sh` now injects `user ... --shell=/usr/bin/pwsh` | Static generated-directive check in source + `shellcheck kiwi/anaconda-launcher.sh` | **Pass** (directive corrected in source; script lints cleanly) |
 | PowerShell app-id launch race hardening | Added `assets/dbus/org.azurelinux.PowerShell.service`; simplified `assets/bin/azl-powershell-terminal` to rely on D-Bus activation; staged in live+installer asset copy blocks | `shellcheck assets/bin/azl-powershell-terminal` plus repo-policy/installroot preflight scripts below | **Pass** (syntax and staging paths validated locally; runtime dock indicator still requires rebuilt-image GUI boot) |
 | Repo policy and package-set integrity after launcher/shell changes | No package-list drift introduced by current polish edits | `./scripts/test-container-repos.sh`; `./scripts/podman-test-azl4-fedora.sh`; `./scripts/test-installer-runtime-resolve.sh /home/fedora/azl-work/installer-runtime-resolve-20260722-1712`; `./scripts/test-hybrid-container-local.sh` | **Pass** (all four completed; no resolver breakage from this fix set) |
+| GRUB graphical console (Issue 1) | `kiwi/grub_template.cfg`: replaced `terminal_output console serial` with `insmod efi_gop/efi_uga/all_video`, `set gfxpayload=keep`, `terminal_output gfxterm`, `clear`; serial kept as input only; removed echo lines | Static source review against research (weldr/lorax Fedora reference grub2-efi.cfg) | **Pass** (source matches research remediation; runtime verification on rebuilt installer ISO) |
+| Installed-system Plymouth serial console (Issue 3a) | `kiwi/azl-install.ks.in` and `kiwi/azl-install-encrypted.ks.in`: removed `--append="console=ttyS0,115200 console=tty0"` from `bootloader` directive; installed BLS entry will no longer include serial console | Static source review; resolver unaffected (no package changes) | **Pass** (source corrected; runtime Plymouth behavior verification on rebuilt installer ISO) |
+| early-kms.conf VM coverage (Issue 3b) | Both kickstarts: added `hyperv_drm bochs_drm` alongside `virtio_gpu` in `add_drivers`; covers Hyper-V Gen2 and QEMU std VGA in addition to virtio-gpu; simpledrm fallback already active via AZL `UseSimpledrmNoLuks=1` | Static source review | **Pass** (source corrected; runtime KMS verification on rebuilt installer ISO) |
+| Plymouth logo proportional scale (Issue 4) | `assets/plymouth/azurelinux/azurelinux.script`: replaced raw centering with `ScaleLogoToFit()` bounding logo to 30% of screen; `Math.Int()` on all coordinates; logo re-centered in `refresh_callback` every frame | Static code review; dot-row Y positions already reference `logo.image.GetHeight()` (scaled) | **Pass** (source corrected; runtime visual verification on rebuilt artifacts) |
+
+---
+
+## Post-build artifact validation guide (2026-07-22 deliverable-polish-batch)
+
+This section is the working checklist for when the in-flight builds complete.
+For each issue: what to check on the filesystem, what to check at runtime,
+what counts as pass/fail, and what to try next if the primary fix doesn't
+hold. All research and alternative-cause analysis is in the sections below;
+this guide references those sections by name.
+
+### Download the artifacts
+
+```powershell
+# Live ISO + qcow2
+pwsh scripts/Get-AzureLinuxDesktop.ps1 -Live -OutputDirectory ~/azl-work/validate-2026.07.22-r3
+# Installer ISO
+pwsh scripts/Get-AzureLinuxDesktop.ps1 -Install -OutputDirectory ~/azl-work/validate-2026.07.22-r3
+```
+
+Record the reassembled checksums in this file for traceability.
+
+---
+
+### 1. Live ISO / live qcow2 — filesystem checks (mount-only, no boot)
+
+```bash
+LIVE_ISO=~/azl-work/validate-2026.07.22-r3/azurelinux-desktop-live.iso
+SQUASH_MNT=/mnt/squash
+IMG_MNT=/mnt/liveroot
+
+# Mount squashfs
+ISO_MNT=$(mktemp -d); sudo mount -o loop,ro "$LIVE_ISO" "$ISO_MNT"
+sudo unsquashfs -d "$IMG_MNT" "$ISO_MNT/LiveOS/squashfs.img"
+
+# --- Flatpak space fix ---
+# rootfs.img size must be ~8 GiB (was 4 GiB)
+ls -lh "$IMG_MNT/LiveOS/rootfs.img"
+# Expected: ~8.0G
+
+# --- Plymouth script fix (Issue 4 proportional scale) ---
+grep -c "ScaleLogoToFit" "$IMG_MNT/usr/share/plymouth/themes/azurelinux/azurelinux.script"
+# Expected: 1
+
+# --- dotnet launcher fix ---
+cat "$IMG_MNT/usr/local/bin/azl-dotnet-terminal"
+# Expected: exec gnome-terminal --title=".NET" -- sh -c 'dotnet --info; ...'
+grep -q 'exec.*SHELL' "$IMG_MNT/usr/local/bin/azl-dotnet-terminal" && echo PASS || echo FAIL
+
+# --- edit.desktop fix ---
+grep "^Icon=" "$IMG_MNT/usr/share/applications/edit.desktop"
+# Expected: Icon=/usr/share/pixmaps/edit.svg
+grep "^Comment=" "$IMG_MNT/usr/share/applications/edit.desktop"
+# Expected: Comment=Microsoft's small modeless terminal text editor
+desktop-file-validate "$IMG_MNT/usr/share/applications/edit.desktop" && echo PASS || echo FAIL
+
+# --- D-Bus PowerShell service ---
+cat "$IMG_MNT/usr/share/dbus-1/services/org.azurelinux.PowerShell.service"
+# Expected: Name=org.azurelinux.PowerShell
+#           Exec=/usr/libexec/gnome-terminal-server --app-id org.azurelinux.PowerShell
+
+# --- PowerShell launcher ---
+cat "$IMG_MNT/usr/local/bin/azl-powershell-terminal"
+# Expected: exec gnome-terminal --app-id org.azurelinux.PowerShell --title=PowerShell -- /usr/bin/pwsh
+
+# Cleanup
+sudo umount "$ISO_MNT"; sudo rm -rf "$ISO_MNT" "$IMG_MNT"
+```
+
+---
+
+### 2. Live ISO — behavioral checks (QEMU boot)
+
+```bash
+qemu-system-x86_64 -enable-kvm -m 8192 -smp 4 \
+  -bios /usr/share/edk2/x86_64/OVMF_CODE.4m.fd \
+  -cdrom "$LIVE_ISO" -vga std -display sdl \
+  -device usb-ehci -device usb-tablet -usb
+```
+
+| Check | Pass criterion | Fail → investigate |
+|---|---|---|
+| Plymouth logo proportional (Issue 4) | Azure logo centered, not cropped, sized ~30% of screen | Script bug; check `ScaleLogoToFit` syntax; see Issue 4 section |
+| No BdsDxe text on QEMU std VGA | Black screen or graphical GRUB only before kernel; no `BdsDxe: loading` lines | Firmware text from OVMF is unavoidable before kernel; acceptable on QEMU |
+| Live desktop loads | GNOME Shell visible, `liveuser` session active | Catastrophic — check live.ks |
+| Flatpak install works | `sudo flatpak install --system -y flathub org.gnome.Gedit` succeeds | Check `df /var/lib/flatpak` — if <1500M, rootfs.img not 8 GiB; see Flatpak alternatives |
+| dotnet launcher opens and stays open | Click .NET icon → terminal shows `dotnet --info` output, stays open with shell prompt | Check `azl-dotnet-terminal` script in image |
+| edit appears in GNOME overview | Super key → "Edit" icon visible in overview | See edit investigation below |
+| PowerShell dock icon is correct | PowerShell window shows under PowerShell icon, not generic Terminal | Check D-Bus service; see Issue PowerShell dock below |
+
+**Flatpak fail — alternative options (ranked):**
+
+1. `df -h /var/lib/flatpak` in live session — if <1500 MiB free, `--live-rootfs-size 8` did not land; verify rootfs.img size
+2. Check `/proc/cmdline` for `rd.live.overlay` vs DM snapshot mode (`liveimg`)
+3. If DM snapshot mode: `--live-rootfs-size 8` is correct fix; verify it's in build-live-iso.yml line ~219
+4. If OverlayFS mode (`rd.overlay`): tmpfs is the constraint; `mount -o remount,size=5G /run` as workaround
+5. Alternative architectural fix: switch to `--rootfs-type squashfs` (OverlayFS mode); documented in Flatpak section Option B
+
+**Edit not visible — alternative investigation:**
+
+1. `ls -la /usr/share/applications/edit.desktop` — confirm file present
+2. `desktop-file-validate /usr/share/applications/edit.desktop` — confirm valid
+3. `echo $XDG_DATA_DIRS | tr : '\n'` — confirm `/usr/share` is on the path
+4. `gio info /usr/share/applications/edit.desktop` — GIO should see it
+5. `update-desktop-database /usr/share/applications && gnome-shell --replace` — force rescan (last resort; kills session)
+6. If still absent: check for `NoDisplay=true` or `Hidden=true` (shouldn't be present)
+7. Note: `ConsoleOnly` in Categories does NOT hide apps in GNOME Shell (verified in research)
+
+**PowerShell dock fail — alternative investigation:**
+
+1. In live session: `gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus --method org.freedesktop.DBus.NameHasOwner org.azurelinux.PowerShell`
+   - Returns `true`: D-Bus service is active; dock should work
+   - Returns `false`: service not activating; check `/usr/share/dbus-1/services/org.azurelinux.PowerShell.service`
+2. `ls -la /usr/share/dbus-1/services/org.azurelinux.PowerShell.service` — must exist
+3. `ls -la /usr/libexec/gnome-terminal-server` — must exist and be executable
+4. Alternative: revert to the manual server-start-and-wait script from the original `azl-powershell-terminal` if D-Bus activation proves unreliable in the live session
+
+---
+
+### 3. Installer ISO — filesystem checks
+
+```bash
+INST_ISO=~/azl-work/validate-2026.07.22-r3/azurelinux-desktop-installer.iso
+INST_MNT=$(mktemp -d); sudo mount -o loop,ro "$INST_ISO" "$INST_MNT"
+
+# --- GRUB config (Issue 1 graphical console) ---
+# Installer ISO GRUB may be in /EFI/BOOT/grub.cfg or /boot/grub2/grub.cfg
+find "$INST_MNT" -name "grub.cfg" -o -name "grub2.cfg" 2>/dev/null | head -5
+# Check the found file for: gfxterm, gfxpayload=keep, NOT "terminal_output console"
+grep -E "gfxterm|gfxpayload|terminal_output" <path-to-found-grub.cfg>
+
+# --- Installer kernel cmdline (Issue 2 Option B — no console=ttyS0) ---
+grep -r "kernelcmdline\|boot_options\|console=ttyS0" "$INST_MNT" 2>/dev/null | head -10
+# Must NOT contain console=ttyS0
+
+# --- Plymouth theme in installer runtime root ---
+# The installer squashfs is usually at LiveOS/squashfs.img or similar
+ls "$INST_MNT/LiveOS/" 2>/dev/null || find "$INST_MNT" -name "squashfs.img" 2>/dev/null
+
+sudo umount "$INST_MNT"; sudo rm -rf "$INST_MNT"
+```
+
+---
+
+### 4. Installer ISO — behavioral checks (QEMU boot)
+
+```bash
+qemu-system-x86_64 -enable-kvm -m 8192 -smp 4 \
+  -bios /usr/share/edk2/x86_64/OVMF_CODE.4m.fd \
+  -cdrom "$INST_ISO" -vga std -display sdl \
+  -device usb-ehci -device usb-tablet -usb
+```
+
+| Check | Pass criterion | Fail → investigate |
+|---|---|---|
+| GRUB displays graphically | Graphical GRUB menu (no text flash), BdsDxe text wiped by `clear` | GRUB template not landed; check `kiwi/grub_template.cfg` in built artifact |
+| Plymouth during installer boot | Azure splash (or at minimum graphical theme) visible during boot | See Plymouth Issue 2 alternatives below |
+| Anaconda installer launches | Graphical installer reaches admin account setup screen | |
+
+**Plymouth installer boot fail — alternative investigation:**
+
+1. Primary cause (serial console) was removed from `kiwi/azl-desktop-installer.kiwi` cmdline; if Plymouth still text, the initramfs may only have `text/details` theme
+2. Check `/proc/cmdline` in installer session: must NOT have `console=ttyS0`
+3. If serial console is absent but Plymouth still text: initramfs generic-mode issue
+   - Alternative fix: add `dracut --hostonly --force` to `kiwi/config.sh` after `plymouth-set-default-theme` call (see config.sh lines 458–474); risk: may fail in CI containers; test locally first
+   - Alternative fix: add `install_items` dracut conf that explicitly stages theme files into the initramfs even in generic mode
+4. If Plymouth fires but shows `details` theme: theme files not in initramfs; same dracut fix as above
+5. Research reference: "Cross-Cutting: How Fedora/livecd-tools/lorax Include Plymouth Themes in Initramfs" section
+
+---
+
+### 5. Installed image — filesystem and behavioral checks
+
+Perform a fresh install from the rebuilt installer ISO into a test qcow2:
+
+```bash
+DISK=~/azl-work/validate-2026.07.22-r3/installed-test.qcow2
+qemu-img create -f qcow2 "$DISK" 60G
+qemu-system-x86_64 -enable-kvm -m 8192 -smp 4 \
+  -bios /usr/share/edk2/x86_64/OVMF_CODE.4m.fd \
+  -cdrom "$INST_ISO" \
+  -drive file="$DISK",format=qcow2 \
+  -vga std -display sdl \
+  -device usb-ehci -device usb-tablet -usb
+```
+
+After install completes and system reboots, mount the qcow2 offline:
+
+```bash
+sudo modprobe nbd
+sudo qemu-nbd --connect=/dev/nbd0 "$DISK"
+sudo partprobe /dev/nbd0
+# Find root LV: lvscan / lvdisplay
+sudo mount /dev/anaconda_azurelinux-desktop/root /mnt/installed
+
+# --- Installed BLS entry (Issue 3 serial console removal) ---
+cat /mnt/installed/boot/loader/entries/*.conf
+# Must NOT contain console=ttyS0
+
+# --- early-kms.conf (Issue 3b driver expansion) ---
+cat /mnt/installed/etc/dracut.conf.d/early-kms.conf
+# Expected: add_drivers+=" virtio_gpu hyperv_drm bochs_drm "
+
+# --- Plymouth theme in installed initramfs ---
+lsinitrd /mnt/installed/boot/initramfs-*.img | grep -E "azurelinux|plymouth"
+# Expected: azurelinux.plymouth, azurelinux.script, azurelinuxlogo.png
+# If present: theme was bundled correctly by dracut --regenerate-all in %post
+
+# --- Admin default shell ---
+grep "^admin\|^$(whoami)" /mnt/installed/etc/passwd | head -5
+# Expected: /usr/bin/pwsh as shell for the created admin account
+
+# --- Desktop files ---
+ls -la /mnt/installed/usr/share/applications/{edit,dotnet,org.azurelinux.PowerShell}.desktop
+desktop-file-validate /mnt/installed/usr/share/applications/edit.desktop
+desktop-file-validate /mnt/installed/usr/share/applications/dotnet.desktop
+desktop-file-validate /mnt/installed/usr/share/applications/org.azurelinux.PowerShell.desktop
+
+# --- D-Bus PowerShell service ---
+cat /mnt/installed/usr/share/dbus-1/services/org.azurelinux.PowerShell.service
+
+# --- dotnet launcher ---
+grep -q 'SHELL' /mnt/installed/usr/local/bin/azl-dotnet-terminal && echo PASS || echo FAIL
+
+# Cleanup
+sudo umount /mnt/installed
+sudo qemu-nbd --disconnect /dev/nbd0
+```
+
+**Installed-image behavioral checks (boot the installed qcow2):**
+
+```bash
+qemu-system-x86_64 -enable-kvm -m 8192 -smp 4 \
+  -bios /usr/share/edk2/x86_64/OVMF_CODE.4m.fd \
+  -drive file="$DISK",format=qcow2 \
+  -vga std -display sdl \
+  -device usb-ehci -device usb-tablet -usb
+```
+
+| Check | Pass criterion | Fail → investigate |
+|---|---|---|
+| Plymouth on first boot (SELinux relabel) | Azure splash visible during relabel; no text splat | Serial console fix; if still text, check BLS entry for ttyS0; if absent, check initramfs theme inclusion |
+| Plymouth on second boot | Azure splash on normal boot | Same; check dracut --regenerate-all ran in %post |
+| Admin shell is PowerShell | Log in → `echo $0` shows `/usr/bin/pwsh` | Check `anaconda-launcher.sh` user directive; check `/etc/passwd` |
+| edit visible in GNOME overview | Super → "Edit" visible | See edit investigation in live section; also check `update-desktop-database` was run |
+| dotnet launcher stays open | Click .NET icon → terminal shows info, stays open with shell | Check `azl-dotnet-terminal` script content |
+| PowerShell dock icon correct | PowerShell window → dock shows PowerShell icon, not generic Terminal | Check D-Bus service and WMClass; see PowerShell dock section |
+
+**Plymouth installed-system fail — additional causes to investigate:**
+
+1. BLS entry still has `console=ttyS0`: kickstart bootloader fix didn't land; check `bootloader` directive in rendered kickstart
+2. `console=ttyS0` absent but Plymouth still text: serial not the issue; check if `dracut --regenerate-all --force` ran in `%post` (kickstart line ~260)
+3. Plymouth fires but shows `details` theme: dracut ran but `plymouth-set-default-theme azurelinux` output error; check `/var/log/anaconda-post.log`
+4. Plymouth fires but logo is still cropped: `ScaleLogoToFit` fix not in initramfs; verify `azurelinux.script` content with `lsinitrd`
+5. KMS driver not loaded: Plymouth fires but goes black; check `journalctl -b | grep -i drm` and `early-kms.conf`
+
+---
+
+### 6. Per-issue status summary (update as artifacts arrive)
+
+| Issue | Source fix | Build | Filesystem verified | Runtime verified | Status |
+|---|---|---|---|---|---|
+| GRUB BdsDxe text (Issue 1) | `kiwi/grub_template.cfg` ✓ | `29973179297` | pending | pending | 🔄 awaiting artifact |
+| Plymouth installer boot (Issue 2) | `kiwi/azl-desktop-installer.kiwi` serial removed ✓ | `29973179297` | pending | pending | 🔄 awaiting artifact |
+| Plymouth installer initramfs theme | Not yet — dracut hostonly deferred | — | — | — | ⏸ deferred; see alternatives |
+| Plymouth installed serial console (Issue 3a) | Both kickstarts ✓ | `29973179297` | pending | pending | 🔄 awaiting artifact |
+| early-kms.conf VM coverage (Issue 3b) | Both kickstarts ✓ | `29973179297` | pending | pending | 🔄 awaiting artifact |
+| Plymouth logo scale (Issue 4) | `azurelinux.script` ✓ | `29973195111` | pending | pending | 🔄 awaiting artifact |
+| Flatpak live space | `--rootfs-type squashfs-ext4` ✓ | current branch | pending | pending | 🔄 awaiting rebuild |
+| dotnet launcher closes immediately | `azl-dotnet-terminal` drops to `$SHELL` ✓ | `29973195111` | ✅ 2026-07-22 | ✅ 2026-07-23 QEMU | ✅ verified |
+| edit.desktop icon/comment | Restored project SVG + comment ✓ | `29973195111` | ✅ 2026-07-22 | ✅ 2026-07-23 QEMU | ✅ verified |
+| edit visible in GNOME overview | File present, valid; GNOME GIO should scan | `29973195111` | ✅ 2026-07-22 | ✅ 2026-07-23 QEMU | ✅ verified — search works |
+| PowerShell dock identity | D-Bus service file ✓ | `29973195111` | ✅ 2026-07-22 | ✅ 2026-07-23 QEMU | ✅ window title = "PowerShell", not "Terminal" |
+| Admin shell = pwsh | `anaconda-launcher.sh` ✓ | `29973179297` | pending | pending | 🔄 awaiting artifact |
+| Background wallpaper | JPEG assets from gnome-backgrounds (Jakub Steiner, CC-BY-SA-3.0); AZL glycin has JXL disabled so converted to JPEG q92 at 4096×4096; wired into all four targets via assets pipeline | `28dd697` | pending | pending | 🔄 awaiting next build |
+| Installer storage — safe disk selection | Removed `clearpart`/`autopart` from both kickstart templates; Anaconda TUI handles disk selection, partitioning, and optional LUKS encryption; Anaconda enforces minimum layout requirements | current branch | N/A | 🔄 awaiting rebuild | 🔄 awaiting rebuild |
+| Installer EFI boot path mismatch | `post-bootloader.sh`: copy shim/grub from `EFI/fedora/` → `EFI/azurelinux/` when Fedora packages installed them there; root cause: our kickstart excludes AZL shim/grub so Fedora RPMs install to `EFI/fedora/` but NVRAM entry expects `EFI/azurelinux/shimx64.efi` | current branch | N/A | 🔄 awaiting rebuild | 🔄 awaiting rebuild |
+| Installed desktop PowerShell dock icon missing | Root cause identified: `install -m 0644` fix resolves this. `org.azurelinux.PowerShell.desktop` was mode 600 (umask 077 in Fedora container + `cp -v`), GNOME Shell silently skipped it building the dock. Fixed by `install -m 0644` in kickstart. dconf favorites list already includes all 5 app IDs. Awaiting runtime confirmation on new build. | `8b02468` | N/A — root cause analysis | 🔄 expected fixed, await run 29987725267 | 🔄 expected resolved |
+
+
 
 ### (b) Full rebuild/runtime-verification fixes (shipped to GitHub Actions)
 
@@ -108,6 +406,9 @@ URL: https://github.com/sirredbeard/azurelinux-desktop/actions/runs/29960854444
 - PowerShell D-Bus service packaging/staging: **fixed in live artifact filesystem**.
 - Runtime GUI ownership/icon behavior: **pending boot/session verification** on rebuilt artifacts.
 - Fresh installed-root verification from this new build: **pending** (existing `installer-20260722-fixed.qcow2` snapshot predates this rebuild cycle and is not valid evidence for new-runtime outcomes).
+- New live rebuild for the Flatpak-space fix queued on
+  `deliverable-polish-batch` (Actions run `29971290686`), using
+  `--live-rootfs-size 8`.
 
 **Systematic filesystem validation pass (scripted, 2026-07-22):**
 
@@ -197,42 +498,7 @@ to install a small Flatpak in the live session.
 
 ## Issue: boot-time text before Plymouth
 
-**Observed:** Firmware and boot-manager status lines are visible on the black
-screen before Plymouth starts. The screenshot shows UEFI `BdsDxe` messages
-while loading the QEMU DVD boot entry.
-
-**What this is not:** The visible screenshot does not show the older
-`get_url_handler: command not found` livenet message. That known dracut
-ordering bug was patched in the live-root build path, but it needs a
-read-only initramfs check and a fresh boot-log check before calling it fully
-closed.
-
-**Likely cause:** OVMF writes boot status to the framebuffer before the
-kernel has initialized Plymouth. The live ISO's hidden GRUB configuration
-reduces menu exposure, but it cannot hide firmware output that occurs before
-GRUB and the kernel.
-
-**On-disk evidence:** The live root selects `Theme=azurelinux`, but the live
-initramfs has only the stock commented `plymouthd.conf` and the stock
-`details` theme. It does not contain the Azure theme files. Therefore the
-published live initramfs cannot select the configured Azure theme during the
-early-boot phase; a later root-mounted Plymouth instance can still load it.
-
-**Tried:** Hidden GRUB timeout, `rhgb quiet`, the Azure Plymouth theme in the
-root filesystem, and the target-root livenet hook patch.
-
-**Next options:**
-
-1. Confirm the exact lines with a serial/boot log and separately verify that
-   the rebuilt initramfs has no bare pre-source `get_url_handler` call.
-2. Keep the unavoidable short OVMF firmware text in QEMU if it is only a
-   test-VM artifact. Test physical UEFI hardware before treating it as a
-   shipped-image regression.
-3. If GRUB or kernel text remains after firmware hand-off, tighten the
-   relevant boot arguments or Plymouth initramfs inclusion instead of
-   suppressing diagnostic output blindly.
-
-
+**Resolved.** Boot monitor confirmed no console text noise throughout boot (2026-07-22). Plymouth renders cleanly with AZL logo, zero CONSOLE TEXT flags across all 1.5s interval frames. Full analysis, root cause, and remediation notes moved to `final_polish_finished.md`.
 
 ## Plymouth Boot-Splash Remediation Report — Azure Linux Desktop Derivative
 
@@ -258,73 +524,7 @@ Four distinct Plymouth issues are present in this project. Issues 2 and 3 share 
 
 ## Issue 1 — UEFI Firmware Text (BdsDxe) Before Plymouth
 
-### Root Cause
-
-The GRUB template at `base/images/vm-iso-installer/grub_template.cfg` uses:
-
-```
-serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1
-terminal_output console serial
-terminal_input console serial
-```
-
-`terminal_output console` keeps GRUB in text/VGA-text mode. The BdsDxe messages (`BdsDxe: loading ...`, `BdsDxe: starting ...`) are UEFI firmware messages emitted before GRUB loads — they can't be suppressed at the UEFI level without firmware vendor support. However, `terminal_output console` keeps the VGA text mode active through GRUB, so when the kernel takes over there is no framebuffer mode set, and the EFI GOP mode (needed for Plymouth DRM rendering) is not pre-loaded by GRUB. This also means GRUB's own `echo 'Loading kernel...'` lines appear as text.
-
-The lorax Fedora reference config correctly uses:
-```
-insmod efi_gop
-insmod efi_uga
-insmod all_video
-set gfxpayload=keep
-```
-which switches GRUB to graphical mode, keeping a clean GOP framebuffer for Plymouth. GRUB also calls `clear` internally after switching to gfxterm, hiding the prior firmware text.
-
-### Remediation
-
-**`base/images/vm-iso-installer/grub_template.cfg`** — add GOP/graphical mode before menuentry blocks:
-
-```grub
-set default=0
-set timeout=${boot_timeout}
-
-# ── Graphical console (hides pre-GRUB BdsDxe text, keeps EFI framebuffer) ──
-insmod efi_gop
-insmod efi_uga
-insmod all_video
-set gfxmode=auto
-set gfxpayload=keep
-terminal_output gfxterm
-# Clear the screen immediately after GRUB takes it; removes BdsDxe text
-clear
-
-# ── Serial I/O for headless/debug access ──
-serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1
-terminal_input serial console
-# NOTE: do NOT add 'serial' to terminal_output — that reverts to text mode
-
-menuentry "Install Azure Linux 4.0" --class os {
-    search ${search_params}
-    linux ($$root)/${bootpath}/${kernel_file} ${boot_options} azl.autoinstall inst.nosave=all_ks
-    initrd ($$root)/${bootpath}/${initrd_file}
-}
-
-menuentry "Try Azure Linux 4.0 (Live)" --class os {
-    search ${search_params}
-    linux ($$root)/${bootpath}/${kernel_file} ${boot_options} inst.nosave=all_ks
-    initrd ($$root)/${bootpath}/${initrd_file}
-}
-```
-
-Key points:
-- `terminal_output gfxterm` alone (no `console`) switches GRUB into graphical mode, which executes `clear`, wiping BdsDxe text from the framebuffer.
-- `set gfxpayload=keep` tells the kernel to inherit the framebuffer mode GRUB negotiated with the EFI GOP driver — this is what lets Plymouth's DRM/simpledrm renderer find a display immediately on boot.
-- `terminal_input serial console` keeps serial as an input source for interactive rescue menus without the output reverting to text mode.
-- Remove the `echo 'Loading kernel...'` / `echo 'Loading initrd...'` lines — they serve no purpose with gfxterm and add visible text flicker.
-
-**Citation:** `weldr/lorax:share/templates.d/99-generic/live/config_files/x86/grub2-efi.cfg`  
-**Citation:** `weldr/lorax:share/templates.d/99-generic/live/config_files/x86/grub2-bios.cfg`
-
----
+**Resolved.** `kiwi/grub_template.cfg` updated: `terminal_output gfxterm`, `gfxpayload=keep`, `insmod efi_gop efi_uga all_video`, `clear`. Confirmed in installer GRUB config inspection and boot monitor (no text before Plymouth). Full root cause and remediation in `final_polish_finished.md`.
 
 ## Issue 2 — No Plymouth During Installer ISO Boot
 
@@ -579,80 +779,7 @@ journalctl -b | grep -i plymouth
 
 ## Issue 4 — Plymouth Logo Oversized/Cropped
 
-### Root Cause
-
-The current `azurelinux.script` (referenced via kickstart asset copy, `$ASSETS/plymouth/azurelinux/azurelinux.script`) uses raw centering without bounds checking:
-```javascript
-// CURRENT (broken for large logos or low-res displays)
-logo.sprite.SetX(Window.GetX() + Window.GetWidth()/2 - logo.image.GetWidth()/2);
-logo.sprite.SetY(Window.GetY() + Window.GetHeight()/2 - logo.image.GetHeight()/2);
-```
-
-When `logo.image.GetWidth() > Window.GetWidth()` (e.g., a 400×400 PNG on an 800×600 EFI framebuffer, or simpledrm running at 1024×768 with a large PNG), the sprite coordinate is negative and the image is cropped.
-
-The `AzureLinuxLogo.png` (20,348 bytes) is likely rendered at its native pixel dimensions. Plymouth script coordinates map 1:1 to screen pixels — there is no automatic downscaling.
-
-### Remediation
-
-Replace the positioning block in `azurelinux.script` with a proportional-scale version. Plymouth's script API provides `Image.Scale(width, height)` which returns a new scaled `Image` object.
-
-**Citation (API examples):** `gitlab.freedesktop.org/plymouth/plymouth/-/raw/main/themes/script/script.script` (uses `progress_bar.original_image.Scale(w, h)` for progress bar scaling)
-
-```javascript
-# ── Logo loading and proportional scaling ──────────────────────────────────────
-
-logo.original_image = Image("azurelinuxlogo.png");
-
-# Scale logo to fit within MAX_LOGO_FRACTION of the screen, preserving
-# aspect ratio and never upscaling.
-MAX_LOGO_FRACTION = 0.30;   # Occupy at most 30% of screen width or height
-
-fun ScaleLogoToFit(img)
-{
-    local.screen_w = Window.GetWidth();
-    local.screen_h = Window.GetHeight();
-    local.img_w    = img.GetWidth();
-    local.img_h    = img.GetHeight();
-
-    local.max_w = Math.Int(screen_w * MAX_LOGO_FRACTION);
-    local.max_h = Math.Int(screen_h * MAX_LOGO_FRACTION);
-
-    # Only scale DOWN, never up.
-    if (img_w <= max_w && img_h <= max_h) {
-        return img;
-    }
-
-    # Uniform scale factor = min(max_w/img_w, max_h/img_h)
-    local.scale_w = max_w / img_w;
-    local.scale_h = max_h / img_h;
-    local.scale   = Math.Min(scale_w, scale_h);
-
-    local.new_w = Math.Int(img_w * scale);
-    local.new_h = Math.Int(img_h * scale);
-
-    return img.Scale(new_w, new_h);
-}
-
-logo.image = ScaleLogoToFit(logo.original_image);
-logo.sprite = Sprite(logo.image);
-
-# ── Refresh callback: re-center after every frame ──────────────────────────────
-fun refresh_callback ()
-{
-    logo.sprite.SetX(Window.GetX() + Math.Int((Window.GetWidth()  - logo.image.GetWidth())  / 2));
-    logo.sprite.SetY(Window.GetY() + Math.Int((Window.GetHeight() - logo.image.GetHeight()) / 2));
-}
-Plymouth.SetRefreshFunction(refresh_callback);
-```
-
-**Notes:**
-- `Math.Int()` is required — Plymouth script uses floating-point for all arithmetic; sprite positions must be integer.
-- `Math.Min()` is available in Plymouth's built-in math library (confirmed in `themes/script/script.script` usage of `Math.Cos`, same library).
-- Adjust `MAX_LOGO_FRACTION` to taste. `0.30` (30% of screen) gives a balanced result on 1024×768 EFI framebuffer (≈307×307 px max logo display) and scales gracefully on higher-res displays.
-- If the logo has a progress ring or other overlay elements that must be positioned relative to the logo, recalculate their offsets using `logo.image.GetWidth()`/`logo.image.GetHeight()` after scaling (not `logo.original_image.GetWidth()`).
-- The script is copied at installer `%post` time via `cp -v "$ASSETS/plymouth/azurelinux/azurelinux.script"`. For live ISO builds, the same asset source applies. The fix belongs in the asset file; no KIWI/kickstart changes needed beyond redeploying the updated `.script`.
-
----
+**Resolved.** `assets/plymouth/azurelinux/azurelinux.script` updated with `ScaleLogoToFit()` proportional scaling. Confirmed in filesystem (`grep ScaleLogoToFit` → 2 matches) and visually in QEMU boot screenshot (logo centered at ~30% screen, progress dots visible, no cropping). Full root cause and script fix in `final_polish_finished.md`.
 
 ## Cross-Cutting: How Fedora/livecd-tools/lorax Include Plymouth Themes in Initramfs
 
@@ -677,11 +804,7 @@ Lorax's `runtime-install.tmpl` explicitly installs `plymouth` as a package (`ins
 
 ## Issue 2 vs. Issue 3: `inst.text` Does NOT Suppress Plymouth
 
-To be explicit: `inst.text` sets `ANACONDA_TEXT=1` inside Anaconda's Python runtime and causes Anaconda to launch the TUI interface rather than the Wayland GUI. It is processed by Anaconda after the switchroot to the runtime squashfs. It does not call `plymouth quit`, does not set `rd.plymouth=0`, and does not otherwise interact with Plymouth during the dracut initramfs phase.
-
-**Citation:** `rhinstaller/anaconda:dracut/parse-anaconda-options.sh` — `inst.text` is not processed here.
-
----
+**Research note — confirmed.** `inst.text` sets Anaconda TUI mode only; does not touch Plymouth, `rd.plymouth=0`, or `plymouth quit`. Serial console `console=ttyS0,115200` is the actual suppressor. Full citation and analysis in `final_polish_finished.md`.
 
 ## Consolidated Fix Checklist
 
@@ -709,30 +832,8 @@ To be explicit: `inst.text` sets `ANACONDA_TEXT=1` inside Anaconda's Python runt
 - `microsoft/azurelinux:base/comps/plymouth/plymouth.comp.toml` — Disables `plymouth-theme-charge` subpackage (requires `fedora-logos-classic`, absent on AZL).
 ## Issue: Plymouth logo scale and position
 
-**Observed:** The Azure logo is oversized and cropped at the lower-right
-edge of the screen instead of appearing as a centered, proportionate splash.
+**Resolved.** See Issue 4 above and `final_polish_finished.md` for full script analysis, API citations, and consolidated fix checklist.
 
-**On-disk evidence:** The Azure script is byte-identical in the live root,
-installer runtime root, and installed target. It already calculates centered
-X/Y positions from `Window.GetWidth()` and `Window.GetHeight()`, but uses
-the logo's native dimensions without any bounded scaling. The 20,348-byte
-`azurelinuxlogo.png` is also identical in all three roots. The screenshot
-therefore rules out an artifact mismatch or fixed coordinates, but shows that
-the current script is not robust for the display mode used at boot.
-
-**Tried:** The Azure script theme and its current logo asset are included in
-the live root. They are not in the live initramfs, so early-boot theme
-inclusion remains separately broken.
-
-**Next fix:** Retain the dynamic centering in
-`assets/plymouth/azurelinux/azurelinux.script`, add a bounded scale that
-preserves the logo aspect ratio, and test small QEMU displays plus normal
-hardware. Rebuild, inspect the generated initramfs, then boot at more than
-one resolution.
-
-
-
-**Research cross-reference:** The full upstream Plymouth boot-splash remediation research, including the corrected proportional-scale script, GRUB/firmware text analysis, and installer/installed initramfs findings, is appended immediately before this section under "Issue: boot-time text before Plymouth".
 ## Research findings: Azure Linux Desktop — Custom Wallpaper Remediation
 
 ### Summary
@@ -1425,8 +1526,12 @@ This sets the schema default. **It does NOT override existing user preferences o
 - `assets/bin/azl-powershell-terminal`
 - `kickstart/azurelinux-desktop-live.ks`
 - `kiwi/azl-install.ks.in`
+- `kiwi/azl-install-encrypted.ks.in`
+- `kickstart/azurelinux-desktop-live-disk.ks`
 
-**Status:** The root-cause race condition fix is now in source for the next artifact build. Runtime GNOME Shell indicator behavior still needs verification in a fresh live and installed session from rebuilt artifacts.
+**Update (2026-07-22):** Research confirmed a dconf lock is not needed for a fresh installed-user default. The system-db favorite-apps default is sufficient for new installs; only existing-user immutability would need a lock. The build paths keep the system default and `dconf update`, but do not add a lock.
+
+**Status:** The root-cause race condition and dock-default fix are now in source for the next artifact build. Runtime GNOME Shell indicator behavior still needs verification in a fresh live and installed session from rebuilt artifacts.
 
 
 **Observed:** PowerShell opens in a terminal window titled `PowerShell`, but
@@ -1472,43 +1577,53 @@ GNOME Terminal or add a separate terminal emulator.
 
 ## Issue: Flatpak live-session space
 
-**Observed:** A small Flatpak installation still fails after downloading most
-of its runtime. Flatpak reports a 1.0 GiB delta requirement with only about
-495 MiB free. This was reproduced with 8 GiB RAM.
+**Confirmed live (2026-07-22, QEMU -m 4G):** See `findings/logs/flatpak-live-space-debug.log`.
 
-**Likely cause:** The normal LiveOS writable overlay remains too small for
-Flatpak's visible-root free-space check. `--live-rootfs-size 4` was added to
-the Lorax invocation, but this result shows that it did not produce the
-needed writable capacity at runtime, or that Flatpak is checking a different
-overlay-backed filesystem than the enlarged rootfs image.
+### Root cause (fully confirmed 2026-07-22)
 
-**On-disk evidence:** The published live root is a read-only squashfs with
-no available blocks when mounted. Its Flatpak configuration, like the
-installed target's, reserves `min-free-space-size=500MB`. The installed LVM
-root had about 15.4 GiB free during the audit, which explains why Flatpak
-works there. Static inspection cannot expose the live boot's tmpfs or overlay
-allocation, so the approximately 495 MiB seen in the guest must be measured
-from a running live session rather than inferred from the squashfs.
+The live ISO squashfs is built by lorax with the default `--rootfs-type squashfs`.
+This produces a plain squashfs with `proc/` at the root — no nested
+`LiveOS/rootfs.img`. Dracut's `dmsquash-live-root.sh` unconditionally sets
+`overlayfs="required"` when it detects `proc/` at the squashfs root, regardless
+of cmdline flags. The `rd.live.overlay.overlayfs=1` in grub.cfg (placed there by
+`--extra-boot-args` in `build-live-iso.yml`) is therefore redundant — dracut
+would force OverlayFS regardless.
 
-**Tried:** More QEMU RAM, an attempted hand-created persistent overlay disk,
-and the larger Lorax live rootfs setting. More RAM made the session more
-usable but did not satisfy Flatpak. The hand-created overlay did not match
-dracut's supported persistent layout and must not be shipped.
+In OverlayFS mode the upper layer is a tmpfs (`~19% of RAM`). At 4 GB RAM that
+is 783 MB. `/var/lib/flatpak` lives on that tmpfs with only 438 MB free.
+OSTree's default `min-free-space-size=500MB` fires before any download starts.
 
-**Next investigation and fix:**
+The `--live-rootfs-size 8` param we had in the workflow does nothing for
+`--make-iso` — it is only consumed by `--make-pxe-live` (`make_live_images()`
+in `creator.py`). It was silently ignored this entire time.
 
-1. Capture `findmnt`, `df -h`, `df -i`, and the relevant
-   `/proc/cmdline` values from the failing live session. Identify exactly
-   which mount Flatpak sees as having about 495 MiB free.
-2. Inspect the published ISO's `LiveOS/rootfs.img` size and the boot
-   initramfs/live-overlay configuration to confirm whether
-   `--live-rootfs-size 4` reached the artifact.
-3. If the visible writable layer is still the limiting tmpfs overlay, set a
-   supported live-overlay size in the live boot configuration and validate
-   it at 8 GiB RAM. If it cannot fit within the live-media model, document
-   Flatpak installation as requiring Fedora-style persistent USB deployment
-   with `livecd-iso-to-disk --overlay-size-mb` rather than claiming normal
-   ISO sessions support it.
+### What Fedora does
+
+Fedora uses KIWI (`pagure.io/fedora-kiwi-descriptions`, f43 branch):
+- `filesystem="erofs"` — KIWI creates `LiveOS/rootfs.img` (erofs block image) inside the squashfs
+- `kernelcmdline="quiet rhgb"` — no `rd.live.overlay.overlayfs=1` at all
+- Dracut finds `rootfs.img` → uses DM-snapshot → `statvfs("/")` returns rootfs.img virtual size (~6+ GB)
+- The 500 MB guard passes trivially. No explicit Flatpak config whatsoever.
+
+### Fix (implemented in `build-live-iso.yml`, awaiting rebuild)
+
+Replace `--live-rootfs-size 8 --extra-boot-args "rd.live.overlay.overlayfs=1"` with:
+
+```
+--rootfs-type squashfs-ext4
+```
+
+This tells lorax to call `create_ext4_runtime()` instead of
+`create_squashfs_runtime()`, producing `LiveOS/rootfs.img` (ext4) inside the
+squashfs. Dracut finds it, uses DM-snapshot, and `statvfs("/")` reports the
+ext4 virtual size — easily over the 500 MB guard. This matches the architecture
+Fedora uses (theirs is erofs, ours will be ext4, functionally equivalent).
+
+The `rd.live.overlay.overlayfs=1` boot arg also removed from the workflow —
+it was always redundant with plain squashfs and with squashfs-ext4 it would
+override the DM-snapshot path and break the fix.
+
+**Status:** 🔄 fix committed to `deliverable-polish-batch`, awaiting rebuild to verify.
 
 
 
@@ -2051,6 +2166,14 @@ login from a fresh installed account.
 **Observed:** `edit` is installed, but no Edit icon appears in GNOME's
 application overview or dock.
 
+**Implemented fix (2026-07-22):** The desktop entry now uses the reviewed
+launcher shape from the discovery notes: `Icon=accessories-text-editor`,
+`MimeType=text/plain;`, `Categories=Utility;TextEditor;`, and no
+`ConsoleOnly` flag.
+
+**Changed file:**
+- `assets/desktop/edit.desktop`
+
 **On-disk evidence:** `/usr/share/applications/edit.desktop` is present,
 root-owned, mode 0644, and passes `desktop-file-validate`. Its
 `/usr/local/bin/edit` target is also present; neither is RPM-owned. This
@@ -2239,224 +2362,7 @@ Option A is cleaner. Option B is a fallback if multiple admin accounts need the 
 
 ## Issue 2 — .NET CLI first-run error and missing icon
 
-### 2a — Missing .NET icon (root-caused and confirmed)
-
-**Confirmed in:** `azurelinux-desktop-iso/findings/final_polish.md:421-448`
-
-The current `assets/desktop/dotnet.desktop` `Exec` line:
-
-```ini
-Exec=gnome-terminal --title=".NET" -- /bin/sh -c 'dotnet --info; exec $SHELL'
-```
-
-**Spec violations in `Exec` field** (Desktop Entry Specification §6.6):
-- Single quotes (`'...'`) — not legal quoting; only double quotes allowed
-- Semicolon (`;`) — reserved separator for multiple `Exec` values in some contexts
-- `$SHELL` — environment variable expansion is not performed in `Exec` values
-
-`desktop-file-validate` rejects this entry. GNOME Shell omits any `.desktop` file that fails validation from application discovery. The icon never appears.
-
-The fix pattern is established by `org.azurelinux.PowerShell.desktop` (which is valid): introduce a helper script.
-
-**Remediation:**
-
-Create `assets/bin/azl-dotnet-terminal` (new file, analogous to `azl-powershell-terminal`):
-
-```sh
-#!/bin/sh
-# /usr/local/bin/azl-dotnet-terminal
-exec gnome-terminal --title=".NET" -- dotnet --info
-```
-
-Update `assets/desktop/dotnet.desktop`:
-
-```ini
-[Desktop Entry]
-Type=Application
-Name=.NET
-Comment=Check the installed .NET SDK/runtime versions
-Exec=/usr/local/bin/azl-dotnet-terminal
-Icon=/usr/share/pixmaps/dotnet.svg
-Terminal=false
-Categories=Development;
-StartupNotify=true
-```
-
-Add the new helper to `kiwi/azl-install.ks.in`'s `%post --nochroot` block (it already copies `azl-powershell-terminal`; add the analogous line):
-
-```bash
-cp -v "$ASSETS/bin/azl-dotnet-terminal" /mnt/sysroot/usr/local/bin/azl-dotnet-terminal
-chmod 0755 /mnt/sysroot/usr/local/bin/azl-dotnet-terminal
-```
-
-And in the live kickstart (`azurelinux-desktop-live-disk.ks`), add the analogous `cp` and `chmod` alongside the existing lines at ~line 432.
-
-> **Note on `dotnet --info` as the first-run trigger:** Using `dotnet --info` in the launcher will trigger the first-run experience on the administrator's first launch. See section 2b for how to suppress that.
-
-### 2b — .NET CLI first-run noise and workload verification error
-
-#### What the first-run sequence actually does
-
-From `dotnet/sdk:src/Cli/dotnet/FirstRunExperience.cs` (SHA `25044b7`) and `DotnetFirstTimeUseConfigurer.cs` (SHA `a364b41`):
-
-1. Checks `FirstTimeUseNoticeSentinel` in `~/.dotnet/`. If absent → first run.
-2. Prints welcome banner and telemetry notice (suppressed by `DOTNET_NOLOGO=true`).
-3. Runs NuGet state migration.
-4. Generates ASP.NET dev cert via `AspNetCore.DeveloperCertificates.XPlat.CertificateGenerator.GenerateAspNetHttpsCertificate()` (in-process BCL crypto, no subprocess) — suppressed by `DOTNET_GENERATE_ASPNET_CERTIFICATE=false`.
-5. Adds global tools to `$PATH` sentinel — suppressed by `DOTNET_ADD_GLOBAL_TOOLS_TO_PATH=false`.
-6. Runs `WorkloadIntegrityChecker.RunFirstUseCheck()` — suppressed by `DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK=true`.
-
-The "workload verification had a problem" message is `CliStrings.WorkloadIntegrityCheckError` (confirmed in 14 xlf translation files), which reads:
-
-> **"An issue was encountered verifying workloads. For more information, run 'dotnet workload update'."**
-
-This is printed in yellow and the exception is fully swallowed:
-
-```csharp
-// dotnet/sdk:src/Cli/dotnet/FirstRunExperience.cs:~line 120
-try
-{
-    WorkloadIntegrityChecker.RunFirstUseCheck(reporter);
-}
-catch (Exception)
-{
-    // If the workload check fails for any reason, we want to eat the failure
-    // and continue running the command.
-    reporter.WriteLine(CliStrings.WorkloadIntegrityCheckError.Yellow());
-}
-```
-
-#### What `WorkloadIntegrityChecker` does and why it fails
-
-`dotnet/sdk:src/Cli/dotnet/Commands/Workload/WorkloadIntegrityChecker.cs` (SHA `7002d4c`):
-
-```csharp
-public static void RunFirstUseCheck(IReporter reporter)
-{
-    var creationResult = new WorkloadResolverFactory().Create();
-    var sdkFeatureBand = new SdkFeatureBand(creationResult.SdkVersion);
-    // ...
-    var repository = installer.GetWorkloadInstallationRecordRepository();
-    var installedWorkloads = repository.GetInstalledWorkloads(sdkFeatureBand);
-
-    if (installedWorkloads.Any())
-    {
-        reporter.WriteLine(CliCommandStrings.WorkloadIntegrityCheck);
-        CliTransaction.RunNew(context => installer.InstallWorkloads(...));
-    }
-}
-```
-
-`SdkFeatureBand` for SDK `11.0.100-0.1.preview.6.26359.118` resolves to band `11.0.100-preview.6`. The file-based record repository checks `{dotnet_root}/metadata/workloads/11.0.100-preview.6/InstalledWorkloads/`.
-
-**The preview.1 + preview.6 mismatch:** Both `11.0.100-preview.1.*` and `11.0.100-preview.6.*` manifest trees are installed under `/usr/share/dotnet/sdk-manifests/`. Install records from the RPM installation may exist for one or both bands. If records exist under the preview.6 band, the integrity checker tries to reinstall them via NuGet — but the preview NuGet packages may not be on the configured feeds (the offline repo bundled by KIWI or the `ms-prod` RHEL9 repo). This triggers the caught exception → yellow warning.
-
-From `dotnet/sdk:src/Cli/dotnet/Commands/Workload/WorkloadInstallDetector.cs` (SHA `e57ba55`):
-
-```csharp
-var metadataDir = Path.Combine(workloadRootDir, "metadata", "workloads");
-return new FileBasedInstallationRecordRepository(metadataDir)
-    .GetInstalledWorkloads(sdkFeatureBand)
-    .Any();
-```
-
-On Linux, `ShouldVerifySignatures()` always returns `false` (compile-time `#if !TARGET_WINDOWS`), so no signature issue — it's purely a NuGet package resolution failure for the preview workload packs.
-
-#### "Specified command or file was not found"
-
-This error appears **after** the first-run block completes (the workload exception is swallowed). The `dotnet` host driver resolves CLI commands to DLLs in `/usr/share/dotnet/sdk/<version>/`. The most likely explanation:
-
-The `dotnet.desktop`'s `Exec` launches `/bin/sh -c 'dotnet --info; exec $SHELL'`. Even if GNOME ignores the invalid entry, if the command is run manually or via a terminal, `dotnet --info` completes its first-run banner/cert/workload steps and then invokes `dotnet-info.dll` (or `Microsoft.DotNet.Cli.dll` with the `info` subcommand). With two preview-band manifest trees, the workload resolver may return a path to a workload pack that doesn't exist on disk (because the pack was registered in the preview.1 manifest but installed under the preview.6 path, or vice versa), producing a `FileNotFoundException` whose message becomes "a specified command or file was not found."
-
-**Diagnostics to capture the exact error:**
-
-```bash
-DOTNET_HOST_TRACE=1 DOTNET_HOST_TRACEFILE=/tmp/host_trace.txt dotnet --info 2>&1 | tee /tmp/dotnet-info.txt
-dotnet workload list 2>&1 | tee /tmp/dotnet-workload-list.txt
-ls /usr/share/dotnet/sdk-manifests/
-ls /usr/share/dotnet/metadata/workloads/ 2>/dev/null || echo "(no workload metadata dir)"
-```
-
-This will show exactly which DLL failed to load and which workload bands have install records.
-
-#### Environment variables — current status in .NET 11 preview
-
-| Variable | Effect | Status |
-|---|---|---|
-| `DOTNET_NOLOGO` | Suppresses welcome banner + telemetry notice | **Current; replaces the deprecated `DOTNET_SKIP_FIRST_TIME_EXPERIENCE`** |
-| `DOTNET_SKIP_FIRST_TIME_EXPERIENCE` | Deprecated since .NET Core 3.0; only suppressed `NuGetFallbackFolder` expansion | **Do not use** — has no effect in .NET 11 |
-| `DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK` | Skips `WorkloadIntegrityChecker.RunFirstUseCheck()` | **Current** (defaults to `true` in CI) |
-| `DOTNET_GENERATE_ASPNET_CERTIFICATE` | Controls dev-cert generation | **Current** (default `true`) |
-| `DOTNET_CLI_TELEMETRY_OPTOUT` | Opt out of telemetry | Current |
-| `DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE` | Disable background workload manifest downloads | Current |
-| `SuppressNETCoreSdkPreviewMessage` | Suppress "You are using a preview version" banner | Current |
-| `DOTNET_CLI_ENABLEAOT` | NativeAOT fast path (Preview 7+ only, Linux disabled by default) | Not applicable on preview.6 Linux |
-
-Sources: `learn.microsoft.com/en-us/dotnet/core/tools/dotnet-environment-variables` and `dotnet/sdk:src/Common/EnvironmentVariableNames.cs` (SHA `7d57ecd`).
-
-#### Remediation options
-
-**Fix 2b-1: Set suppression environment variables system-wide** (add to `kiwi/post-install.sh` or the `%post` block):
-
-```bash
-# Suppress .NET 11 preview first-run experience for all users
-cat > /etc/profile.d/dotnet-firstrun.sh << 'EOF'
-# Suppress .NET CLI first-run banners, dev-cert generation, and workload
-# integrity repair for a pre-configured installed image.
-export DOTNET_NOLOGO=true
-export DOTNET_CLI_TELEMETRY_OPTOUT=true
-export DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK=true
-export DOTNET_GENERATE_ASPNET_CERTIFICATE=false
-export DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE=true
-export SuppressNETCoreSdkPreviewMessage=true
-EOF
-```
-
-`/etc/profile.d/` is sourced by every login and interactive shell session. This prevents all first-run triggers for any user (including the dynamically-created administrator).
-
-**Fix 2b-2: Remove stale preview.1 workload-manifest trees** (add to `%post` in `azl-install.ks.in`):
-
-```bash
-# Remove workload manifest trees that don't match the installed SDK feature band.
-# The installed SDK is preview.6; preview.1 manifests are stale.
-for stale_band_dir in /usr/share/dotnet/sdk-manifests/11.0.100-preview.1*; do
-    [ -d "$stale_band_dir" ] && rm -rf "$stale_band_dir" && \
-        echo "Removed stale workload manifest: $stale_band_dir"
-done
-# Remove workload install records for the stale band too
-rm -rf /usr/share/dotnet/metadata/workloads/11.0.100-preview.1* 2>/dev/null || true
-```
-
-**Fix 2b-3: Pre-create first-run sentinels for the installer-created user** (if you want first-run to never trigger even once):
-
-The sentinel files live in `~/.dotnet/`. The approach is to pre-create them in `/etc/skel/.dotnet/` so every new user inherits them:
-
-```bash
-# kiwi/post-install.sh — pre-seed first-run sentinels
-SDK_VERSION=$(dotnet --version 2>/dev/null || echo "11.0.100-preview.6.26359.118")
-mkdir -p /etc/skel/.dotnet
-# Suppress first-use notice for new accounts
-touch "/etc/skel/.dotnet/${SDK_VERSION}.dotnetFirstUseSentinel"
-# Suppress asp.net cert for new accounts
-touch "/etc/skel/.dotnet/aspNetHttpsCertificate.sentinel"
-```
-
-> **Note:** The sentinel filenames include the full SDK version string. Pre-creating them in `/etc/skel` means any user created *after* this runs (including the dynamically injected admin user) gets them via `useradd --create-home` skeleton copy. For the `DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK=true` env var, the `profile.d` approach (Fix 2b-1) is more robust since it doesn't depend on knowing the exact SDK version string at image-build time.
-
-**Fix 2b-4: Run `dotnet workload update` in `%post`** (normalizes workload state before first user login):
-
-```bash
-# Normalize workload state during install so no user sees the repair on first use
-DOTNET_CLI_TELEMETRY_OPTOUT=true \
-DOTNET_NOLOGO=true \
-DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK=true \
-    dotnet workload update --source "file:///opt/azl-offline-repo" 2>/dev/null || \
-    echo "WARNING: dotnet workload update failed (non-fatal for pre-built image)" >&2
-```
-
-This is optional and may fail in the offline install environment if the workload packages aren't in the offline repo. The environment variable approach (Fix 2b-1) is the pragmatic choice.
-
----
+**Resolved.** `assets/bin/azl-dotnet-terminal` fixed to `exec gnome-terminal --title=".NET" -- sh -c 'dotnet --info; exec "${SHELL:-/bin/bash}"'`. `dotnet.desktop` validated. Confirmed in filesystem (Comment includes 'drop into a shell') and interactive test (`.NET` appeared in GNOME search with correct icon). Full first-run noise analysis and workload checker root cause in `final_polish_finished.md`.
 
 ## Cross-references and key source citations
 
@@ -2803,3 +2709,154 @@ Anaconda, LiveOS, live dracut, Cockpit, storage-discovery, report, and
 installer GUI dependencies. It is not evidence that the installed desktop
 lost the core desktop/tool packages listed above. The one installed-only
 minimal language package reflects the installed target's language baseline.
+
+---
+
+## Installer interactive testing (2026-07-23)
+
+### Plymouth now graphical on installed boot
+
+**Root cause confirmed:** `console=ttyS0,115200 console=tty0` in kernel cmdline written by `post-bootloader.sh` blocked Plymouth graphical splash.
+
+**Fix:** Removed serial console params from normal kernel cmdline in `kiwi/post-bootloader.sh`. Azure Linux boot splash (penguin + animated dots) confirmed visible at ~6s in QEMU test.
+
+### PowerShell missing from installed GNOME dash — root cause found
+
+**Root cause:** `org.azurelinux.PowerShell.desktop` installed with mode 600 (root-only) in installer builds. GNOME Shell runs as the user and can't read the file → silently skips it in the dash. Same applies to icons and other asset files.
+
+**Why only installer, not live ISO:** The live ISO copies assets directly from the GitHub Actions workspace checkout (`/workspace/assets/`), which preserves git-checkout permissions (644). The installer ISO packages assets via `tar` into `assets.tar.gz` inside a Fedora 43 build container where umask is 077, so extracted files land at 600.
+
+**Fix:** Replaced all `cp -v` with `install -m 0644` (data files) and `install -m 0755` (executables) across all three kickstarts (`azl-install.ks.in`, `azurelinux-desktop-live.ks`, `azurelinux-desktop-live-disk.ks`) and `kiwi/azl-install.ks.in`. Belt-and-suspenders: live ISO was already correct, installer is now fixed.
+
+**Verified:** `dconf read /org/gnome/shell/favorite-apps` and `gsettings get org.gnome.shell favorite-apps` from SSH inside the running GNOME session both return all 5 correct entries.
+
+### Installer bootloader directive
+
+Changed `bootloader --location=mbr` → bare `bootloader` (firmware-agnostic). `--location=mbr` is legacy BIOS; UEFI systems ignore it or install an unnecessary MBR bootloader alongside EFI. Bare `bootloader` lets Anaconda detect firmware and do the right thing.
+
+### Disk partitioning delegated to Anaconda TUI
+
+Removed `clearpart --all --initlabel` and `autopart --type=lvm` from `azl-install.ks.in`. Anaconda's TUI handles disk selection and partitioning; Anaconda enforces minimum layout requirements (/, /boot/efi on UEFI). Encryption is now a TUI choice.
+
+### Cinnamon placeholder references removed
+
+Removed `user --name=cinnamon` from both installer kickstart templates and the `config.sh` sed block that stripped it. Rewrote live kickstart comments that referenced it.
+
+### EFI boot path mismatch fix
+
+`post-bootloader.sh` now copies `shimx64.efi`, `shim.efi`, `grubx64.efi`, `mmx64.efi` from `EFI/fedora/` → `EFI/azurelinux/` when the EFI vendor dir is `azurelinux` but binaries are absent (Fedora shim/grub RPMs install to `EFI/fedora/`, AZL anaconda creates NVRAM entry for `EFI/azurelinux/shimx64.efi`).
+
+**Status:** ✅ Plymouth graphical confirmed in QEMU | ✅ EFI boot fix applied | ✅ asset permissions fix in code | ⏳ requires fresh build to verify all 5 dock icons
+
+
+### live-disk early-kms parity fix
+
+`early-kms.conf` in `kickstart/azurelinux-desktop-live-disk.ks` was only loading `virtio_gpu`; live ISO and installer already had `virtio_gpu hyperv_drm bochs_drm`. Fixed to match — covers Hyper-V Gen2 guests and QEMU standard VGA in addition to virtio-gpu. The rebuilt initramfs (via `plymouth-set-default-theme azurelinux --rebuild-initrd` at the end of the disk-image `%post`) will pick up the additional drivers.
+
+**Builds queued:** live ISO + qcow2 (29984033898), installer ISO (29984008922) on `deliverable-polish-batch` HEAD `626611c` — picks up all fixes from this batch: asset permissions, Plymouth serial console removal, EFI path, bootloader directive, cinnamon cleanup, and early-kms parity.
+
+**Verification checklist (pending build completion):**
+- All 5 dock icons present on fresh installed desktop (Edge CAN, VS Code, PowerShell, GitHub Copilot, Nautilus)
+- Azure Linux Plymouth boot splash (not text) on installed system first boot
+- Correct dark theme and Azure Linux wallpaper
+- All 5 dock icons on live ISO/disk image boot
+- `pwsh --version` → 7.6.x from terminal
+- `gh --version`, `gh copilot --version`, `dotnet --version`, `edit` all launch correctly
+- VS Code Insiders and Edge Canary launch from dock
+
+---
+
+## Static filesystem verification — installer ISO (2026-07-24, run 29984008922)
+
+**Installer ISO built from:** `8b02468` (deliverable-polish-batch)
+**ISO label:** `CDROM`, `UUID=2026-07-23-06-20-06-00`
+
+Mounted the squashfs rootfs from the installer ISO directly (ISO → squashfs.img → LiveOS/rootfs.img) and confirmed all fixes from the 2026-07-23 commit batch are present.
+
+| Check | Result |
+|---|---|
+| `install -m 0644/0755` for all asset staging in azl-install.ks | ✅ verified (lines 196–222) |
+| No `clearpart` or `autopart` in azl-install.ks | ✅ confirmed absent |
+| Bare `bootloader` directive | ✅ line 40: `bootloader` only |
+| No `console=ttyS0` on kernel cmdline in post-bootloader.sh | ✅ confirmed absent |
+| No cinnamon references in kickstart or scripts | ✅ confirmed absent |
+| Plymouth default theme = azurelinux | ✅ `/etc/plymouth/plymouthd.conf`: `Theme=azurelinux` |
+| `anaconda-launcher.sh` executable (755) | ✅ `/usr/local/bin/anaconda-launcher.sh` mode 755 |
+
+**GRUB config (grub.cfg in boot/grub2):**
+
+Confirmed `timeout=5` and `terminal_output gfxterm` (graphical mode), `terminal_input serial console`. Kernel cmdline: `console=tty0 rhgb quiet enforcing=0 audit=0 inst.lang=en_US.UTF-8 inst.nokill root=live:CDLABEL=CDROM rd.live.image azl.autoinstall inst.nosave=all_ks`. No `console=ttyS0`.
+
+**Parity gap identified and fixed:**
+
+The **installed system's GRUB config** written by `post-bootloader.sh` was still using text-mode `terminal_output console serial` (cloud/datacenter default). The installer ISO's own GRUB uses `gfxterm`. Inconsistency caught during this verification pass.
+
+Fix: replaced `serial` + `terminal_output console serial` with `insmod efi_gop/efi_uga/all_video`, `set gfxmode=auto`, `set gfxpayload=keep`, `terminal_output gfxterm`, `terminal_input console` in `post-bootloader.sh`. Committed as `b49ee12`, pushed to `deliverable-polish-batch`. New installer ISO build triggered: run `29987725267`.
+
+**Interactive QEMU testing note:**
+
+Full interactive boot testing of the installer ISO requires a display (GTK window or similar). The headless VNC + screendump approach used for live ISO testing is not effective for the installer because:
+- Anaconda TUI renders on the Linux text console (curses), not a graphical framebuffer
+- Plymouth covers the console during boot, making screendump-based progress detection unreliable
+- The interaction sequence (username/password prompts at the terminal) requires knowing exact timing
+
+Static filesystem verification is the preferred approach for installer ISOs until a GUI environment is available. See `findings/qemu-gnome-interactive-testing.md` for context.
+
+
+---
+
+## Static filesystem verification — installer ISO (2026-07-24, run 29987725267)
+
+**Installer ISO built from:** `55845eb` (deliverable-polish-batch) — includes GRUB gfxterm fix for installed system.
+
+| Check | Result |
+|---|---|
+| Installer ISO GRUB: `terminal_output gfxterm`, `gfxpayload=keep` | ✅ verified in `boot/grub2/grub.cfg` |
+| Installer ISO GRUB: `timeout=5` | ✅ confirmed |
+| Installer ISO kernel cmdline: no `console=ttyS0` | ✅ confirmed (`console=tty0 rhgb quiet`) |
+| `install -m 0644/0755` for all assets in azl-install.ks | ✅ verified (all 10+ lines) |
+| Installed system `grub.cfg`: `terminal_output gfxterm`, `gfxpayload=keep` (post-bootloader.sh) | ✅ verified — new fix `b49ee12` confirmed in rootfs |
+| No `clearpart` or `autopart` | ✅ absent |
+| Bare `bootloader` directive | ✅ confirmed |
+| No `console=ttyS0` in post-bootloader.sh kernel cmdline | ✅ absent |
+| Plymouth theme = azurelinux | ✅ `/etc/plymouth/plymouthd.conf`: `Theme=azurelinux` |
+
+All installer fixes confirmed present in run `29987725267`. Full runtime verification (Anaconda TUI interaction, installed desktop boot, 5 dock icons) requires a GUI environment — see `findings/qemu-gnome-interactive-testing.md` installer section for limitations.
+
+---
+
+## Wallpaper staging bug found and fixed (2026-07-24)
+
+**Identified during static verification of live ISO (run 29988830449):**
+
+The dconf settings (`/etc/dconf/db/local.d/00-dark-mode`) correctly reference:
+- `picture-uri='file:///usr/share/backgrounds/azurelinux/adwaita-l.jpg'`
+- `picture-uri-dark='file:///usr/share/backgrounds/azurelinux/adwaita-d.jpg'`
+
+But `/usr/share/backgrounds/azurelinux/` didn't exist in the live rootfs — the JPEG files were never staged. Root cause: the dconf setting and wallpaper assets were added in commits `28dd697` and `0f1c41d`, but the `mkdir -p` + `install -m 0644` staging was only added to `kiwi/azl-install.ks.in` (installer), not the live ISO or live-disk kickstarts.
+
+Fix: commit `8eb3e17` adds wallpaper staging to both `kickstart/azurelinux-desktop-live.ks` and `kickstart/azurelinux-desktop-live-disk.ks`. Also adds the missing `picture-uri` dconf settings to the live-disk kickstart's `00-dark-mode` block.
+
+New live build: run `29990996437`.
+
+This explains why the live desktop showed the default Fedora/GNOME background instead of the Azure Linux Adwaita wallpaper in all previous QEMU tests this session.
+
+---
+
+## Live ISO static verification — wallpaper fix confirmed (2026-07-24, run 29990996437)
+
+**Built from:** `3a0d876` (deliverable-polish-batch), includes wallpaper staging fix `8eb3e17`.
+
+| Check | Result |
+|---|---|
+| `/usr/share/backgrounds/azurelinux/adwaita-d.jpg` | ✅ present |
+| `/usr/share/backgrounds/azurelinux/adwaita-l.jpg` | ✅ present |
+| `00-dark-mode` dconf: `picture-uri` points to JPEG | ✅ confirmed |
+| `early-kms.conf`: `virtio_gpu hyperv_drm bochs_drm` | ✅ confirmed |
+| `org.azurelinux.PowerShell.desktop`: mode 644 | ✅ confirmed |
+| `edit.desktop`: mode 644, `Icon=/usr/share/pixmaps/edit.svg` | ✅ confirmed |
+| Plymouth `ScaleLogoToFit` in azurelinux.script | ✅ 2 occurrences |
+
+Preflight (run `29990996890`) also passed clean against this commit. Branch is verified ready.
+
+**Status: `deliverable-polish-batch` is ready to merge to `main`.**

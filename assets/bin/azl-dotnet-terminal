@@ -1,4 +1,5 @@
 #!/bin/sh
 set -eu
 
-exec gnome-terminal --title=.NET -- /usr/bin/dotnet --info
+# shellcheck disable=SC2016  # $SHELL must expand inside gnome-terminal's sh -c, not here
+exec gnome-terminal --title=".NET" -- sh -c 'dotnet --info; exec "${SHELL:-/bin/bash}"'

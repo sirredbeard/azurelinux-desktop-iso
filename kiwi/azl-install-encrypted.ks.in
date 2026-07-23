@@ -1,16 +1,16 @@
 # Azure Linux Desktop - Anaconda Kickstart (Offline installer, Encrypted)
 #
-# LUKS-encrypted variant of azl-install.ks.in, rendered/selected by
-# anaconda-launcher.sh's "Encrypted disk (LUKS)" menu option (matching
-# upstream's own azl-install-encrypted.ks.in - see reference/azl-installer/
-# README.md) - identical to azl-install.ks.in in every way except the
-# disk-layout section below, no --passphrase given so anaconda prompts
-# the user for it interactively during install.
+# LUKS-encrypted variant of azl-install.ks.in. Storage directives are
+# omitted; Anaconda's interactive TUI handles disk selection and the
+# LUKS passphrase prompt. Anaconda enforces the minimum layout (/, /boot,
+# /boot/efi, swap). Only kept as a separate file for inst.ks= custom
+# kickstart use; the standard launcher uses azl-install.ks for both
+# plain and encrypted installs (user enables encryption in the TUI).
 #
 # Structure is a direct adaptation of Microsoft's own azl-install.ks.in
 # (microsoft/azurelinux, base/images/vm-iso-installer/azl-install.ks.in,
 # pinned commit noted in reference/azl-installer/README.md): same
-# offline-repo install source, same LVM partitioning, same
+# offline-repo install source, same
 # post-install.sh/post-bootloader.sh %post --nochroot blocks, generated
 # the same way (kiwi/config.sh expands the packages placeholder below at
 # ISO-build time - deliberately not spelled out literally in this
@@ -21,6 +21,7 @@
 # findings/gh-actions-installer-iso-build.md for the real incident this
 # comment is guarding against).
 # Differences from upstream, all deliberate:
+#   - storage directives removed; Anaconda TUI handles disk/LUKS setup
 #   - a third %post --nochroot block staging this project's own
 #     branding/tooling extras (Copilot, microsoft/edit, Flathub,
 #     Plymouth theme, dock favorites, dark mode) into the installed
@@ -39,17 +40,11 @@ firewall --enabled --ssh
 network --hostname=azurelinux-desktop
 services --enabled=sshd,systemd-networkd,systemd-resolved,gdm,NetworkManager
 
-# The renderer removes the remaining legacy user directive so account
-# creation stays interactive, matching Azure Linux's installer templates.
-user --name=cinnamon --groups=wheel --plaintext --password=cinnamon --gecos="Cinnamon"
+bootloader
 
 rootpw --lock
 
-bootloader --location=mbr --append="console=ttyS0,115200 console=tty0"
 reboot --eject
-
-clearpart --all --initlabel
-autopart --type=lvm --encrypted
 
 @@PACKAGES@@
 
@@ -89,6 +84,9 @@ if [ -d "$ASSETS" ]; then
     cp -v "$ASSETS/plymouth/azurelinux/dot.png" /mnt/sysroot/usr/share/plymouth/themes/azurelinux/dot.png
     cp -v "$ASSETS/plymouth/azurelinux/dot-glow.png" /mnt/sysroot/usr/share/plymouth/themes/azurelinux/dot-glow.png
     cp -v "$ASSETS/branding/AzureLinuxLogo.png" /mnt/sysroot/usr/share/plymouth/themes/azurelinux/azurelinuxlogo.png
+    mkdir -p /mnt/sysroot/usr/share/backgrounds/azurelinux
+    cp -v "$ASSETS/wallpapers/adwaita-l.jpg" /mnt/sysroot/usr/share/backgrounds/azurelinux/adwaita-l.jpg
+    cp -v "$ASSETS/wallpapers/adwaita-d.jpg" /mnt/sysroot/usr/share/backgrounds/azurelinux/adwaita-d.jpg
 else
     echo "WARNING: $ASSETS not found in install environment - branding/launcher assets skipped" >&2
 fi
@@ -218,7 +216,7 @@ cat > /etc/dracut.conf.d/no-multipath.conf << 'EOF'
 omit_dracutmodules+=" multipath "
 EOF
 cat > /etc/dracut.conf.d/early-kms.conf << 'EOF'
-add_drivers+=" virtio_gpu "
+add_drivers+=" virtio_gpu hyperv_drm bochs_drm "
 EOF
 
 # Regenerate the initrd for every installed kernel now that the theme
@@ -246,8 +244,8 @@ color-scheme='prefer-dark'
 gtk-theme='Adwaita-dark'
 
 [org/gnome/desktop/background]
-picture-uri='file:///usr/share/backgrounds/gnome/adwaita-l.jxl'
-picture-uri-dark='file:///usr/share/backgrounds/gnome/adwaita-d.jxl'
+picture-uri='file:///usr/share/backgrounds/azurelinux/adwaita-l.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/azurelinux/adwaita-d.jpg'
 picture-options='zoom'
 
 [org/gnome/shell]

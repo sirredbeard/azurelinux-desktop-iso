@@ -73,24 +73,40 @@ EFI_VENDOR_NAME=$(basename "$EFI_VENDOR")
 echo "EFI vendor dir: $EFI_VENDOR"
 ls -la "$EFI_VENDOR/" 2>/dev/null
 
+# When Fedora's shim/grub RPMs install to EFI/fedora/ but our NVRAM entry
+# will point to EFI/azurelinux/, copy the binaries across so the boot
+# entry resolves. This covers the hybrid Fedora-on-AZL package mix.
+if [ "$EFI_VENDOR_NAME" = "azurelinux" ]; then
+    FEDORA_EFI="$SYSROOT/boot/efi/EFI/fedora"
+    for f in shimx64.efi shimaa64.efi shim.efi grubx64.efi grubaa64.efi mmx64.efi; do
+        if [ ! -f "$EFI_VENDOR/$f" ] && [ -f "$FEDORA_EFI/$f" ]; then
+            cp -v "$FEDORA_EFI/$f" "$EFI_VENDOR/$f"
+        fi
+    done
+fi
+
 # --- Generate /boot/grub2/grub.cfg ---
 mkdir -p "$SYSROOT/boot/grub2"
 cat > "$SYSROOT/boot/grub2/grub.cfg" << GRUBCFG
 set default=0
 set timeout=2
-serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1
-terminal_output console serial
-terminal_input console serial
+insmod efi_gop
+insmod efi_uga
+insmod all_video
+set gfxmode=auto
+set gfxpayload=keep
+terminal_output gfxterm
+terminal_input console
 
 menuentry "Azure Linux" {
     search --no-floppy --fs-uuid --set=root ${BOOT_UUID}
-    linux /${KERNEL_NAME} root=UUID=${ROOT_UUID} ${LUKS_PARAMS} console=ttyS0,115200 console=tty0 rhgb quiet ro
+    linux /${KERNEL_NAME} root=UUID=${ROOT_UUID} ${LUKS_PARAMS} rhgb quiet ro
     initrd /${INITRD_NAME}
 }
 
 menuentry "Azure Linux (rescue)" {
     search --no-floppy --fs-uuid --set=root ${BOOT_UUID}
-    linux /${KERNEL_NAME} root=UUID=${ROOT_UUID} ${LUKS_PARAMS} console=ttyS0,115200 console=tty0 ro systemd.unit=rescue.target
+    linux /${KERNEL_NAME} root=UUID=${ROOT_UUID} ${LUKS_PARAMS} ro systemd.unit=rescue.target
     initrd /${INITRD_NAME}
 }
 
