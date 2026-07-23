@@ -2822,3 +2822,21 @@ Static filesystem verification is the preferred approach for installer ISOs unti
 | Plymouth theme = azurelinux | ✅ `/etc/plymouth/plymouthd.conf`: `Theme=azurelinux` |
 
 All installer fixes confirmed present in run `29987725267`. Full runtime verification (Anaconda TUI interaction, installed desktop boot, 5 dock icons) requires a GUI environment — see `findings/qemu-gnome-interactive-testing.md` installer section for limitations.
+
+---
+
+## Wallpaper staging bug found and fixed (2026-07-24)
+
+**Identified during static verification of live ISO (run 29988830449):**
+
+The dconf settings (`/etc/dconf/db/local.d/00-dark-mode`) correctly reference:
+- `picture-uri='file:///usr/share/backgrounds/azurelinux/adwaita-l.jpg'`
+- `picture-uri-dark='file:///usr/share/backgrounds/azurelinux/adwaita-d.jpg'`
+
+But `/usr/share/backgrounds/azurelinux/` didn't exist in the live rootfs — the JPEG files were never staged. Root cause: the dconf setting and wallpaper assets were added in commits `28dd697` and `0f1c41d`, but the `mkdir -p` + `install -m 0644` staging was only added to `kiwi/azl-install.ks.in` (installer), not the live ISO or live-disk kickstarts.
+
+Fix: commit `8eb3e17` adds wallpaper staging to both `kickstart/azurelinux-desktop-live.ks` and `kickstart/azurelinux-desktop-live-disk.ks`. Also adds the missing `picture-uri` dconf settings to the live-disk kickstart's `00-dark-mode` block.
+
+New live build: run `29990996437`.
+
+This explains why the live desktop showed the default Fedora/GNOME background instead of the Azure Linux Adwaita wallpaper in all previous QEMU tests this session.
